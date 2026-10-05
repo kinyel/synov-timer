@@ -1,17 +1,19 @@
 ---
 /**
- * 04 · Services. A bright page section (no 3D canvas here: it is clipped
- * away). Four columns, each with a small isometric line glyph that draws
- * itself in, in the same architectural-model language. Cards tilt toward the
- * pointer on desktop and press on tap on mobile.
+ * 04 · Services: a spiral staircase. Wedge-shaped treads climb around a
+ * glowing gold spine; each service card stands on its own landing. Scroll
+ * turns and climbs the stair so each card swings round to the front, sharp
+ * and lit, while the others dim and blur into the dark. Pure CSS 3D (crisp
+ * text, no canvas: the WebGL layer is clipped away here). Black and gold.
  */
 
-/** Isometric projection: x runs down-right, y down-left, z up. */
+import { SERVICES } from '../../lib/content';
+
+/** Isometric line glyphs (x down-right, y down-left, z up). */
 const S = 9;
 const iso = (x: number, y: number, z: number): [number, number] => [60 + (x - y) * 0.866 * S, 40 + (x + y) * 0.5 * S - z * S];
 const pt = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
 const poly = (pts: [number, number, number][], close = false) => 'M' + pts.map((p) => pt(iso(...p))).join('L') + (close ? 'Z' : '');
-/** Visible edges of a box (top face, three verticals, two bottom edges). */
 const box = (x: number, y: number, z: number, w: number, d: number, h: number) =>
   [
     poly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]], true),
@@ -21,13 +23,12 @@ const box = (x: number, y: number, z: number, w: number, d: number, h: number) =
     poly([[x + w, y, z], [x + w, y + d, z], [x, y + d, z]]),
   ].join(' ');
 
-const glyphs = {
+const glyphs: Record<string, { ink: string[]; gold: string[]; pins: [number, number][] }> = {
   advisory: {
     ink: [box(-1, -1, 0, 7, 7, 0.4)],
     gold: [poly([[0, 5, 0.4], [2, 4.5, 0.4], [2.5, 2, 0.4], [5, 1.5, 0.4], [5.5, 0, 0.4]])],
-    pins: [[0, 5], [2.5, 2], [5.5, 0]] as [number, number][],
+    pins: [[0, 5], [2.5, 2], [5.5, 0]],
   },
-  // A building frame going up: slab, columns, one finished floor, the next beam in gold.
   implementation: {
     ink: [
       box(0, 0, 0, 6, 4.5, 0.35),
@@ -36,78 +37,259 @@ const glyphs = {
       poly([[0, 4.5, 3.6], [0, 0, 3.6], [6, 0, 3.6]]),
     ],
     gold: [poly([[6, 0, 3.6], [6, 4.5, 3.6], [0, 4.5, 3.6]])],
-    pins: [] as [number, number][],
+    pins: [],
   },
   integration: {
     ink: [box(-1, 2, 0, 3, 3, 3.4), box(4.4, -1.6, 0, 3, 3, 2.4)],
     gold: [poly([[2, 3, 2.2], [4.4, 0.6, 2.2]]), poly([[2, 4.2, 2.2], [4.4, 1.6, 2.2]])],
-    pins: [] as [number, number][],
+    pins: [],
   },
   support: {
     ink: [box(0, 0, 0, 5.5, 3, 1), box(0.5, 0.5, 1, 4.5, 0.5, 3.4)],
     gold: [poly([[0.8, 0.5, 2.6], [1.8, 0.5, 2.6], [2.3, 0.5, 3.6], [2.9, 0.5, 1.7], [3.4, 0.5, 2.6], [4.6, 0.5, 2.6]])],
-    pins: [] as [number, number][],
+    pins: [],
   },
 };
 
-const services = [
-  { key: 'advisory', title: 'Advisory & Strategy', body: 'Roadmaps and alignment that reduce complexity and maximize ROI.' },
-  { key: 'implementation', title: 'Implementation', body: 'Architecture, configuration, testing, deployment.' },
-  { key: 'integration', title: 'Integration', body: 'HR, Finance, ITSM and custom apps connected to eliminate silos.' },
-  { key: 'support', title: 'Support & Optimization', body: 'Monitoring, upgrades, performance tuning.' },
-] as const;
+const services = SERVICES;
+
+/** Stair geometry: 15° and one rise per tread; a card lands every 6 treads (90°). */
+const PER_CARD = 6;
+const TREADS = PER_CARD * (services.length - 1) + 9;
+const FIRST = 3;
+const treads = Array.from({ length: TREADS }, (_, i) => i - FIRST);
+const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
 ---
 
-<section id="services" data-scene="services" data-theme="light" class="relative">
-  <div class="layer-bg absolute inset-0 bg-cloud" aria-hidden="true"></div>
-  <div class="layer-copy gutter py-28 text-ink md:py-36">
-    <div class="flex flex-wrap items-end justify-between gap-6">
-      <div>
-        <p class="label text-[0.66rem] text-ink/55">Services</p>
-        <h2 class="mt-3 font-display text-[2rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.8rem]" data-reveal>
-          From roadmap to run.
-        </h2>
+<section id="services" data-scene="services" data-theme="dark" class="relative h-[460svh]" data-stair-section>
+  <div class="layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" style="background: radial-gradient(70% 60% at 62% 52%, #1a1407 0%, #0b0a08 45%, #050506 100%);" aria-hidden="true">
+    <div class="stair-glow absolute top-1/2 left-[62%] size-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full max-md:left-1/2"></div>
+    {Array.from({ length: 26 }, (_, i) => <span class="stair-dust" style={`--x:${(i * 37) % 100}%;--y:${(i * 61) % 100}%;--d:${6 + (i % 7)}s;--o:${-(i % 9)}s`} />)}
+  </div>
+
+  <div class="layer-copy sticky top-0 -mt-[100svh] h-svh overflow-hidden text-white">
+    <!-- Left: heading, counter, service list (desktop). Top on mobile. -->
+    <div class="gutter absolute inset-x-0 top-0 z-10 pt-24 md:top-1/2 md:right-auto md:w-[40%] md:-translate-y-1/2 md:pt-0">
+      <p class="label flex items-center gap-3 text-[0.66rem] text-[#f2b200]"><span class="h-px w-6 bg-current"></span>Services</p>
+      <h2 class="mt-3 font-display text-[1.9rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.8rem]">From roadmap to run.</h2>
+      <div class="mt-5 flex items-center gap-4">
+        <p class="font-mono text-[0.75rem] tracking-[0.12em] text-white/50 tabular-nums">
+          <span class="text-[#ffc21a]" data-stair-count>01</span> / 0{services.length}
+        </p>
+        <span class="relative h-px flex-1 bg-white/12 md:max-w-[14rem]"><span class="absolute inset-y-0 left-0 w-full origin-left scale-x-0 bg-[#f2b200]" data-stair-rail></span></span>
       </div>
-      <p class="max-w-sm text-[0.95rem] leading-relaxed text-ink/65" data-reveal>
-        One team from first workshop to steady state, so nothing is lost between strategy and delivery.
-      </p>
-    </div>
-    <ol class="mt-12 grid gap-4 [perspective:1100px] sm:grid-cols-2 lg:grid-cols-4">
-      {
-        services.map((s, i) => {
-          const g = glyphs[s.key];
-          return (
-            <li class="service-card group relative rounded-[1.5rem] bg-white p-6 shadow-[0_24px_60px_-34px_rgb(10_16_48/0.35)] transition-shadow duration-500 will-change-transform [transform-style:preserve-3d] hover:shadow-[0_40px_80px_-40px_rgb(10_16_48/0.45)] md:p-7" data-tilt>
-              <p class="label flex justify-between text-[0.66rem] text-ink/50">
-                <span>0{i + 1}</span>
-                <span class="text-gold-deep">Service</span>
-              </p>
-              <svg viewBox="0 0 120 100" class="mt-4 h-28 w-full [transform:translateZ(30px)]" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-glyph>
-                {g.ink.map((d) => <path d={d} stroke="#0A1030" stroke-width="1.4" pathLength="1" />)}
-                {g.gold.map((d) => <path d={d} stroke="#F2B200" stroke-width="2.2" pathLength="1" />)}
-                {g.pins.map(([x, y]) => {
-                  const a = iso(x, y, 0.4);
-                  const b = iso(x, y, 2.2);
-                  return (
-                    <>
-                      <path d={`M${pt(a)}L${pt(b)}`} stroke="#0A1030" stroke-width="1.2" pathLength="1" />
-                      <circle cx={b[0]} cy={b[1]} r="2.6" fill="#F2B200" stroke="none" data-pin />
-                    </>
-                  );
-                })}
-              </svg>
-              <h3 class="mt-5 font-display text-[1.35rem] leading-[1.08] font-semibold tracking-[-0.02em]">{s.title}</h3>
-              <p class="mt-2 text-[0.9rem] leading-relaxed text-ink/65">{s.body}</p>
+      <ol class="mt-8 hidden space-y-1 md:block">
+        {
+          services.map((s, i) => (
+            <li>
+              <button type="button" class="stair-link group flex w-full items-baseline gap-4 py-2 text-left" data-stair-link={i}>
+                <span class="font-mono text-[0.7rem] text-white/35 tabular-nums transition-colors">0{i + 1}</span>
+                <span class="text-[1.05rem] text-white/45 transition-colors duration-500">{s.title}</span>
+              </button>
             </li>
-          );
-        })
-      }
-    </ol>
+          ))
+        }
+      </ol>
+    </div>
+
+    <!-- The staircase. -->
+    <div class="stair-stage absolute inset-0 md:left-[24%]" aria-hidden="false">
+      <div class="stair-spine" aria-hidden="true"></div>
+      <div class="stair-ring" data-stair-ring>
+        {
+          treads.map((t) => (
+            <div class="stair-tread" style={`--a:${t * 15}deg;--y:${-t}`} data-tread={t} aria-hidden="true">
+              <span />
+            </div>
+          ))
+        }
+        {rail.map((t) => <span class="stair-rail" style={`--a:${t * 15}deg;--y:${-t}`} aria-hidden="true" />)}
+        {
+          services.map((s, i) => {
+            const g = glyphs[s.key]!;
+            return (
+              <article class="stair-card" style={`--a:${i * 90}deg;--y:${-i * PER_CARD}`} data-stair-card={i}>
+                <div class="stair-card-inner">
+                  <p class="label flex justify-between text-[0.6rem] text-white/45">
+                    <span>0{i + 1}</span>
+                    <span class="text-[#f2b200]">Service</span>
+                  </p>
+                  <svg viewBox="0 0 120 100" class="mt-2 h-20 w-full md:h-24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-glyph>
+                    {g.ink.map((d) => <path d={d} stroke="#f5f1e6" stroke-opacity="0.85" stroke-width="1.3" pathLength="1" />)}
+                    {g.gold.map((d) => <path d={d} stroke="#ffc21a" stroke-width="2.2" pathLength="1" />)}
+                    {g.pins.map(([x, y]) => {
+                      const a = iso(x, y, 0.4);
+                      const b = iso(x, y, 2.2);
+                      return (
+                        <>
+                          <path d={`M${pt(a)}L${pt(b)}`} stroke="#f5f1e6" stroke-opacity="0.85" stroke-width="1.1" pathLength="1" />
+                          <circle cx={b[0]} cy={b[1]} r="2.6" fill="#ffc21a" stroke="none" data-pin />
+                        </>
+                      );
+                    })}
+                  </svg>
+                  <h3 class="mt-3 font-display text-[1.2rem] leading-[1.08] font-semibold tracking-[-0.02em] md:text-[1.35rem]">{s.title}</h3>
+                  <p class="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{s.body}</p>
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+    <!-- Entry blend: dissolves the stair's top edge into the section above while
+         the seam is on screen; fully transparent once the stair is pinned. -->
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-[34svh]" style="background: linear-gradient(to bottom, #070707 0%, rgb(7 7 7 / 0.85) 30%, transparent 100%);" aria-hidden="true" data-stair-entry></div>
   </div>
 </section>
 
 <style>
-  .text-gold-deep {
-    color: #9a6b00;
+  /* Stair geometry in one place: radius of the spine, tread length, rise per tread. */
+  [data-stair-section] {
+    --r0: 18px;
+    --len: 230px;
+    --tread-w: 70px;
+    --rise: 26px;
+    --card-w: 250px;
+    /* Cards stand just outside the handrail, so the rail never crosses them. */
+    --card-r: calc(var(--r0) + var(--len) + 22px);
+  }
+  @media (max-width: 767px) {
+    [data-stair-section] {
+      --len: 150px;
+      --tread-w: 48px;
+      --rise: 20px;
+      --card-w: 210px;
+    }
+  }
+  .stair-stage {
+    perspective: 1000px;
+    perspective-origin: 50% 32%;
+  }
+  @media (max-width: 767px) {
+    .stair-stage {
+      top: 22%;
+      perspective: 760px;
+    }
+  }
+  .stair-spine {
+    position: absolute;
+    left: 50%;
+    top: -10%;
+    bottom: -10%;
+    width: 2px;
+    transform: translateX(-50%);
+    background: linear-gradient(transparent, #f2b200 30%, #ffe07a 50%, #f2b200 70%, transparent);
+    box-shadow:
+      0 0 18px 2px rgb(242 178 0 / 0.45),
+      0 0 60px 8px rgb(242 178 0 / 0.15);
+  }
+  .stair-ring {
+    position: absolute;
+    left: 50%;
+    top: 58%;
+    transform-style: preserve-3d;
+    will-change: transform;
+  }
+  /* A tread: a wedge lying flat, narrow at the spine, gold nosing at its outer edge. */
+  .stair-tread {
+    position: absolute;
+    width: var(--tread-w);
+    height: var(--len);
+    margin-left: calc(var(--tread-w) / -2);
+    margin-top: calc(var(--len) / -2);
+    transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise))) translateZ(calc(var(--r0) + var(--len) / 2)) rotateX(90deg);
+    transform-style: preserve-3d;
+  }
+  .stair-tread > span {
+    position: absolute;
+    inset: 0;
+    clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
+    background: linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.12) 70%, rgb(255 194 26 / 0.55) 97%, #ffc21a 100%);
+    opacity: var(--lit, 0.4);
+    transition: opacity 0.3s linear;
+  }
+  /* Handrail: gold beads tracing the helix at the outer edge. */
+  .stair-rail {
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px 0 0 -2.5px;
+    border-radius: 50%;
+    background: #ffc21a;
+    box-shadow: 0 0 8px rgb(255 194 26 / 0.8);
+    transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise) - 95px)) translateZ(calc(var(--r0) + var(--len) - 8px));
+    opacity: 0.55;
+  }
+  /* A card stands on its landing, facing outward. */
+  .stair-card {
+    position: absolute;
+    width: var(--card-w);
+    margin-left: calc(var(--card-w) / -2);
+    transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise) - 100%)) translateZ(var(--card-r));
+    transform-origin: 50% 100%;
+    backface-visibility: hidden;
+  }
+  .stair-card-inner {
+    border-radius: 1.25rem;
+    padding: 1.1rem 1.15rem 1.2rem;
+    background: linear-gradient(160deg, #1b1710, #0b0b0d);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 194 26 / var(--edge, 0.12)),
+      0 30px 60px -30px rgb(0 0 0 / 0.9),
+      0 0 50px -10px rgb(242 178 0 / calc(var(--edge, 0.12) * 0.5));
+    transform: translateY(-14px);
+  }
+  .stair-glow {
+    background: radial-gradient(circle, rgb(242 178 0 / 0.22), transparent 62%);
+    filter: blur(10px);
+  }
+  .stair-dust {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: 2px;
+    height: 2px;
+    border-radius: 50%;
+    background: #ffd36a;
+    opacity: 0.5;
+    animation: stair-dust var(--d) ease-in-out var(--o) infinite;
+  }
+  @keyframes stair-dust {
+    0%,
+    100% {
+      transform: translate(0, 0);
+      opacity: 0.15;
+    }
+    50% {
+      transform: translate(10px, -26px);
+      opacity: 0.7;
+    }
+  }
+  .stair-link[aria-current='true'] span:first-child {
+    color: #ffc21a;
+  }
+  .stair-link[aria-current='true'] span:last-child {
+    color: #fff;
+  }
+  /* Reduced motion: no stair, a calm list of cards. */
+  :global(html.reduced-motion) [data-stair-section] {
+    height: auto;
+  }
+  :global(html.reduced-motion) .stair-ring {
+    position: static;
+    display: grid;
+    gap: 1rem;
+    padding: 2rem 1rem;
+  }
+  :global(html.reduced-motion) .stair-tread,
+  :global(html.reduced-motion) .stair-rail,
+  :global(html.reduced-motion) .stair-spine {
+    display: none;
+  }
+  :global(html.reduced-motion) .stair-card {
+    position: static;
+    transform: none;
+    margin: 0;
   }
 </style>

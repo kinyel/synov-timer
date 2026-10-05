@@ -5,6 +5,7 @@ import Lenis from 'lenis';
 import { $introDone, $loadProgress, $progress, $reducedMotion, $scene, $sceneReady, $webgl, live, SCENES, type SceneId } from '../lib/store';
 import { reportLoad } from '../lib/loader';
 import { initScroll } from './scroll';
+import { initNav } from './nav';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
 
@@ -22,7 +23,8 @@ if (!reduced) {
   gsap.ticker.add((time) => lenis?.raf(time * 1000));
   gsap.ticker.lagSmoothing(0);
 }
-for (const a of $$<HTMLAnchorElement>('a[href^="#"], a[href^="/#"]')) {
+const { closeMenu } = initNav(lenis, reduced);
+for (const a of $$<HTMLAnchorElement>('a[href^="#"]:not([data-nav-jump]), a[href^="/#"]:not([data-nav-jump])')) {
   a.addEventListener('click', (e) => {
     const href = a.getAttribute('href')!;
     if (href.startsWith('/#') && location.pathname !== '/') return;
@@ -136,7 +138,7 @@ const canvas = $<HTMLCanvasElement>('#webgl canvas');
 if (canvas) requestAnimationFrame(() => requestAnimationFrame(() => import('../webgl/boot').then((m) => m.boot(canvas))));
 
 /* ── Scroll choreography (sections, canvas clip, nav theme) ───────────── */
-initScroll(reduced);
+initScroll(reduced, lenis);
 for (const section of $$('[data-scene]')) {
   const id = section.dataset.scene as SceneId;
   ScrollTrigger.create({ trigger: section, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && $scene.set(id) });
@@ -180,9 +182,12 @@ if (html.classList.contains('has-cursor') && dot && ring) {
   const ry = gsap.quickTo(ring, 'y', { duration: 0.45, ease: 'expo.out' });
   addEventListener('pointermove', (e) => (dx(e.clientX), dy(e.clientY), rx(e.clientX), ry(e.clientY)));
   document.addEventListener('pointerover', (e) => {
-    const over = (e.target as Element).closest('a, button, [data-magnetic]');
-    gsap.to(ring, { scale: over ? 1.9 : 1, backgroundColor: over ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)', duration: 0.45, ease: 'expo.out' });
-    gsap.to(dot, { scale: over ? 0 : 1, duration: 0.3 });
+    const target = e.target as Element;
+    // Nav controls have their own hover states; the cursor steps back to a small ring there.
+    const quiet = target.closest('[data-cursor="none"], [data-nav]');
+    const over = !quiet && target.closest('a, button, [data-magnetic]');
+    gsap.to(ring, { scale: quiet ? 0 : over ? 1.9 : 1, backgroundColor: over ? 'rgba(255,255,255,1)' : 'rgba(255,255,255,0)', duration: 0.45, ease: 'expo.out' });
+    gsap.to(dot, { scale: over || quiet ? 0 : 1, duration: 0.3 });
   });
   document.addEventListener('mouseleave', () => gsap.to([dot, ring], { opacity: 0, duration: 0.3 }));
   document.addEventListener('mouseenter', () => gsap.to([dot, ring], { opacity: 1, duration: 0.3 }));
@@ -201,30 +206,6 @@ if (!reduced && matchMedia('(pointer: fine)').matches) {
     el.addEventListener('pointerleave', () => (x(0), y(0)));
   }
 }
-
-/* ── Mobile menu ───────────────────────────────────────────────────────── */
-const menu = $('[data-menu]');
-const toggle = $('[data-menu-toggle]');
-function closeMenu() {
-  if (!menu || !toggle) return;
-  toggle.setAttribute('aria-expanded', 'false');
-  toggle.textContent = 'Menu';
-  menu.setAttribute('aria-hidden', 'true');
-  menu.classList.add('opacity-0', 'pointer-events-none');
-  delete html.dataset.menuOpen;
-  lenis?.start();
-}
-toggle?.addEventListener('click', () => {
-  if (!menu) return;
-  if (toggle.getAttribute('aria-expanded') === 'true') return closeMenu();
-  toggle.setAttribute('aria-expanded', 'true');
-  toggle.textContent = 'Close';
-  menu.setAttribute('aria-hidden', 'false');
-  menu.classList.remove('opacity-0', 'pointer-events-none');
-  html.dataset.menuOpen = '';
-  lenis?.stop();
-  gsap.from($$('li', menu), { yPercent: 60, opacity: 0, stagger: 0.05, duration: 0.8, ease: 'expo.out' });
-});
 
 /* ── Hooks for screenshot tooling ──────────────────────────────────────── */
 declare global {

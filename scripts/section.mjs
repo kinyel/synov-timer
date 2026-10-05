@@ -19,7 +19,7 @@ for (const size of sizes) {
   const page = await (await browser.newContext(size)).newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto('http://localhost:4321/');
+  await page.goto(process.env.URL ?? 'http://localhost:4321/');
   await page.waitForFunction(() => window.__raleston?.introDone(), null, { timeout: 30000 });
   await page.waitForTimeout(5500);
   for (const p of points) {

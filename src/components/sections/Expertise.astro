@@ -5,28 +5,25 @@
  * the rest of the model fades back, and an info card explains it. Then the
  * section turns dark and an x-ray scan sweeps down the whole model.
  */
-const layers = [
-  { name: 'App Engine', short: 'App Engine', body: 'Custom applications built on the platform, from low-code to pro-code.' },
-  { name: 'ITSM', short: 'ITSM', body: 'Service desk, incident, problem and change, designed to scale.' },
-  { name: 'ITAM', short: 'ITAM', body: 'Hardware and software assets tracked across their whole lifecycle.' },
-  { name: 'ITOM', short: 'ITOM', body: 'Discovery, service mapping and event management, end to end.' },
-  { name: 'Integration', short: 'Integration', body: 'HR, Finance, ITSM and custom apps connected to eliminate silos.' },
-  { name: 'Enterprise Architecture', short: 'Ent. Arch.', body: 'Roadmaps and structure that keep the platform clean as it grows.' },
-];
+import { EXPERTISE } from '../../lib/content';
+const layers = EXPERTISE;
 ---
 
-<section id="expertise" data-scene="expertise" data-theme="light" data-webgl="campus" class="relative h-[620svh]">
+<section id="expertise" data-scene="expertise" data-theme="light" data-webgl="campus" data-feather="bottom" class="relative h-[620svh]">
   <div class="layer-bg absolute inset-0" style="background: linear-gradient(180deg, #eceff4 0%, #f3f5f8 100%);" aria-hidden="true"></div>
-  <div class="layer-bg pointer-events-none sticky top-0 h-svh opacity-0" style="background: radial-gradient(90% 70% at 60% 40%, #101a46 0%, #04060f 75%);" aria-hidden="true" data-xray-bg></div>
+  <div class="layer-bg pointer-events-none sticky top-0 h-svh opacity-0" style="background: radial-gradient(90% 70% at 60% 40%, #101a46 0%, #04060f 75%);" aria-hidden="true" data-xray-bg>
+    <!-- As the x-ray finishes, the backdrop warms into the staircase's black and gold, so the two sections meet with no seam. -->
+    <div class="absolute inset-0 opacity-0" style="background: radial-gradient(70% 60% at 62% 52%, #1a1407 0%, #0b0a08 45%, #050506 100%);" data-xray-warm></div>
+  </div>
 
   <div class="layer-copy pointer-events-none sticky top-0 -mt-[100svh] h-svh overflow-hidden" data-expertise-stage>
     <!-- Labels: positioned each frame at the projected roof point of their building. -->
     {
       layers.map((l, i) => (
-        <div class="absolute top-0 left-0 opacity-0" data-label={i} aria-hidden="true">
-          <span class="absolute -top-[3px] -left-[3px] size-1.5 rounded-full bg-gold" />
-          <span class="absolute bottom-0 left-0 h-14 w-px origin-bottom bg-ink/40" data-label-line />
-          <span class="label absolute bottom-14 left-0 -translate-x-1/2 rounded-full bg-ink px-3 py-1.5 text-[0.62rem] whitespace-nowrap text-white">
+        <div class="bldg-label" data-label={i} aria-hidden="true">
+          <span class="bldg-dot" />
+          <span class="bldg-line" />
+          <span class="bldg-tag">
             <span class="max-sm:hidden">{l.name}</span>
             <span class="sm:hidden">{l.short}</span>
           </span>

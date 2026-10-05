@@ -1,4 +1,5 @@
 import { gsap } from 'gsap';
+import type Lenis from 'lenis';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { live } from '../lib/store';
 import { anchors, scroll, type World } from '../webgl/scroll';
@@ -8,7 +9,7 @@ import { anchors, scroll, type World } from '../webgl/scroll';
  * scenes, clips the canvas to the sections that use 3D, and drives each
  * section's DOM layer (cards, labels, kinetic type).
  */
-export function initScroll(reduced: boolean) {
+export function initScroll(reduced: boolean, lenis: Lenis | null) {
   const $ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = document) => r.querySelector<T>(s);
   const $$ = <T extends HTMLElement = HTMLElement>(s: string, r: ParentNode = document) => [...r.querySelectorAll<T>(s)];
   const html = document.documentElement;
@@ -41,28 +42,49 @@ export function initScroll(reduced: boolean) {
     // Clip the canvas to the on-screen 3D sections of ONE world (the one with
     // the most screen area), so DOM-only sections (services, impact) between
     // two worlds are never painted over.
-    const spans = new Map<World, { top: number; bottom: number }>();
+    type Span = { top: number; bottom: number; featherBottom: boolean };
+    const spans = new Map<World, Span>();
     for (const s of webglSections) {
       const r = s.getBoundingClientRect();
       const t = Math.max(0, r.top);
       const b = Math.min(innerHeight, r.bottom);
       if (b - t < 1) continue;
       const w = s.dataset.webgl as World;
+      const fb = r.bottom < innerHeight && (s.dataset.feather ?? '').includes('bottom');
       const span = spans.get(w);
-      spans.set(w, span ? { top: Math.min(span.top, t), bottom: Math.max(span.bottom, b) } : { top: t, bottom: b });
+      if (!span) spans.set(w, { top: t, bottom: b, featherBottom: fb });
+      else {
+        span.top = Math.min(span.top, t);
+        if (b >= span.bottom) span.featherBottom = fb;
+        span.bottom = Math.max(span.bottom, b);
+      }
     }
     let world: World = 'none';
-    let top = 0;
-    let bottom = 0;
+    let best: Span = { top: 0, bottom: 0, featherBottom: false };
     for (const [w, span] of spans) {
-      if (span.bottom - span.top > bottom - top) {
+      if (span.bottom - span.top > best.bottom - best.top) {
         world = w;
-        top = span.top;
-        bottom = span.bottom;
+        best = span;
       }
     }
     scroll.world = world;
-    if (canvasWrap) canvasWrap.style.clipPath = world === 'none' ? 'inset(100% 0 0 0)' : `inset(${top}px 0 ${Math.max(0, innerHeight - bottom)}px 0)`;
+    if (canvasWrap) {
+      const { top, bottom, featherBottom } = best;
+      if (world !== 'none' && featherBottom) {
+        // Soft edge: the 3D dissolves into the next section instead of being cut.
+        const f = Math.min(260, innerHeight * 0.3, bottom - top);
+        const mask = `linear-gradient(to bottom, transparent ${top}px, #000 ${top}px, #000 ${bottom - f}px, transparent ${bottom}px)`;
+        canvasWrap.style.clipPath = 'none';
+        canvasWrap.style.maskImage = mask;
+        canvasWrap.style.webkitMaskImage = mask;
+      } else {
+        if (canvasWrap.style.maskImage) {
+          canvasWrap.style.maskImage = '';
+          canvasWrap.style.webkitMaskImage = '';
+        }
+        canvasWrap.style.clipPath = world === 'none' ? 'inset(100% 0 0 0)' : `inset(${top}px 0 ${Math.max(0, innerHeight - bottom)}px 0)`;
+      }
+    }
   });
 
   // ── Hero copy lifts away ───────────────────────────────────────────────
@@ -120,51 +142,102 @@ export function initScroll(reduced: boolean) {
   }
   const labels = $$('[data-label]');
   const xrayBg = $('[data-xray-bg]');
+  const xrayWarm = $('[data-xray-warm]');
   const expSection = $('#expertise');
   gsap.ticker.add(() => {
     labels.forEach((el, i) => {
       const a = anchors.expertise[i]!;
+      const w = Math.max(0, a.weight * 1.4 - 0.4);
       el.style.transform = `translate3d(${a.x}px, ${a.y}px, 0)`;
-      el.style.opacity = String(Math.max(0, a.weight * 1.4 - 0.4));
+      el.style.opacity = String(w);
+      el.style.setProperty('--w', w.toFixed(3));
     });
     const x = gsap.utils.clamp(0, 1, (scroll.expertise - 0.735) / 0.05);
     if (xrayBg) xrayBg.style.opacity = String(x);
+    if (xrayWarm) xrayWarm.style.opacity = String(gsap.utils.clamp(0, 1, (scroll.expertise - 0.9) / 0.1));
     // The nav flips with the section's light/dark state.
     if (expSection) expSection.dataset.theme = x > 0.5 ? 'dark' : 'light';
   });
 
-  // ── Services: glyphs draw themselves in; cards tilt (desktop) / press (touch) ──
-  for (const svg of $$('[data-glyph]')) {
-    const paths = [...svg.querySelectorAll<SVGPathElement>('path')];
-    const pins = [...svg.querySelectorAll<SVGCircleElement>('[data-pin]')];
-    if (reduced) continue;
-    gsap.set(paths, { strokeDasharray: 1, strokeDashoffset: 1 });
-    gsap.set(pins, { scale: 0, transformOrigin: 'center' });
-    gsap
-      .timeline({ scrollTrigger: { trigger: svg, start: 'top 85%', once: true } })
-      .to(paths, { strokeDashoffset: 0, duration: 1.4, ease: 'power2.inOut', stagger: 0.12 })
-      .to(pins, { scale: 1, duration: 0.6, ease: 'back.out(3)', stagger: 0.1 }, '-=0.5');
+  // ── Services: the spiral staircase turns and climbs with scroll ─────────
+  const stair = $('[data-stair-section]');
+  const stairEntry = stair ? $('[data-stair-entry]', stair) : null;
+  if (stair && stairEntry) {
+    gsap.ticker.add(() => {
+      // 1 while the section top is still well below the viewport top, 0 once pinned.
+      const top = stair.getBoundingClientRect().top;
+      const o = gsap.utils.clamp(0, 1, top / (innerHeight * 0.18));
+      stairEntry.style.opacity = o.toFixed(3);
+    });
   }
-  for (const el of $$('[data-reveal]')) {
-    if (reduced) continue;
-    gsap.from(el, { y: 24, opacity: 0, duration: 1.1, ease: 'expo.out', scrollTrigger: { trigger: el, start: 'top 88%', once: true } });
-  }
-  const fine = matchMedia('(pointer: fine)').matches;
-  for (const card of $$('[data-tilt]')) {
-    if (reduced) continue;
-    if (fine) {
-      const rx = gsap.quickTo(card, 'rotationX', { duration: 0.6, ease: 'power3.out' });
-      const ry = gsap.quickTo(card, 'rotationY', { duration: 0.6, ease: 'power3.out' });
-      card.addEventListener('pointermove', (e) => {
-        const r = card.getBoundingClientRect();
-        ry(((e.clientX - r.left) / r.width - 0.5) * 14);
-        rx(-((e.clientY - r.top) / r.height - 0.5) * 12);
+  if (stair && !reduced) {
+    const ring = $('[data-stair-ring]', stair)!;
+    const cards = $$('[data-stair-card]', stair);
+    const treads = $$('[data-tread]', stair).map((el) => ({ el, t: Number(el.dataset.tread) }));
+    const links = $$('[data-stair-link]', stair);
+    const count = $('[data-stair-count]', stair);
+    const rail = $('[data-stair-rail]', stair);
+    const N = cards.length;
+    const PER = 6;
+    const drawn = new Set<number>();
+    let progress = 0;
+    let c = 0;
+    let active = -1;
+    const st = ScrollTrigger.create({ trigger: stair, start: 'top top', end: 'bottom bottom', onUpdate: (s) => (progress = s.progress) });
+    const draw = (k: number) => {
+      if (drawn.has(k)) return;
+      drawn.add(k);
+      const svg = $('[data-glyph]', cards[k]!);
+      if (!svg) return;
+      const paths = [...svg.querySelectorAll<SVGPathElement>('path')];
+      const pins = [...svg.querySelectorAll<SVGCircleElement>('[data-pin]')];
+      gsap.fromTo(paths, { strokeDasharray: 1, strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 1.3, ease: 'power2.inOut', stagger: 0.1 });
+      gsap.fromTo(pins, { scale: 0, transformOrigin: 'center' }, { scale: 1, duration: 0.6, ease: 'back.out(3)', stagger: 0.1, delay: 0.7 });
+    };
+    // Glyphs wait, undrawn, until their card reaches the front.
+    for (const card of cards) for (const path of card.querySelectorAll<SVGPathElement>('[data-glyph] path')) gsap.set(path, { strokeDasharray: 1, strokeDashoffset: 1 });
+    links.forEach((link, k) =>
+      link.addEventListener('click', () => {
+        const y = st.start + ((0.06 + (k / (N - 1)) * 0.88) * (st.end - st.start));
+        lenis ? lenis.scrollTo(y, { duration: 1.4 }) : scrollTo({ top: y, behavior: 'smooth' });
+      }),
+    );
+    gsap.ticker.add((time) => {
+      const rect = stair.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > innerHeight) return;
+      const rise = parseFloat(getComputedStyle(stair).getPropertyValue('--rise')) || 26;
+      // Hold briefly at both ends so the first and last cards get a beat of their own.
+      const raw = gsap.utils.clamp(0, 1, (progress - 0.06) / 0.88) * (N - 1);
+      // Each card rests at the front for the middle of its stretch, then the stair turns on.
+      const seg = Math.min(N - 2, Math.floor(raw));
+      const f = gsap.utils.clamp(0, 1, (raw - seg - 0.3) / 0.4);
+      const target = seg + f * f * (3 - 2 * f);
+      c += (target - c) * 0.1;
+      const sway = Math.sin(time * 0.6) * 2.5;
+      ring.style.transform = `translateY(${c * PER * rise}px) rotateY(${-c * 90 + sway}deg)`;
+      cards.forEach((card, k) => {
+        const rel = ((k - c) * Math.PI) / 2;
+        const facing = Math.max(0, Math.cos(rel));
+        const near = Math.max(0, 1 - Math.abs(k - c) * 1.6);
+        card.style.opacity = String(0.12 + 0.88 * facing * facing);
+        card.style.filter = near > 0.6 ? 'none' : `blur(${((1 - facing) * 3).toFixed(2)}px)`;
+        card.style.setProperty('--edge', (0.1 + 0.6 * near).toFixed(3));
       });
-      card.addEventListener('pointerleave', () => (rx(0), ry(0)));
-    } else {
-      card.addEventListener('touchstart', () => gsap.to(card, { scale: 0.97, duration: 0.25, ease: 'power2.out' }), { passive: true });
-      card.addEventListener('touchend', () => gsap.to(card, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.4)' }), { passive: true });
-    }
+      for (const { el, t } of treads) {
+        const rel = ((t * 15 - c * 90) * Math.PI) / 180;
+        const front = Math.max(0, Math.cos(rel));
+        const height = Math.exp(-Math.abs(t - c * PER) / 9);
+        el.style.setProperty('--lit', (0.22 + 0.78 * front * front * height).toFixed(3));
+      }
+      const k = Math.round(c);
+      if (k !== active) {
+        active = k;
+        if (count) count.textContent = String(k + 1).padStart(2, '0');
+        links.forEach((l, i) => l.setAttribute('aria-current', String(i === k)));
+        draw(k);
+      }
+      if (rail) rail.style.transform = `scaleX(${(c / (N - 1)).toFixed(3)})`;
+    });
   }
 
   // ── Industries: sky follows the day cycle, labels follow districts, cards swap ──
@@ -194,8 +267,10 @@ export function initScroll(reduced: boolean) {
     if (indSection) indSection.dataset.theme = d > 0.5 ? 'dark' : 'light';
     cityLabels.forEach((el, i) => {
       const a = anchors.industries[i]!;
+      const w = Math.max(0, a.weight * 1.4 - 0.4);
       el.style.transform = `translate3d(${a.x}px, ${a.y}px, 0)`;
-      el.style.opacity = String(Math.max(0, a.weight * 1.4 - 0.4));
+      el.style.opacity = String(w);
+      el.style.setProperty('--w', w.toFixed(3));
     });
   });
   if (cityCards.length) {

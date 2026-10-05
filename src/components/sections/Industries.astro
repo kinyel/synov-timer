@@ -14,10 +14,10 @@ const items = DISTRICTS.map(({ name, short, body }) => ({ name, short, body }));
   <div class="layer-copy pointer-events-none sticky top-0 -mt-[100svh] h-svh overflow-hidden">
     {
       items.map((d, i) => (
-        <div class="absolute top-0 left-0 opacity-0" data-city-label={i} aria-hidden="true">
-          <span class="absolute -top-[3px] -left-[3px] size-1.5 rounded-full bg-gold" />
-          <span class="absolute bottom-0 left-0 h-14 w-px bg-ink/40" />
-          <span class="label absolute bottom-14 left-0 -translate-x-1/2 rounded-full bg-ink px-3 py-1.5 text-[0.62rem] whitespace-nowrap text-white">
+        <div class="bldg-label" data-city-label={i} aria-hidden="true">
+          <span class="bldg-dot" />
+          <span class="bldg-line" />
+          <span class="bldg-tag">
             <span class="max-sm:hidden">{d.name}</span>
             <span class="sm:hidden">{d.short}</span>
           </span>
