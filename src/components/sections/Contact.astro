@@ -1,0 +1,68 @@
+---
+/**
+ * 07 · Contact. The campus model returns at dusk, every window lit, with the
+ * gold vans still running. Copy sits in a card; email and phone copy to the
+ * clipboard, buttons are magnetic.
+ */
+const email = 'info@ralestonconsulting.com';
+const phone = '+1 (613) 981-1843';
+---
+
+<section id="contact" data-scene="contact" data-theme="dark" data-webgl="campus" class="relative min-h-svh">
+  <div class="layer-bg absolute inset-0" style="background: linear-gradient(180deg, #1c2456 0%, #0a1030 55%, #04060f 100%);" aria-hidden="true"></div>
+
+  <div class="layer-copy gutter flex min-h-svh flex-col justify-end pt-28 pb-6 md:pb-10">
+    <div class="w-full max-w-[27rem] rounded-[1.4rem] border border-white/10 bg-deep/60 p-5 text-white backdrop-blur-xl md:p-7">
+      <p class="label text-[0.66rem] text-gold">Contact</p>
+      <h2 class="mt-3 font-display text-[1.9rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.5rem]">Let's architect your empire.</h2>
+      <p class="mt-3 text-[0.9rem] leading-relaxed text-muted">Ottawa, Canada</p>
+      <div class="mt-5 grid gap-2">
+        <button type="button" class="contact-copy group" data-copy={email} data-magnetic>
+          <span class="label text-[0.6rem] text-muted">Email</span>
+          <span class="min-w-0 truncate text-[0.85rem] md:text-[0.95rem]">{email}</span>
+          <span class="label text-[0.6rem] text-gold" data-copy-hint>Copy</span>
+        </button>
+        <button type="button" class="contact-copy group" data-copy={phone} data-magnetic>
+          <span class="label text-[0.6rem] text-muted">Phone</span>
+          <span class="min-w-0 truncate text-[0.85rem] md:text-[0.95rem]">{phone}</span>
+          <span class="label text-[0.6rem] text-gold" data-copy-hint>Copy</span>
+        </button>
+      </div>
+      <div class="mt-5 flex flex-wrap gap-2">
+        <a href={`mailto:${email}`} class="btn btn-gold !px-5 !py-3 text-[0.85rem]" data-magnetic>Email us</a>
+        <a href="tel:+16139811843" class="btn btn-ghost !px-5 !py-3 text-[0.85rem]" data-magnetic>Call</a>
+      </div>
+    </div>
+    <footer class="mt-8 flex flex-wrap items-center justify-between gap-3 text-[0.8rem] text-muted">
+      <span>© {new Date().getFullYear()} Raleston Consulting</span>
+      <span class="label text-[0.6rem]">ServiceNow architects · Ottawa</span>
+    </footer>
+  </div>
+</section>
+
+<style>
+  .contact-copy {
+    display: grid;
+    grid-template-columns: 3.6rem minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    border-radius: 0.9rem;
+    background: rgb(255 255 255 / 0.05);
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+    text-align: left;
+    transition: background-color 0.4s var(--ease-expo);
+  }
+  .contact-copy:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+  @media (max-width: 480px) {
+    .contact-copy {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+    .contact-copy > :first-child {
+      display: none;
+    }
+  }
+</style>

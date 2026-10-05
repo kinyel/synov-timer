@@ -1,0 +1,206 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque/standard.css';
+@import '@fontsource-variable/inter/index.css';
+@import '@fontsource/dm-mono/400.css';
+@import '@fontsource/dm-mono/500.css';
+@import 'lenis/dist/lenis.css';
+
+/* Palette: mirrors src/lib/palette.ts — change both together. */
+@theme {
+  --color-void: #04060f;
+  --color-deep: #0a1030;
+  --color-cobalt: #2350ff;
+  --color-cobalt-light: #5b82ff;
+  --color-gold: #ffc21a;
+  --color-gold-glow: #ffe07a;
+  --color-cyan: #22d3ff;
+  --color-snow: #ffffff;
+  --color-cloud: #eef2f9;
+  --color-ink: #0a1030;
+  --color-mint: #14c99a;
+  --color-muted: #aeb8d6;
+
+  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
+  --font-sans: 'Inter Variable', system-ui, sans-serif;
+  --font-mono: 'DM Mono', ui-monospace, monospace;
+
+  --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-cloud);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  body {
+    font-family: var(--font-sans);
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--color-gold);
+    color: var(--color-ink);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 3px;
+    border-radius: 6px;
+  }
+}
+
+@layer components {
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: 'opsz' 96;
+    font-weight: 640;
+    letter-spacing: -0.04em;
+    line-height: 0.9;
+  }
+  .label {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+  .gutter {
+    padding-inline: max(1rem, env(safe-area-inset-left), min(5vw, 4.5rem));
+  }
+  .line-mask {
+    display: block;
+    overflow: clip;
+    padding-block: 0.06em 0.1em;
+    margin-block: -0.06em -0.1em;
+  }
+  .text-gold-lit {
+    color: var(--color-gold);
+    text-shadow:
+      0 0 24px rgb(255 194 26 / 0.45),
+      0 0 2px rgb(255 224 122 / 0.6);
+  }
+  /* Navy text on a gold marker stroke: the gold accent without failing contrast on white. */
+  .marker {
+    background: linear-gradient(transparent 56%, var(--color-gold) 56%, var(--color-gold) 90%, transparent 90%);
+    padding-inline: 0.05em;
+    margin-inline: -0.05em;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    border-radius: 999px;
+    padding: 1rem 1.6rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+    line-height: 1;
+    transition:
+      background-color 0.4s var(--ease-expo),
+      color 0.4s var(--ease-expo),
+      box-shadow 0.4s var(--ease-expo);
+    will-change: transform;
+  }
+  .btn-gold {
+    background: var(--color-gold);
+    color: var(--color-ink);
+    box-shadow: 0 0 0 0 rgb(255 194 26 / 0);
+  }
+  .btn-gold:hover {
+    box-shadow: 0 0 44px 6px rgb(255 194 26 / 0.45);
+  }
+  .btn-ghost {
+    color: var(--color-snow);
+    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.4);
+    backdrop-filter: blur(10px);
+  }
+  .btn-ghost:hover {
+    background: rgb(255 255 255 / 0.1);
+  }
+}
+
+/*
+ * Layering, bottom to top:
+ *   .layer-bg   (z 0)  section backgrounds and giant kinetic type
+ *   #webgl      (z 10) the single transparent canvas
+ *   #fx-vignette(z 15) page vignette, dark sections only
+ *   .layer-copy (z 20) readable copy
+ *   chrome      (z 40+) nav, progress, cursor, grain
+ * <main> and sections must not create stacking contexts (no z-index /
+ * transform / filter on them) or the copy would get trapped under the canvas.
+ */
+@layer components {
+  /* In the components layer so utilities like `sticky` can override the default position. */
+  .layer-bg {
+    z-index: 0;
+  }
+  .layer-copy {
+    position: relative;
+    z-index: 20;
+  }
+}
+#webgl {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  height: 100lvh;
+  pointer-events: none;
+}
+#webgl canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#fx-vignette {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  background: radial-gradient(130% 100% at 50% 45%, transparent 55%, rgb(4 6 15 / 0.55) 100%);
+  transition: opacity 0.8s var(--ease-expo);
+}
+html[data-theme='light'] #fx-vignette {
+  opacity: 0;
+}
+/* Film grain: an SVG turbulence tile, jittered in steps so it shimmers like film. */
+#fx-grain {
+  position: fixed;
+  inset: -50%;
+  z-index: 60;
+  pointer-events: none;
+  opacity: 0.07;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain 0.9s steps(6) infinite;
+}
+@keyframes grain {
+  0% { transform: translate(0, 0); }
+  20% { transform: translate(-4%, 3%); }
+  40% { transform: translate(3%, -5%); }
+  60% { transform: translate(-6%, -2%); }
+  80% { transform: translate(5%, 4%); }
+  100% { transform: translate(0, 0); }
+}
+
+@media (pointer: fine) {
+  html.has-cursor,
+  html.has-cursor a,
+  html.has-cursor button {
+    cursor: none;
+  }
+}
+
+/* No WebGL: complete static page with the poster as hero art. */
+.no-webgl-art {
+  display: none;
+}
+html.no-webgl .no-webgl-art {
+  display: block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fx-grain {
+    animation: none;
+  }
+}

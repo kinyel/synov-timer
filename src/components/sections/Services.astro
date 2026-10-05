@@ -1,0 +1,113 @@
+---
+/**
+ * 04 · Services. A bright page section (no 3D canvas here: it is clipped
+ * away). Four columns, each with a small isometric line glyph that draws
+ * itself in, in the same architectural-model language. Cards tilt toward the
+ * pointer on desktop and press on tap on mobile.
+ */
+
+/** Isometric projection: x runs down-right, y down-left, z up. */
+const S = 9;
+const iso = (x: number, y: number, z: number): [number, number] => [60 + (x - y) * 0.866 * S, 40 + (x + y) * 0.5 * S - z * S];
+const pt = (p: [number, number]) => `${p[0].toFixed(1)},${p[1].toFixed(1)}`;
+const poly = (pts: [number, number, number][], close = false) => 'M' + pts.map((p) => pt(iso(...p))).join('L') + (close ? 'Z' : '');
+/** Visible edges of a box (top face, three verticals, two bottom edges). */
+const box = (x: number, y: number, z: number, w: number, d: number, h: number) =>
+  [
+    poly([[x, y, z + h], [x + w, y, z + h], [x + w, y + d, z + h], [x, y + d, z + h]], true),
+    poly([[x + w, y, z], [x + w, y, z + h]]),
+    poly([[x + w, y + d, z], [x + w, y + d, z + h]]),
+    poly([[x, y + d, z], [x, y + d, z + h]]),
+    poly([[x + w, y, z], [x + w, y + d, z], [x, y + d, z]]),
+  ].join(' ');
+
+const glyphs = {
+  advisory: {
+    ink: [box(-1, -1, 0, 7, 7, 0.4)],
+    gold: [poly([[0, 5, 0.4], [2, 4.5, 0.4], [2.5, 2, 0.4], [5, 1.5, 0.4], [5.5, 0, 0.4]])],
+    pins: [[0, 5], [2.5, 2], [5.5, 0]] as [number, number][],
+  },
+  // A building frame going up: slab, columns, one finished floor, the next beam in gold.
+  implementation: {
+    ink: [
+      box(0, 0, 0, 6, 4.5, 0.35),
+      ...([[0, 0], [6, 0], [6, 4.5], [0, 4.5], [3, 0], [3, 4.5]] as const).map(([x, y]) => poly([[x, y, 0.35], [x, y, 3.6]])),
+      poly([[0, 0, 2], [6, 0, 2], [6, 4.5, 2], [0, 4.5, 2]], true),
+      poly([[0, 4.5, 3.6], [0, 0, 3.6], [6, 0, 3.6]]),
+    ],
+    gold: [poly([[6, 0, 3.6], [6, 4.5, 3.6], [0, 4.5, 3.6]])],
+    pins: [] as [number, number][],
+  },
+  integration: {
+    ink: [box(-1, 2, 0, 3, 3, 3.4), box(4.4, -1.6, 0, 3, 3, 2.4)],
+    gold: [poly([[2, 3, 2.2], [4.4, 0.6, 2.2]]), poly([[2, 4.2, 2.2], [4.4, 1.6, 2.2]])],
+    pins: [] as [number, number][],
+  },
+  support: {
+    ink: [box(0, 0, 0, 5.5, 3, 1), box(0.5, 0.5, 1, 4.5, 0.5, 3.4)],
+    gold: [poly([[0.8, 0.5, 2.6], [1.8, 0.5, 2.6], [2.3, 0.5, 3.6], [2.9, 0.5, 1.7], [3.4, 0.5, 2.6], [4.6, 0.5, 2.6]])],
+    pins: [] as [number, number][],
+  },
+};
+
+const services = [
+  { key: 'advisory', title: 'Advisory & Strategy', body: 'Roadmaps and alignment that reduce complexity and maximize ROI.' },
+  { key: 'implementation', title: 'Implementation', body: 'Architecture, configuration, testing, deployment.' },
+  { key: 'integration', title: 'Integration', body: 'HR, Finance, ITSM and custom apps connected to eliminate silos.' },
+  { key: 'support', title: 'Support & Optimization', body: 'Monitoring, upgrades, performance tuning.' },
+] as const;
+---
+
+<section id="services" data-scene="services" data-theme="light" class="relative">
+  <div class="layer-bg absolute inset-0 bg-cloud" aria-hidden="true"></div>
+  <div class="layer-copy gutter py-28 text-ink md:py-36">
+    <div class="flex flex-wrap items-end justify-between gap-6">
+      <div>
+        <p class="label text-[0.66rem] text-ink/55">Services</p>
+        <h2 class="mt-3 font-display text-[2rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.8rem]" data-reveal>
+          From roadmap to run.
+        </h2>
+      </div>
+      <p class="max-w-sm text-[0.95rem] leading-relaxed text-ink/65" data-reveal>
+        One team from first workshop to steady state, so nothing is lost between strategy and delivery.
+      </p>
+    </div>
+    <ol class="mt-12 grid gap-4 [perspective:1100px] sm:grid-cols-2 lg:grid-cols-4">
+      {
+        services.map((s, i) => {
+          const g = glyphs[s.key];
+          return (
+            <li class="service-card group relative rounded-[1.5rem] bg-white p-6 shadow-[0_24px_60px_-34px_rgb(10_16_48/0.35)] transition-shadow duration-500 will-change-transform [transform-style:preserve-3d] hover:shadow-[0_40px_80px_-40px_rgb(10_16_48/0.45)] md:p-7" data-tilt>
+              <p class="label flex justify-between text-[0.66rem] text-ink/50">
+                <span>0{i + 1}</span>
+                <span class="text-gold-deep">Service</span>
+              </p>
+              <svg viewBox="0 0 120 100" class="mt-4 h-28 w-full [transform:translateZ(30px)]" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-glyph>
+                {g.ink.map((d) => <path d={d} stroke="#0A1030" stroke-width="1.4" pathLength="1" />)}
+                {g.gold.map((d) => <path d={d} stroke="#F2B200" stroke-width="2.2" pathLength="1" />)}
+                {g.pins.map(([x, y]) => {
+                  const a = iso(x, y, 0.4);
+                  const b = iso(x, y, 2.2);
+                  return (
+                    <>
+                      <path d={`M${pt(a)}L${pt(b)}`} stroke="#0A1030" stroke-width="1.2" pathLength="1" />
+                      <circle cx={b[0]} cy={b[1]} r="2.6" fill="#F2B200" stroke="none" data-pin />
+                    </>
+                  );
+                })}
+              </svg>
+              <h3 class="mt-5 font-display text-[1.35rem] leading-[1.08] font-semibold tracking-[-0.02em]">{s.title}</h3>
+              <p class="mt-2 text-[0.9rem] leading-relaxed text-ink/65">{s.body}</p>
+            </li>
+          );
+        })
+      }
+    </ol>
+  </div>
+</section>
+
+<style>
+  .text-gold-deep {
+    color: #9a6b00;
+  }
+</style>

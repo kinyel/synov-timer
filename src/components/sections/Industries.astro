@@ -1,0 +1,69 @@
+---
+/**
+ * 05 · Industries (pinned). A floating model city in the sky. The camera
+ * descends through clouds and visits each district while the light runs from
+ * day to golden hour to dusk; the sky behind (z 0, under the canvas) follows.
+ */
+import { DISTRICTS } from '../../webgl/scenes/city/districts';
+const items = DISTRICTS.map(({ name, short, body }) => ({ name, short, body }));
+---
+
+<section id="industries" data-scene="industries" data-theme="light" data-webgl="city" class="relative h-[760svh]">
+  <div class="layer-bg pointer-events-none sticky top-0 h-svh" style="background: linear-gradient(180deg, #e7f0fb 0%, #f6f9fc 100%);" aria-hidden="true" data-sky></div>
+
+  <div class="layer-copy pointer-events-none sticky top-0 -mt-[100svh] h-svh overflow-hidden">
+    {
+      items.map((d, i) => (
+        <div class="absolute top-0 left-0 opacity-0" data-city-label={i} aria-hidden="true">
+          <span class="absolute -top-[3px] -left-[3px] size-1.5 rounded-full bg-gold" />
+          <span class="absolute bottom-0 left-0 h-14 w-px bg-ink/40" />
+          <span class="label absolute bottom-14 left-0 -translate-x-1/2 rounded-full bg-ink px-3 py-1.5 text-[0.62rem] whitespace-nowrap text-white">
+            <span class="max-sm:hidden">{d.name}</span>
+            <span class="sm:hidden">{d.short}</span>
+          </span>
+        </div>
+      ))
+    }
+    <div class="gutter absolute inset-x-0 bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-10">
+      <div class="relative h-[9.5rem] w-full max-w-[24rem] md:h-[11rem]">
+        <article
+          class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/70 bg-white/80 p-5 text-ink shadow-[0_24px_60px_-30px_rgb(10_16_48/0.35)] backdrop-blur-xl md:p-6"
+          data-city-card="0"
+          style="clip-path: inset(100% 0 0 0 round 1.4rem)"
+        >
+          <p class="label text-[0.66rem] text-ink/55">Industries</p>
+          <div>
+            <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">Six districts. One platform.</h3>
+            <p class="mt-1.5 text-[0.85rem] leading-snug text-ink/70">The sectors we serve, all connected to the same core.</p>
+          </div>
+        </article>
+        {
+          items.map((d, i) => (
+            <article
+              class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/70 bg-white/80 p-5 text-ink shadow-[0_24px_60px_-30px_rgb(10_16_48/0.35)] backdrop-blur-xl md:p-6"
+              data-city-card={i + 1}
+              style="clip-path: inset(100% 0 0 0 round 1.4rem)"
+            >
+              <p class="label flex justify-between text-[0.66rem] text-ink/55">
+                <span>Industries</span>
+                <span class="tabular-nums">0{i + 1} / 06</span>
+              </p>
+              <div>
+                <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">{d.name}</h3>
+                <p class="mt-1.5 text-[0.85rem] leading-snug text-ink/70">{d.body}</p>
+              </div>
+            </article>
+          ))
+        }
+        <article
+          class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/10 bg-deep/70 p-5 text-white backdrop-blur-xl md:p-6"
+          data-city-card="7"
+          style="clip-path: inset(100% 0 0 0 round 1.4rem)"
+        >
+          <p class="label text-[0.66rem] text-gold">Industries</p>
+          <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">Every district, connected.</h3>
+        </article>
+      </div>
+    </div>
+  </div>
+</section>

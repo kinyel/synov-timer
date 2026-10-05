@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.astro/
+.wrangler/
+references/*.mov
+references/frames/
+shots/
+test-results/
+.DS_Store

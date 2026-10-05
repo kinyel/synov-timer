@@ -1,0 +1,73 @@
+---
+import '../styles/global.css';
+import Nav from '../components/chrome/Nav.astro';
+import Preloader from '../components/chrome/Preloader.astro';
+import SceneProgress from '../components/chrome/SceneProgress.astro';
+import Cursor from '../components/chrome/Cursor.astro';
+
+interface Props {
+  title: string;
+  description: string;
+}
+const { title, description } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL('/og.png', Astro.site);
+---
+
+<!doctype html>
+<html lang="en-CA" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/brand/mark.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/brand/mark.png" />
+    <meta name="theme-color" content="#EEF1F5" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Raleston Consulting" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script is:inline>
+      (function () {
+        var d = document.documentElement;
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('reduced-motion');
+        if (matchMedia('(pointer: fine)').matches) d.classList.add('has-cursor');
+      })();
+    </script>
+    <script
+      type="application/ld+json"
+      set:html={JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'ProfessionalService',
+        name: 'Raleston Consulting',
+        url: 'https://ralestonconsulting.com',
+        logo: 'https://ralestonconsulting.com/brand/mark.png',
+        email: 'info@ralestonconsulting.com',
+        telephone: '+1-613-981-1843',
+        address: { '@type': 'PostalAddress', addressLocality: 'Ottawa', addressRegion: 'ON', addressCountry: 'CA' },
+        description,
+        knowsAbout: ['ServiceNow', 'ITSM', 'ITOM', 'IT Asset Management', 'App Engine', 'Integration', 'Enterprise Architecture'],
+      })}
+    />
+  </head>
+  <body class="min-h-svh">
+    <div id="webgl" aria-hidden="true"><canvas></canvas></div>
+    <div id="fx-vignette" aria-hidden="true"></div>
+    <Preloader />
+    <Nav />
+    <main id="main">
+      <slot />
+    </main>
+    <SceneProgress />
+    <Cursor />
+    <div id="fx-grain" aria-hidden="true"></div>
+    <script>
+      import '../scripts/main';
+    </script>
+  </body>
+</html>
