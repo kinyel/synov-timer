@@ -15,6 +15,11 @@ export const scroll = {
   contact: 0,
   /** Which 3D world the visible 3D sections need. */
   world: 'campus' as World,
+  /** Fraction of the viewport the 3D currently occupies (0..1). */
+  coverage: 1,
+  /** The visible 3D band in CSS px from the top of the viewport. */
+  bandTop: 0,
+  bandBottom: 0,
   /** Which section currently owns the camera. */
   owner: 'hero' as 'hero' | 'craft' | 'expertise' | 'industries' | 'contact',
 };

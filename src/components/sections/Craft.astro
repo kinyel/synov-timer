@@ -5,9 +5,21 @@
  * skew with scroll speed. The value-prop cards swap with clip-path reveals.
  */
 const props = [
-  { title: 'Architect-led excellence', line: 'Master craftsmen, not just configurators.' },
-  { title: 'Lightning results', line: 'Value in weeks, not months.' },
-  { title: 'Empire building', line: 'Platforms that scale with your ambitions.' },
+  {
+    title: 'Architect-led excellence',
+    line: 'Master craftsmen, not just configurators.',
+    detail: 'A certified architect leads every engagement and designs the solution before anything is configured.',
+  },
+  {
+    title: 'Lightning results',
+    line: 'Value in weeks, not months.',
+    detail: 'Work ships in short, usable increments, so you see results early and can steer as you go.',
+  },
+  {
+    title: 'Empire building',
+    line: 'Platforms that scale with your ambitions.',
+    detail: 'Clean data models and shared standards make each new module easier to add than the last.',
+  },
 ];
 ---
 
@@ -20,19 +32,18 @@ const props = [
     </p>
   </div>
   <div class="layer-copy gutter pointer-events-none sticky top-0 -mt-[100svh] flex h-svh items-end pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-10">
-    <div class="pointer-events-auto relative h-[9.5rem] w-full max-w-[24rem] md:h-[11rem]">
+    <div class="story-stack pointer-events-auto">
       {
         props.map((p, i) => (
-          <article
-            class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/70 bg-white/75 p-5 text-ink shadow-[0_24px_60px_-30px_rgb(10_16_48/0.35)] backdrop-blur-xl md:p-6"
-            data-craft-card={i}
-            style={i ? 'clip-path: inset(100% 0 0 0 round 1.4rem)' : 'clip-path: inset(0 0 0 0 round 1.4rem)'}
-          >
-            <p class="label flex justify-between text-[0.66rem] text-ink/55">
+          <article class="story-card" data-craft-card={i} style={i ? 'clip-path: inset(100% 0 0 0 round 1.4rem)' : 'clip-path: inset(0 0 0 0 round 1.4rem)'}>
+            <p class="story-eyebrow">
               <span>{p.title}</span>
-              <span class="tabular-nums">0{i + 1} / 03</span>
+              <span class="num">0{i + 1} / 03</span>
             </p>
-            <p class="font-display text-[1.45rem] leading-[1.08] font-semibold tracking-[-0.02em] md:text-[1.7rem]">{p.line}</p>
+            <div>
+              <h3 class="story-title">{p.line}</h3>
+              <p class="story-body">{p.detail}</p>
+            </div>
           </article>
         ))
       }

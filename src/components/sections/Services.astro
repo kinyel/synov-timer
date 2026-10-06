@@ -62,16 +62,19 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
 ---
 
 <section id="services" data-scene="services" data-theme="dark" class="relative h-[460svh]" data-stair-section>
-  <div class="layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" style="background: radial-gradient(70% 60% at 62% 52%, #1a1407 0%, #0b0a08 45%, #050506 100%);" aria-hidden="true">
+  <div class="stair-bg layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" style="background: radial-gradient(70% 60% at 62% 52%, #1a1407 0%, #0b0a08 45%, #050506 100%);" aria-hidden="true">
     <div class="stair-glow absolute top-1/2 left-[62%] size-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full max-md:left-1/2"></div>
     {Array.from({ length: 26 }, (_, i) => <span class="stair-dust" style={`--x:${(i * 37) % 100}%;--y:${(i * 61) % 100}%;--d:${6 + (i % 7)}s;--o:${-(i % 9)}s`} />)}
   </div>
 
-  <div class="layer-copy sticky top-0 -mt-[100svh] h-svh overflow-hidden text-white">
+  <div class="stair-copy layer-copy sticky top-0 -mt-[100svh] h-svh overflow-hidden text-white">
     <!-- Left: heading, counter, service list (desktop). Top on mobile. -->
-    <div class="gutter absolute inset-x-0 top-0 z-10 pt-24 md:top-1/2 md:right-auto md:w-[40%] md:-translate-y-1/2 md:pt-0">
+    <div class="stair-head gutter absolute inset-x-0 top-0 z-10 pt-24 md:top-1/2 md:right-auto md:w-[40%] md:-translate-y-1/2 md:pt-0">
       <p class="label flex items-center gap-3 text-[0.66rem] text-[#f2b200]"><span class="h-px w-6 bg-current"></span>Services</p>
       <h2 class="mt-3 font-display text-[1.9rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.8rem]">From roadmap to run.</h2>
+      <p class="mt-4 hidden max-w-[24rem] text-[0.95rem] leading-relaxed text-white/60 md:block">
+        Four stages, one team. Each step builds on the one below it, so nothing is lost between strategy and delivery.
+      </p>
       <div class="mt-5 flex items-center gap-4">
         <p class="font-mono text-[0.75rem] tracking-[0.12em] text-white/50 tabular-nums">
           <span class="text-[#ffc21a]" data-stair-count>01</span> / 0{services.length}
@@ -140,6 +143,8 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     <!-- Entry blend: dissolves the stair's top edge into the section above while
          the seam is on screen; fully transparent once the stair is pinned. -->
     <div class="pointer-events-none absolute inset-x-0 top-0 h-[34svh]" style="background: linear-gradient(to bottom, #070707 0%, rgb(7 7 7 / 0.85) 30%, transparent 100%);" aria-hidden="true" data-stair-entry></div>
+    <!-- Exit blend: the mirror of the entry blend, for the hand-over to Industries. -->
+    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-[34svh] opacity-0" style="background: linear-gradient(to top, #070707 0%, rgb(7 7 7 / 0.85) 30%, transparent 100%);" aria-hidden="true" data-stair-exit></div>
   </div>
 </section>
 
@@ -272,24 +277,58 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
   .stair-link[aria-current='true'] span:last-child {
     color: #fff;
   }
-  /* Reduced motion: no stair, a calm list of cards. */
+  /* Reduced motion: no stair. The heading, then a calm grid of the four cards, in normal flow. */
   :global(html.reduced-motion) [data-stair-section] {
     height: auto;
   }
+  :global(html.reduced-motion) .stair-bg {
+    position: absolute;
+    inset: 0;
+    height: auto;
+  }
+  :global(html.reduced-motion) .stair-copy {
+    position: relative;
+    margin-top: 0;
+    height: auto;
+    overflow: visible;
+    padding-block: 6rem 4rem;
+  }
+  :global(html.reduced-motion) .stair-head {
+    position: static;
+    width: auto;
+    transform: none;
+    padding-top: 0;
+  }
+  :global(html.reduced-motion) .stair-stage {
+    position: static;
+    perspective: none;
+  }
   :global(html.reduced-motion) .stair-ring {
     position: static;
+    transform: none !important;
     display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
     gap: 1rem;
-    padding: 2rem 1rem;
+    padding: 2.5rem max(1rem, min(5vw, 4.5rem)) 0;
   }
   :global(html.reduced-motion) .stair-tread,
   :global(html.reduced-motion) .stair-rail,
-  :global(html.reduced-motion) .stair-spine {
+  :global(html.reduced-motion) .stair-spine,
+  :global(html.reduced-motion) [data-stair-entry],
+  :global(html.reduced-motion) [data-stair-exit] {
     display: none;
   }
   :global(html.reduced-motion) .stair-card {
     position: static;
+    width: auto;
     transform: none;
     margin: 0;
+    opacity: 1 !important;
+    filter: none !important;
+    backface-visibility: visible;
+  }
+  :global(html.reduced-motion) .stair-card-inner {
+    transform: none;
+    height: 100%;
   }
 </style>

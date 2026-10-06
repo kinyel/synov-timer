@@ -169,9 +169,13 @@ export class CityScene implements SceneModule {
     }
     this.wasVisible = true;
 
-    // Clouds thin out once we are below the deck.
+    // Clouds thin out once we are below the deck. A puff right next to the
+    // camera fills the screen several layers deep for no visible gain, so the
+    // closest ones are skipped (pure overdraw, the dominant cost of the descent).
+    const cam = this.engine.camera.position;
     this.city.clouds.children.forEach((c, i) => {
-      if (c.position.y > 5) c.visible = p < VISITS_START + 0.04 || i % 3 === 0;
+      const deck = c.position.y > 5 ? p < VISITS_START + 0.04 || i % 3 === 0 : true;
+      c.visible = deck && c.position.distanceTo(cam) > 6;
     });
 
     this.city.setActive(weights);

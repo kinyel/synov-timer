@@ -5,8 +5,16 @@
  * scroll speed; thin light streaks run behind everything.
  */
 const stats = [
-  { value: 40, label: 'faster deployment' },
-  { value: 60, label: 'higher user adoption' },
+  {
+    value: 40,
+    label: 'faster deployment',
+    how: 'Proven delivery patterns and design decisions made early remove the rework that slows rollouts down.',
+  },
+  {
+    value: 60,
+    label: 'higher user adoption',
+    how: 'Workflows are designed around how people already work, so the platform gets used instead of worked around.',
+  },
 ];
 const band = 'VALUE IN WEEKS, NOT MONTHS';
 ---
@@ -26,11 +34,12 @@ const band = 'VALUE IN WEEKS, NOT MONTHS';
   </div>
 
   <div class="layer-copy gutter py-28 text-white md:py-40">
-    <p class="label text-[0.66rem] text-gold">Impact</p>
-    <div class="mt-8 grid gap-10 md:grid-cols-2 md:gap-16">
+    <p class="label flex items-center gap-3 text-[0.66rem] text-gold"><span class="h-px w-6 bg-current"></span>Impact</p>
+    <h2 class="mt-3 max-w-[22ch] font-display text-[1.9rem] leading-[1.04] font-semibold tracking-[-0.03em] md:text-[2.6rem]">What architect-led delivery changes.</h2>
+    <div class="mt-10 grid gap-10 md:mt-14 md:grid-cols-2 md:gap-16">
       {
         stats.map((s) => (
-          <div>
+          <div class="border-t border-[#ffc21a]/25 pt-6">
             <p class="font-display leading-[0.9] font-semibold tracking-[-0.04em] text-[clamp(4.5rem,13vw,10rem)]">
               <span class="bg-gradient-to-b from-gold-glow to-[#f2b200] bg-clip-text text-transparent tabular-nums" data-count={s.value}>
                 {s.value}%
@@ -39,13 +48,14 @@ const band = 'VALUE IN WEEKS, NOT MONTHS';
             <p class="mt-3 text-[1rem] text-muted md:text-lg">
               Up to <span class="text-white">{s.value}% {s.label}</span>
             </p>
+            <p class="mt-2 max-w-[26rem] text-[0.9rem] leading-relaxed text-white/55">{s.how}</p>
           </div>
         ))
       }
     </div>
   </div>
 
-  <div class="layer-copy overflow-hidden border-y border-white/10 py-5 md:py-7" aria-label="Value in weeks, not months">
+  <div class="layer-copy overflow-hidden border-y border-[#ffc21a]/20 py-5 md:py-7" aria-label="Value in weeks, not months">
     <div class="flex w-max gap-10 whitespace-nowrap will-change-transform" data-band aria-hidden="true">
       {
         Array.from({ length: 6 }, () => (

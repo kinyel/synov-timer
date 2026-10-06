@@ -56,12 +56,24 @@ npm run deploy       # build, then `wrangler pages deploy dist`
   - `prefers-reduced-motion`: no smooth scroll, no intro or headline animation, and no handheld camera drift.
   - No WebGL: a complete static page with the logo as hero art.
 
+## Performance notes
+
+- **One loop.** The 3D renders from GSAP's ticker, after Lenis has moved the scroll and the DOM choreography has run, so page and 3D never drift a frame apart.
+- **No layout reads per frame.** Section positions come from `src/lib/layout.ts` (measured on load and resize, then derived from the scroll position), and style writes skip unchanged values.
+- **First viewport first.** Only the campus is built and compiled before the curtain lifts. The x-ray lines and the Industries city are built, compiled with their own lights, and drawn once off-screen in idle time (or on demand).
+- **GPU follows what's visible.** When only part of the screen shows 3D (section boundaries), the scene, AO and output passes are confined to that band; a still sliver stops re-rendering entirely.
+- **Quality tiers** (`src/lib/tier.ts`) cap DPR at 1.5, skip SMAA where the canvas is already supersampled, and only step down for real GPU slowness (a steady 30 fps from energy saver doesn't count), applied when it can't be seen.
+
 ## Checking your work
 
-These need `npm run dev` running.
+These need a server running (`npm run dev`, or `npm run build && npx astro preview --port 4322` with `URL=http://localhost:4322/`). Add `?debug` to the page URL to expose the engine in production builds.
 
 ```bash
 node scripts/shots.mjs                  # hero intro and scroll frames, desktop and phone, plus video
+node scripts/visual-complete.mjs        # cold load: first text and hero fully built (fast 4G)
+node scripts/budget.mjs desktop         # per-frame CPU and GPU ms across Services → Industries
+node scripts/twitch.mjs mobile 0.12     # stop with 12% of Industries visible; prints stability
+node scripts/navstable.mjs              # header position through the Services transition
 node scripts/section.mjs industries 0.1 0.5 0.95   # one section at chosen progress points
 node scripts/widths.mjs                 # overflow check at 360–1920 px
 ```

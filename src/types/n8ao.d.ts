@@ -5,6 +5,7 @@ declare module 'n8ao' {
   export class N8AOPostPass extends Pass {
     constructor(scene: Scene, camera: Camera, width?: number, height?: number);
     autosetGamma: boolean;
+    autoDetectTransparency: boolean;
     configuration: {
       aoSamples: number;
       aoRadius: number;

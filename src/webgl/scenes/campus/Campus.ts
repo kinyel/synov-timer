@@ -174,8 +174,6 @@ export class Campus {
       const group = building.kit.build(buildingMaterials(build, this.uniforms), opts.shadows);
       group.position.set(x, 0.05, z);
       group.rotation.y = rot;
-      const xr = buildXray(building, group, this.uniforms);
-      group.add(xr.shells, xr.interiors);
       const ring = new THREE.Mesh(ringGeometry(building.half.x + 0.28, building.half.y + 0.28), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, depthWrite: false }));
       ring.position.set(x, 0.062, z);
       ring.rotation.x = -Math.PI / 2;
@@ -277,25 +275,56 @@ export class Campus {
     this.update(0, 0);
   }
 
-  /** The model builds itself: street marks draw on, trees pop, buildings rise with a gold build line, HQ last. */
+  private xrayBuilt = false;
+  /**
+   * X-ray edge lines are only seen at the end of Expertise, and extracting
+   * edges is the single most expensive part of building the campus, so it is
+   * done later, in idle time (or on demand if someone scrolls there first).
+   */
+  ensureXray() {
+    if (this.xrayBuilt) return;
+    this.xrayBuilt = true;
+    for (const p of this.placed) {
+      const xr = buildXray(p.building, p.group, this.uniforms);
+      p.group.add(xr.shells, xr.interiors);
+    }
+  }
+
+  /**
+   * The model builds itself: street marks draw on, trees pop, buildings rise
+   * with a gold build line, HQ alongside them. Tuned so the first viewport is
+   * complete about 1.5 s after the curtain lifts.
+   */
   playBuild(tl: gsap.core.Timeline, at = 0) {
     const ground = this.ground.material as THREE.MeshStandardMaterial;
     const marks = { v: 0 };
-    tl.to(marks, { v: 1, duration: 2.4, ease: 'power2.out', onUpdate: () => {
+    tl.to(marks, { v: 1, duration: 1.2, ease: 'power2.out', onUpdate: () => {
       const s = ground.userData.shader as { uniforms: { uMarks: THREE.IUniform<number> } } | undefined;
       if (s) s.uniforms.uMarks.value = marks.v;
     } }, at);
-    for (const g of this.grow) tl.to(g.uGrow, { value: 1.6, duration: 2.6, ease: 'none' }, at + 0.2);
-    const order = [...this.placed].sort((a, b) => (a.building.id === 'hq' ? 1 : b.building.id === 'hq' ? -1 : a.position.length() - b.position.length()));
+    for (const g of this.grow) tl.to(g.uGrow, { value: 1.6, duration: 1.4, ease: 'none' }, at + 0.05);
+    const order = [...this.placed].sort((a, b) => (a.building.id === 'hq' ? -1 : b.building.id === 'hq' ? 1 : a.position.length() - b.position.length()));
+    let end = at;
     order.forEach((p, i) => {
       const isHq = p.building.id === 'hq';
+      const start = at + (isHq ? 0.05 : 0.12 + i * 0.07);
+      const duration = isHq ? 1.3 : 0.85;
+      end = Math.max(end, start + duration);
       tl.fromTo(
         p.build.uBuild,
         { value: -0.01 },
-        { value: p.building.height + 0.3, duration: isHq ? 2.4 : 1.25, ease: isHq ? 'power2.inOut' : 'power3.inOut' },
-        at + 0.35 + (isHq ? 1.15 : i * 0.17),
-      ).set(p.build.uBuild, { value: 100 });
+        { value: p.building.height + 0.3, duration, ease: isHq ? 'power2.out' : 'power3.out' },
+        start,
+      );
     });
+    // The moment the last building tops out, switch the build clip off entirely.
+    tl.call(
+      () => {
+        for (const p of this.placed) p.build.uBuild.value = 100;
+      },
+      [],
+      end,
+    );
   }
 
   /** Instant finished state (reduced motion, or when warming shaders). */

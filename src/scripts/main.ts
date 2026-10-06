@@ -6,8 +6,16 @@ import { $introDone, $loadProgress, $progress, $reducedMotion, $scene, $sceneRea
 import { reportLoad } from '../lib/loader';
 import { initScroll } from './scroll';
 import { initNav } from './nav';
+import { rectOf, track } from '../lib/layout';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
+// Mobile address bars resize the viewport while scrolling; re-measuring every
+// trigger then would shift pinned content mid-gesture.
+ScrollTrigger.config({ ignoreMobileResize: true });
+
+// Start downloading the 3D chunk now; it only executes after first paint (below).
+const canvasEl = document.querySelector<HTMLCanvasElement>('#webgl canvas');
+const bootModule = canvasEl ? import('../webgl/boot') : null;
 
 const html = document.documentElement;
 const reduced = html.classList.contains('reduced-motion');
@@ -113,16 +121,17 @@ if (pre && preCount && preBar) {
     gsap.set(preBar, { scaleX: shown.v });
   };
   $loadProgress.subscribe((p) =>
-    gsap.to(shown, { v: p, duration: 0.55, ease: 'power2.out', overwrite: true, onUpdate: render, onComplete: maybeExit }),
+    gsap.to(shown, { v: p, duration: 0.15, ease: 'power2.out', overwrite: true, onUpdate: render, onComplete: maybeExit }),
   );
+  // The build-up starts the moment the curtain begins to lift, not after it.
   const exit = () => {
     if (exiting) return;
     exiting = true;
+    $introDone.set(true);
     gsap
       .timeline({ onComplete: () => pre.remove() })
-      .to([preCount, preLabel], { yPercent: -30, opacity: 0, duration: 0.45, ease: 'power3.in', stagger: 0.04 })
-      .call(() => $introDone.set(true), [], 0.35)
-      .to(pre, { clipPath: 'inset(0% 0% 100% 0%)', duration: 1.15, ease: 'expo.inOut' }, 0.3);
+      .to([preCount, preLabel], { yPercent: -30, opacity: 0, duration: 0.3, ease: 'power3.in', stagger: 0.03 })
+      .to(pre, { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.85, ease: 'expo.inOut' }, 0.05);
   };
   function maybeExit() {
     if (shown.v >= 0.999 && $sceneReady.get()) exit();
@@ -133,9 +142,8 @@ if (pre && preCount && preBar) {
   setTimeout(() => !exiting && ($loadProgress.set(1), exit()), 10000);
 }
 
-/* ── WebGL: its own chunk, requested after the DOM has painted ─────────── */
-const canvas = $<HTMLCanvasElement>('#webgl canvas');
-if (canvas) requestAnimationFrame(() => requestAnimationFrame(() => import('../webgl/boot').then((m) => m.boot(canvas))));
+/* ── WebGL: downloaded from the start, run once the DOM has painted ────── */
+if (canvasEl && bootModule) requestAnimationFrame(() => bootModule.then((m) => m.boot(canvasEl)));
 
 /* ── Scroll choreography (sections, canvas clip, nav theme) ───────────── */
 initScroll(reduced, lenis);
@@ -144,9 +152,12 @@ for (const section of $$('[data-scene]')) {
   ScrollTrigger.create({ trigger: section, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && $scene.set(id) });
 }
 // Nav colours follow whichever section is under the nav (themes can change mid-section).
+// Positions come from the layout cache: no layout reads in the frame loop.
+const themed = $$('[data-scene]');
+for (const s of themed) track(s);
 gsap.ticker.add(() => {
-  for (const section of $$('[data-scene]')) {
-    const r = section.getBoundingClientRect();
+  for (const section of themed) {
+    const r = rectOf(section);
     if (r.top <= 40 && r.bottom > 40) {
       const theme = section.dataset.theme ?? 'light';
       if (html.dataset.theme !== theme) html.dataset.theme = theme;

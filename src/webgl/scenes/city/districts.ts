@@ -127,7 +127,7 @@ function energy(): DistrictModel {
     [1.1, 0.2],
   ] as const) {
     k.cylinder('clay', 0.025, 0.05, 1.9, x, 0, z, 10);
-    k.box('clay', 0.1, 0.08, 0.16, x, 1.88, z + 0.02, 0.02);
+    k.box('gold', 0.1, 0.08, 0.16, x, 1.88, z + 0.02, 0.02);
     rotors.push(V(x, 1.92, z + 0.11));
   }
   for (let r = 0; r < 3; r++)
@@ -141,13 +141,60 @@ function energy(): DistrictModel {
   return { id: 'energy', kit: k, height: 2.2, radius: 1.5, rotors };
 }
 
-export const DISTRICTS: { make: () => DistrictModel; name: string; short: string; body: string }[] = [
-  { make: finance, name: 'Financial Services', short: 'Finance', body: 'Resilient, auditable service operations for regulated money.' },
-  { make: healthcare, name: 'Healthcare', short: 'Healthcare', body: 'Clinical and IT services that keep care running.' },
-  { make: government, name: 'Government & Public Sector', short: 'Government', body: 'Modern citizen and employee services, built to policy.' },
-  { make: tech, name: 'Technology & Startups', short: 'Tech', body: 'Platforms that grow as fast as the company does.' },
-  { make: manufacturing, name: 'Manufacturing', short: 'Manufacturing', body: 'Plant, asset and operations workflows in one place.' },
-  { make: energy, name: 'Energy & Utilities', short: 'Energy', body: 'Field service and asset management for critical infrastructure.' },
+/**
+ * Industries, one district each. `place` names what the visitor sees, `tag`
+ * is the caption on the district's 3D label, `body` says what the work looks
+ * like in that sector.
+ */
+export const DISTRICTS: { make: () => DistrictModel; name: string; short: string; place: string; tag: string; body: string }[] = [
+  {
+    make: finance,
+    name: 'Financial Services',
+    place: 'Glass towers',
+    short: 'Finance',
+    tag: 'Audit-ready operations',
+    body: 'Service and risk processes that stand up to auditors and regulators, with every change on record.',
+  },
+  {
+    make: healthcare,
+    name: 'Healthcare',
+    place: 'Hospital and helipad',
+    short: 'Healthcare',
+    tag: 'Clinical systems kept running',
+    body: 'IT and clinical engineering services that keep care teams working, on shift and off.',
+  },
+  {
+    make: government,
+    name: 'Government & Public Sector',
+    place: 'Copper roofs and clock tower',
+    short: 'Government',
+    tag: 'Services built to policy',
+    body: 'Citizen and employee services designed around policy, privacy and accessibility requirements.',
+  },
+  {
+    make: tech,
+    name: 'Technology & Startups',
+    place: 'The ring campus',
+    short: 'Tech',
+    tag: 'Room to scale',
+    body: 'A platform set up right from the start, so growth adds capacity instead of rework.',
+  },
+  {
+    make: manufacturing,
+    name: 'Manufacturing',
+    place: 'The factory floor',
+    short: 'Manufacturing',
+    tag: 'Plant and asset workflows',
+    body: 'Plant, asset and maintenance workflows connected to the IT that runs the floor.',
+  },
+  {
+    make: energy,
+    name: 'Energy & Utilities',
+    place: 'Wind and solar',
+    short: 'Energy',
+    tag: 'Field service at scale',
+    body: 'Field service and asset management for infrastructure that has to stay online.',
+  },
 ];
 
 /** The HQ, at model scale for the city centre. */

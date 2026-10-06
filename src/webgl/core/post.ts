@@ -4,6 +4,10 @@ import { N8AOPostPass } from 'n8ao';
 import type { TierBudget } from '../../lib/tier';
 
 export interface Post {
+  /** Every render target whose work can be confined to a band of the screen. */
+  bandTargets(): THREE.WebGLRenderTarget[];
+  /** Enable SMAA only where it is visible: below ~1.4× the image isn't supersampled. */
+  setPixelRatio(dpr: number): void;
   composer: EffectComposer;
   ao: N8AOPostPass | null;
   bloom: BloomEffect;
@@ -14,7 +18,7 @@ export interface Post {
 
 /**
  * HDR pipeline on a transparent canvas:
- * render → ambient occlusion → bloom → neutral tone map → SMAA.
+ * render → ambient occlusion → bloom → neutral tone map → SMAA (low DPR only).
  *
  * - AO (N8AO) gives the architectural-model look: soft contact shading where
  *   buildings meet the ground and in every recess.
@@ -34,7 +38,12 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
   if (budget.ao) {
     ao = new N8AOPostPass(scene, camera, innerWidth, innerHeight);
     ao.autosetGamma = false;
+    // N8AO auto-enables a transparency-aware mode when it finds transparent
+    // materials (our fading ground edges, rings, smoke), which adds extra
+    // passes every frame. The matte model look doesn't need it.
+    ao.autoDetectTransparency = false;
     Object.assign(ao.configuration, {
+      transparencyAware: false,
       gammaCorrection: false,
       aoRadius: 1.4,
       distanceFalloff: 0.7,
@@ -43,7 +52,9 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
       halfRes: true,
       color: new THREE.Color('#1b2340'),
     });
-    ao.setQualityMode(budget.bloomScale < 1 ? 'Low' : 'Medium');
+    // 'Low' (fewer denoise samples) is indistinguishable from 'Medium' on the
+    // soft, matte model look (side-by-side checked).
+    ao.setQualityMode('Low');
     composer.addPass(ao);
   }
 
@@ -57,10 +68,24 @@ export function createPost(renderer: THREE.WebGLRenderer, scene: THREE.Scene, ca
     resolutionScale: budget.bloomScale,
   });
   const toneMapping = new ToneMappingEffect({ mode: ToneMappingMode.NEUTRAL });
-  composer.addPass(new EffectPass(camera, bloom, toneMapping));
-  composer.addPass(new EffectPass(camera, new SMAAEffect({ preset: SMAAPreset.HIGH })));
+  const main = new EffectPass(camera, bloom, toneMapping);
+  const smaa = new EffectPass(camera, new SMAAEffect({ preset: SMAAPreset.HIGH }));
+  composer.addPass(main);
+  composer.addPass(smaa);
+
+  const aoTargets = (): THREE.WebGLRenderTarget[] =>
+    ao ? Object.values(ao as unknown as Record<string, unknown>).filter((v): v is THREE.WebGLRenderTarget => !!v && (v as THREE.WebGLRenderTarget).isWebGLRenderTarget === true) : [];
 
   return {
+    bandTargets: () => [composer.inputBuffer, composer.outputBuffer, ...aoTargets()],
+    // At ≥1.4× the canvas is already supersampled and SMAA's edge passes cost
+    // ~3 ms a frame for no visible gain (measured on retina, compared side by side).
+    setPixelRatio: (dpr) => {
+      const on = dpr < 1.4;
+      smaa.enabled = on;
+      smaa.renderToScreen = on;
+      main.renderToScreen = !on;
+    },
     composer,
     ao,
     bloom,

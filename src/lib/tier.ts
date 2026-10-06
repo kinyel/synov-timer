@@ -16,11 +16,15 @@ export interface TierBudget {
   ao: boolean;
 }
 
+/**
+ * DPR is capped at 1.5: above that, AO, bloom and SMAA cost grows with the
+ * square of the ratio while the soft, matte model look gains nothing visible.
+ */
 export const BUDGETS: Record<Tier, TierBudget> = {
   0: { dprMax: 1, particles: 160, shadowMap: 1024, bloomScale: 0.5, bloomLevels: 4, transmission: false, reflection: 0.25, ao: false },
-  1: { dprMax: 1.5, particles: 320, shadowMap: 1024, bloomScale: 0.5, bloomLevels: 5, transmission: false, reflection: 0.35, ao: true },
-  2: { dprMax: 1.75, particles: 520, shadowMap: 1024, bloomScale: 0.75, bloomLevels: 6, transmission: true, reflection: 0.5, ao: true },
-  3: { dprMax: 2, particles: 800, shadowMap: 2048, bloomScale: 1, bloomLevels: 7, transmission: true, reflection: 0.5, ao: true },
+  1: { dprMax: 1.25, particles: 320, shadowMap: 1024, bloomScale: 0.5, bloomLevels: 5, transmission: false, reflection: 0.35, ao: true },
+  2: { dprMax: 1.5, particles: 520, shadowMap: 1024, bloomScale: 0.75, bloomLevels: 6, transmission: true, reflection: 0.5, ao: true },
+  3: { dprMax: 1.5, particles: 800, shadowMap: 2048, bloomScale: 0.75, bloomLevels: 7, transmission: true, reflection: 0.5, ao: true },
 };
 
 /**
@@ -31,13 +35,25 @@ export async function detectTier(reducedMotion: boolean): Promise<Tier> {
   const forced = new URL(location.href).searchParams.get('tier');
   if (forced && /^[0-3]$/.test(forced)) return Number(forced) as Tier;
   if (reducedMotion) return 1;
+  // Repeat visits skip the benchmark lookup entirely.
+  try {
+    const cached = localStorage.getItem('raleston:tier');
+    if (cached && /^[0-3]$/.test(cached)) return Number(cached) as Tier;
+  } catch {
+    /* storage unavailable */
+  }
+  let tier: Tier = 1;
   try {
     const gpu = await getGPUTier({ benchmarksURL: '/benchmarks' });
     const mobile = gpu.isMobile ?? false;
-    if (gpu.tier >= 3) return mobile ? 2 : 3;
-    if (gpu.tier === 2) return mobile ? 1 : 2;
-    return 1;
+    tier = gpu.tier >= 3 ? (mobile ? 2 : 3) : gpu.tier === 2 ? (mobile ? 1 : 2) : 1;
   } catch {
-    return 1;
+    tier = 1;
   }
+  try {
+    localStorage.setItem('raleston:tier', String(tier));
+  } catch {
+    /* storage unavailable */
+  }
+  return tier;
 }

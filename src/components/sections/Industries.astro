@@ -5,11 +5,15 @@
  * day to golden hour to dusk; the sky behind (z 0, under the canvas) follows.
  */
 import { DISTRICTS } from '../../webgl/scenes/city/districts';
-const items = DISTRICTS.map(({ name, short, body }) => ({ name, short, body }));
+const items = DISTRICTS.map(({ name, short, place, tag, body }) => ({ name, short, place, tag, body }));
 ---
 
-<section id="industries" data-scene="industries" data-theme="light" data-webgl="city" class="relative h-[760svh]">
-  <div class="layer-bg pointer-events-none sticky top-0 h-svh" style="background: linear-gradient(180deg, #e7f0fb 0%, #f6f9fc 100%);" aria-hidden="true" data-sky></div>
+<section id="industries" data-scene="industries" data-theme="dark" data-webgl="city" data-feather="top" class="relative h-[760svh]">
+  <div class="layer-bg pointer-events-none sticky top-0 h-svh" style="background: linear-gradient(180deg, #e7f0fb 0%, #f6f9fc 100%);" aria-hidden="true" data-sky>
+    <!-- Arrival veil: carries the staircase's black into the sky, then dissolves
+         as the camera comes down through the clouds into daylight. -->
+    <div class="absolute inset-0" style="background: linear-gradient(180deg, #070707 0%, #0b0a09 38%, rgb(11 10 9 / 0.55) 66%, transparent 100%);" data-sky-veil></div>
+  </div>
 
   <div class="layer-copy pointer-events-none sticky top-0 -mt-[100svh] h-svh overflow-hidden">
     {
@@ -18,50 +22,44 @@ const items = DISTRICTS.map(({ name, short, body }) => ({ name, short, body }));
           <span class="bldg-dot" />
           <span class="bldg-line" />
           <span class="bldg-tag">
-            <span class="max-sm:hidden">{d.name}</span>
-            <span class="sm:hidden">{d.short}</span>
+            <span class="bldg-name">
+              <span class="max-sm:hidden">{d.name}</span>
+              <span class="sm:hidden">{d.short}</span>
+            </span>
+            <span class="bldg-cap">{d.tag}</span>
           </span>
         </div>
       ))
     }
     <div class="gutter absolute inset-x-0 bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-10">
-      <div class="relative h-[9.5rem] w-full max-w-[24rem] md:h-[11rem]">
-        <article
-          class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/70 bg-white/80 p-5 text-ink shadow-[0_24px_60px_-30px_rgb(10_16_48/0.35)] backdrop-blur-xl md:p-6"
-          data-city-card="0"
-          style="clip-path: inset(100% 0 0 0 round 1.4rem)"
-        >
-          <p class="label text-[0.66rem] text-ink/55">Industries</p>
+      <div class="story-stack">
+        <article class="story-card" data-city-card="0" style="clip-path: inset(100% 0 0 0 round 1.4rem)">
+          <p class="story-eyebrow"><span>Industries</span></p>
           <div>
-            <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">Six districts. One platform.</h3>
-            <p class="mt-1.5 text-[0.85rem] leading-snug text-ink/70">The sectors we serve, all connected to the same core.</p>
+            <h3 class="story-title">Six districts. One platform.</h3>
+            <p class="story-body">Each district is a sector we work in. The gold lines are the integrations that tie every one of them back to the same core platform.</p>
           </div>
         </article>
         {
           items.map((d, i) => (
-            <article
-              class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/70 bg-white/80 p-5 text-ink shadow-[0_24px_60px_-30px_rgb(10_16_48/0.35)] backdrop-blur-xl md:p-6"
-              data-city-card={i + 1}
-              style="clip-path: inset(100% 0 0 0 round 1.4rem)"
-            >
-              <p class="label flex justify-between text-[0.66rem] text-ink/55">
-                <span>Industries</span>
-                <span class="tabular-nums">0{i + 1} / 06</span>
+            <article class="story-card" data-city-card={i + 1} style="clip-path: inset(100% 0 0 0 round 1.4rem)">
+              <p class="story-eyebrow">
+                <span>{d.place}</span>
+                <span class="num">0{i + 1} / 06</span>
               </p>
               <div>
-                <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">{d.name}</h3>
-                <p class="mt-1.5 text-[0.85rem] leading-snug text-ink/70">{d.body}</p>
+                <h3 class="story-title">{d.name}</h3>
+                <p class="story-body">{d.body}</p>
               </div>
             </article>
           ))
         }
-        <article
-          class="absolute inset-0 flex flex-col justify-between rounded-[1.4rem] border border-white/10 bg-deep/70 p-5 text-white backdrop-blur-xl md:p-6"
-          data-city-card="7"
-          style="clip-path: inset(100% 0 0 0 round 1.4rem)"
-        >
-          <p class="label text-[0.66rem] text-gold">Industries</p>
-          <h3 class="font-display text-[1.45rem] leading-[1.05] font-semibold tracking-[-0.02em] md:text-[1.7rem]">Every district, connected.</h3>
+        <article class="story-card is-dark" data-city-card="7" style="clip-path: inset(100% 0 0 0 round 1.4rem)">
+          <p class="story-eyebrow"><span>Industries</span></p>
+          <div>
+            <h3 class="story-title">Every district, connected.</h3>
+            <p class="story-body">At dusk the whole city is lit by the same network: one platform, governed once, serving every sector on it.</p>
+          </div>
         </article>
       </div>
     </div>

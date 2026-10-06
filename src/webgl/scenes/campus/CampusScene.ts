@@ -75,9 +75,9 @@ export class CampusScene implements SceneModule {
     this.intro.lift = 1;
     this.building = true;
     // Shadows can't follow the build clip, so they fade in as the model completes: "lights on".
-    tl.fromTo(this.sun.shadow, { intensity: 0 }, { intensity: 1, duration: 1.6, ease: 'power2.out' }, 2.6);
-    tl.to(this.intro, { lift: 0, duration: 4.2, ease: 'power3.inOut' }, 0);
-    this.campus.playBuild(tl, 0.1);
+    tl.fromTo(this.sun.shadow, { intensity: 0 }, { intensity: 1, duration: 0.9, ease: 'power2.out' }, 0.9);
+    tl.to(this.intro, { lift: 0, duration: 2.4, ease: 'power3.out' }, 0);
+    this.campus.playBuild(tl, 0);
     tl.call(() => (this.building = false));
     return tl;
   }
@@ -186,6 +186,8 @@ export class CampusScene implements SceneModule {
       applyShot(this.contactShot(v, t), v, rig);
     } else if (owner === 'expertise') {
       const p = scroll.expertise;
+      // Normally built in idle time already; this only runs if someone scrolls here first.
+      if (p > 0.4) this.campus.ensureXray();
       weights = this.expertise(v, p, this.out);
       applyShot(this.out, v, rig);
       xray = smooth(XRAY_START, XRAY_START + 0.05, p);

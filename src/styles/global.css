@@ -5,7 +5,7 @@
 @import '@fontsource/dm-mono/500.css';
 @import 'lenis/dist/lenis.css';
 
-/* Palette: mirrors src/lib/palette.ts — change both together. */
+/* Palette: mirrors src/lib/palette.ts. Change both together. */
 @theme {
   --color-void: #04060f;
   --color-deep: #0a1030;
@@ -173,6 +173,15 @@
   .btn-gold:hover {
     box-shadow: 0 0 44px 6px rgb(255 194 26 / 0.45);
   }
+  /* Secondary button on light backgrounds: a gold hairline that fills softly on hover. */
+  .btn-outline-gold {
+    color: var(--color-ink);
+    box-shadow: inset 0 0 0 1.5px rgb(201 146 6 / 0.55);
+  }
+  .btn-outline-gold:hover {
+    background: rgb(242 178 0 / 0.12);
+    box-shadow: inset 0 0 0 1.5px rgb(201 146 6 / 0.9);
+  }
   .btn-ghost {
     color: var(--color-snow);
     box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.4);
@@ -237,18 +246,15 @@
   position: absolute;
   left: 0;
   bottom: var(--line);
-  display: inline-flex;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 0.55rem;
+  row-gap: 0.2rem;
   align-items: center;
-  gap: 0.55rem;
-  padding: 0.6rem 1rem 0.6rem 0.85rem;
-  border-radius: 999px;
+  padding: 0.62rem 1.05rem 0.68rem 0.85rem;
+  border-radius: 0.95rem;
   background: rgb(10 16 48 / 0.94);
   color: #fff;
-  font-family: var(--font-mono);
-  font-size: 0.76rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
   white-space: nowrap;
   box-shadow:
     inset 0 0 0 1px rgb(255 194 26 / 0.55),
@@ -265,13 +271,146 @@
   background: #ffc21a;
   box-shadow: 0 0 8px #ffc21a;
 }
+.bldg-name {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+/* Caption: what the building is for, in plain words. */
+.bldg-cap {
+  grid-column: 2;
+  font-size: 0.74rem;
+  letter-spacing: 0;
+  color: rgb(255 255 255 / 0.72);
+}
 @media (max-width: 639px) {
   .bldg-label {
     --line: 3.6rem;
   }
   .bldg-tag {
+    padding: 0.52rem 0.9rem 0.56rem 0.75rem;
+  }
+  .bldg-name {
     font-size: 0.7rem;
-    padding: 0.52rem 0.9rem 0.52rem 0.75rem;
+  }
+  .bldg-cap {
+    font-size: 0.7rem;
+  }
+}
+
+/* Story cards: the copy that accompanies each 3D beat. A gold hairline on
+ * top, a gold-ruled eyebrow naming what the visitor is looking at, a title,
+ * one or two sentences. Light and dark variants. */
+.story-stack {
+  position: relative;
+  width: 100%;
+  max-width: 25rem;
+  height: 12.25rem;
+}
+@media (min-width: 768px) {
+  .story-stack {
+    height: 13.5rem;
+  }
+}
+.story-card {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  padding: 1.25rem 1.3rem 1.3rem;
+  color: var(--color-ink);
+  background: rgb(255 255 255 / 0.86);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.75),
+    0 24px 60px -30px rgb(10 16 48 / 0.38);
+  backdrop-filter: blur(22px) saturate(1.2);
+  -webkit-backdrop-filter: blur(22px) saturate(1.2);
+}
+.story-card::before {
+  content: '';
+  position: absolute;
+  left: 1.3rem;
+  right: 1.3rem;
+  top: 0;
+  height: 2px;
+  border-radius: 0 0 2px 2px;
+  background: linear-gradient(90deg, #f2b200, rgb(242 178 0 / 0.15) 70%, transparent);
+}
+.story-card.is-dark {
+  color: #fff;
+  background: rgb(12 12 14 / 0.78);
+  box-shadow:
+    inset 0 0 0 1px rgb(255 194 26 / 0.22),
+    0 24px 60px -30px rgb(0 0 0 / 0.8);
+}
+@media (min-width: 768px) {
+  .story-card {
+    padding: 1.45rem 1.5rem 1.5rem;
+  }
+  .story-card::before {
+    left: 1.5rem;
+    right: 1.5rem;
+  }
+}
+.story-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #8c6200;
+}
+.story-eyebrow > :first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+.story-eyebrow > :first-child::before {
+  content: '';
+  width: 1.1rem;
+  height: 1px;
+  background: currentColor;
+}
+.story-eyebrow .num {
+  color: rgb(10 16 48 / 0.45);
+  font-variant-numeric: tabular-nums;
+}
+.is-dark .story-eyebrow {
+  color: #ffc21a;
+}
+.is-dark .story-eyebrow .num {
+  color: rgb(255 255 255 / 0.45);
+}
+.story-title {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  line-height: 1.05;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.story-body {
+  margin-top: 0.45rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  color: rgb(10 16 48 / 0.72);
+}
+.is-dark .story-body {
+  color: #aeb8d6;
+}
+@media (min-width: 768px) {
+  .story-title {
+    font-size: 1.7rem;
+  }
+  .story-body {
+    font-size: 0.9rem;
   }
 }
 
@@ -336,6 +475,22 @@ html[data-theme='light'] #fx-vignette {
   60% { transform: translate(-6%, -2%); }
   80% { transform: translate(5%, 4%); }
   100% { transform: translate(0, 0); }
+}
+
+/* A slim gold scrollbar where the platform allows styling it. */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(201 146 6 / 0.7) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: linear-gradient(#ffd24d, #c99206);
+}
+::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 @media (pointer: fine) {

@@ -2,6 +2,7 @@ import { gsap } from 'gsap';
 import type Lenis from 'lenis';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { live } from '../lib/store';
+import { onRefresh, rectOf, track as trackLayout, viewport } from '../lib/layout';
 import { anchors, scroll, type World } from '../webgl/scroll';
 
 /**
@@ -26,13 +27,36 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
   track('#industries', 'industries', 'top top', 'bottom bottom');
   track('#contact', 'contact', 'top bottom', 'top top');
 
+  /** Style writes that skip unchanged values, so a still page does no style work. */
+  const written = new WeakMap<HTMLElement, Record<string, string>>();
+  const setStyle = (el: HTMLElement | null, prop: string, value: string) => {
+    if (!el) return;
+    const rec = written.get(el) ?? {};
+    if (rec[prop] === value) return;
+    rec[prop] = value;
+    written.set(el, rec);
+    if (prop.startsWith('--')) el.style.setProperty(prop, value);
+    else (el.style as unknown as Record<string, string>)[prop] = value;
+  };
+  /** Position a building label at its projected anchor; hidden labels are left alone. */
+  const placeLabel = (el: HTMLElement, a: { x: number; y: number; weight: number }) => {
+    const w = Math.max(0, a.weight * 1.4 - 0.4);
+    setStyle(el, 'opacity', w.toFixed(3));
+    if (w === 0) return;
+    setStyle(el, 'transform', `translate3d(${a.x.toFixed(1)}px, ${a.y.toFixed(1)}px, 0)`);
+    setStyle(el, '--w', w.toFixed(3));
+  };
+
   // ── Camera owner, world, and canvas clip, every frame ──────────────────
+  let lastClip = '';
   const sections = $$('[data-scene]');
+  for (const s of sections) trackLayout(s);
   const webglSections = sections.filter((s) => s.dataset.webgl);
   gsap.ticker.add(() => {
+    const innerHeight = viewport.height;
     const mid = innerHeight / 2;
     for (const s of sections) {
-      const r = s.getBoundingClientRect();
+      const r = rectOf(s);
       if (r.top <= mid && r.bottom > mid) {
         const id = s.dataset.scene as typeof scroll.owner;
         if (s.dataset.webgl) scroll.owner = id;
@@ -42,25 +66,27 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
     // Clip the canvas to the on-screen 3D sections of ONE world (the one with
     // the most screen area), so DOM-only sections (services, impact) between
     // two worlds are never painted over.
-    type Span = { top: number; bottom: number; featherBottom: boolean };
+    type Span = { top: number; bottom: number; featherBottom: boolean; featherTop: boolean };
     const spans = new Map<World, Span>();
     for (const s of webglSections) {
-      const r = s.getBoundingClientRect();
+      const r = rectOf(s);
       const t = Math.max(0, r.top);
       const b = Math.min(innerHeight, r.bottom);
       if (b - t < 1) continue;
       const w = s.dataset.webgl as World;
       const fb = r.bottom < innerHeight && (s.dataset.feather ?? '').includes('bottom');
+      const ft = r.top > 0 && (s.dataset.feather ?? '').includes('top');
       const span = spans.get(w);
-      if (!span) spans.set(w, { top: t, bottom: b, featherBottom: fb });
+      if (!span) spans.set(w, { top: t, bottom: b, featherBottom: fb, featherTop: ft });
       else {
+        if (t <= span.top) span.featherTop = ft;
         span.top = Math.min(span.top, t);
         if (b >= span.bottom) span.featherBottom = fb;
         span.bottom = Math.max(span.bottom, b);
       }
     }
     let world: World = 'none';
-    let best: Span = { top: 0, bottom: 0, featherBottom: false };
+    let best: Span = { top: 0, bottom: 0, featherBottom: false, featherTop: false };
     for (const [w, span] of spans) {
       if (span.bottom - span.top > best.bottom - best.top) {
         world = w;
@@ -68,21 +94,33 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
       }
     }
     scroll.world = world;
+    scroll.coverage = world === 'none' ? 0 : (best.bottom - best.top) / innerHeight;
+    scroll.bandTop = best.top;
+    scroll.bandBottom = best.bottom;
     if (canvasWrap) {
-      const { top, bottom, featherBottom } = best;
-      if (world !== 'none' && featherBottom) {
-        // Soft edge: the 3D dissolves into the next section instead of being cut.
-        const f = Math.min(260, innerHeight * 0.3, bottom - top);
-        const mask = `linear-gradient(to bottom, transparent ${top}px, #000 ${top}px, #000 ${bottom - f}px, transparent ${bottom}px)`;
-        canvasWrap.style.clipPath = 'none';
+      const { top, bottom, featherBottom, featherTop } = best;
+      // Whole pixels, written only when they change, so a still page does no style work.
+      const T = Math.round(top);
+      const B = Math.round(bottom);
+      let mask = '';
+      let clip: string;
+      if (world !== 'none' && (featherBottom || featherTop)) {
+        // Soft edges: the 3D dissolves into the neighbouring section instead of being cut.
+        const span = (B - T) / (featherBottom && featherTop ? 2 : 1);
+        // Arriving from the dark staircase into a bright sky needs a long dissolve; a short one suffices below.
+        const fTop = Math.round(Math.min(innerHeight * 0.45, span));
+        const fBottom = Math.round(Math.min(260, innerHeight * 0.3, span));
+        const a = featherTop ? T + fTop : T;
+        const z = featherBottom ? B - fBottom : B;
+        mask = `linear-gradient(to bottom, transparent ${T}px, #000 ${a}px, #000 ${z}px, transparent ${B}px)`;
+        clip = 'none';
+      } else clip = world === 'none' ? 'inset(100% 0 0 0)' : `inset(${T}px 0 ${Math.max(0, Math.round(innerHeight) - B)}px 0)`;
+      const key = clip + mask;
+      if (key !== lastClip) {
+        lastClip = key;
+        canvasWrap.style.clipPath = clip;
         canvasWrap.style.maskImage = mask;
         canvasWrap.style.webkitMaskImage = mask;
-      } else {
-        if (canvasWrap.style.maskImage) {
-          canvasWrap.style.maskImage = '';
-          canvasWrap.style.webkitMaskImage = '';
-        }
-        canvasWrap.style.clipPath = world === 'none' ? 'inset(100% 0 0 0)' : `inset(${top}px 0 ${Math.max(0, innerHeight - bottom)}px 0)`;
       }
     }
   });
@@ -145,29 +183,27 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
   const xrayWarm = $('[data-xray-warm]');
   const expSection = $('#expertise');
   gsap.ticker.add(() => {
-    labels.forEach((el, i) => {
-      const a = anchors.expertise[i]!;
-      const w = Math.max(0, a.weight * 1.4 - 0.4);
-      el.style.transform = `translate3d(${a.x}px, ${a.y}px, 0)`;
-      el.style.opacity = String(w);
-      el.style.setProperty('--w', w.toFixed(3));
-    });
+    labels.forEach((el, i) => placeLabel(el, anchors.expertise[i]!));
     const x = gsap.utils.clamp(0, 1, (scroll.expertise - 0.735) / 0.05);
-    if (xrayBg) xrayBg.style.opacity = String(x);
-    if (xrayWarm) xrayWarm.style.opacity = String(gsap.utils.clamp(0, 1, (scroll.expertise - 0.9) / 0.1));
+    setStyle(xrayBg, 'opacity', x.toFixed(3));
+    setStyle(xrayWarm, 'opacity', gsap.utils.clamp(0, 1, (scroll.expertise - 0.9) / 0.1).toFixed(3));
     // The nav flips with the section's light/dark state.
-    if (expSection) expSection.dataset.theme = x > 0.5 ? 'dark' : 'light';
+    const expTheme = x > 0.5 ? 'dark' : 'light';
+    if (expSection && expSection.dataset.theme !== expTheme) expSection.dataset.theme = expTheme;
   });
 
   // ── Services: the spiral staircase turns and climbs with scroll ─────────
   const stair = $('[data-stair-section]');
   const stairEntry = stair ? $('[data-stair-entry]', stair) : null;
-  if (stair && stairEntry) {
+  const stairExit = stair ? $('[data-stair-exit]', stair) : null;
+  if (stair && stairEntry && stairExit) {
     gsap.ticker.add(() => {
-      // 1 while the section top is still well below the viewport top, 0 once pinned.
-      const top = stair.getBoundingClientRect().top;
-      const o = gsap.utils.clamp(0, 1, top / (innerHeight * 0.18));
-      stairEntry.style.opacity = o.toFixed(3);
+      // Entry: 1 while the section top is still well below the viewport top, 0 once pinned.
+      // Exit: 0 while pinned, rising to 1 as the section's bottom comes up the screen.
+      const r = rectOf(stair);
+      const vh = viewport.height;
+      setStyle(stairEntry, 'opacity', gsap.utils.clamp(0, 1, r.top / (vh * 0.18)).toFixed(3));
+      setStyle(stairExit, 'opacity', gsap.utils.clamp(0, 1, (vh - r.bottom) / (vh * 0.18)).toFixed(3));
     });
   }
   if (stair && !reduced) {
@@ -202,10 +238,13 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
         lenis ? lenis.scrollTo(y, { duration: 1.4 }) : scrollTo({ top: y, behavior: 'smooth' });
       }),
     );
+    let rise = 26;
+    onRefresh(() => (rise = parseFloat(getComputedStyle(stair).getPropertyValue('--rise')) || 26));
+    const lastLit = new Map<HTMLElement, string>();
+    const lastCard = new Map<HTMLElement, string>();
     gsap.ticker.add((time) => {
-      const rect = stair.getBoundingClientRect();
-      if (rect.bottom < 0 || rect.top > innerHeight) return;
-      const rise = parseFloat(getComputedStyle(stair).getPropertyValue('--rise')) || 26;
+      const rect = rectOf(stair);
+      if (rect.bottom < 0 || rect.top > viewport.height) return;
       // Hold briefly at both ends so the first and last cards get a beat of their own.
       const raw = gsap.utils.clamp(0, 1, (progress - 0.06) / 0.88) * (N - 1);
       // Each card rests at the front for the middle of its stretch, then the stair turns on.
@@ -213,21 +252,32 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
       const f = gsap.utils.clamp(0, 1, (raw - seg - 0.3) / 0.4);
       const target = seg + f * f * (3 - 2 * f);
       c += (target - c) * 0.1;
+      if (Math.abs(target - c) < 1e-4) c = target;
       const sway = Math.sin(time * 0.6) * 2.5;
       ring.style.transform = `translateY(${c * PER * rise}px) rotateY(${-c * 90 + sway}deg)`;
+      // Card and tread styles depend only on c: once it settles, nothing is written.
       cards.forEach((card, k) => {
         const rel = ((k - c) * Math.PI) / 2;
         const facing = Math.max(0, Math.cos(rel));
         const near = Math.max(0, 1 - Math.abs(k - c) * 1.6);
-        card.style.opacity = String(0.12 + 0.88 * facing * facing);
-        card.style.filter = near > 0.6 ? 'none' : `blur(${((1 - facing) * 3).toFixed(2)}px)`;
-        card.style.setProperty('--edge', (0.1 + 0.6 * near).toFixed(3));
+        const op = (0.12 + 0.88 * facing * facing).toFixed(3);
+        const blur = near > 0.6 ? 'none' : `blur(${((1 - facing) * 3).toFixed(2)}px)`;
+        const edge = (0.1 + 0.6 * near).toFixed(3);
+        const key = op + blur + edge;
+        if (lastCard.get(card) === key) return;
+        lastCard.set(card, key);
+        card.style.opacity = op;
+        card.style.filter = blur;
+        card.style.setProperty('--edge', edge);
       });
       for (const { el, t } of treads) {
         const rel = ((t * 15 - c * 90) * Math.PI) / 180;
         const front = Math.max(0, Math.cos(rel));
         const height = Math.exp(-Math.abs(t - c * PER) / 9);
-        el.style.setProperty('--lit', (0.22 + 0.78 * front * front * height).toFixed(3));
+        const lit = (0.22 + 0.78 * front * front * height).toFixed(3);
+        if (lastLit.get(el) === lit) continue;
+        lastLit.set(el, lit);
+        el.style.setProperty('--lit', lit);
       }
       const k = Math.round(c);
       if (k !== active) {
@@ -242,6 +292,7 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
 
   // ── Industries: sky follows the day cycle, labels follow districts, cards swap ──
   const sky = $('[data-sky]');
+  const veil = $('[data-sky-veil]');
   const indSection = $('#industries');
   const cityLabels = $$('[data-city-label]');
   const cityCards = $$('[data-city-card]');
@@ -262,16 +313,14 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
     if (sky) {
       const top = skyStops[0]![0].map((v, i) => v + (skyStops[1]![0][i]! - v) * g);
       const bot = skyStops[0]![1].map((v, i) => v + (skyStops[1]![1][i]! - v) * g);
-      sky.style.background = `linear-gradient(180deg, ${mix(top, skyStops[2]![0], d)} 0%, ${mix(bot, skyStops[2]![1], d)} 100%)`;
+      setStyle(sky, 'background', `linear-gradient(180deg, ${mix(top, skyStops[2]![0], d)} 0%, ${mix(bot, skyStops[2]![1], d)} 100%)`);
     }
-    if (indSection) indSection.dataset.theme = d > 0.5 ? 'dark' : 'light';
-    cityLabels.forEach((el, i) => {
-      const a = anchors.industries[i]!;
-      const w = Math.max(0, a.weight * 1.4 - 0.4);
-      el.style.transform = `translate3d(${a.x}px, ${a.y}px, 0)`;
-      el.style.opacity = String(w);
-      el.style.setProperty('--w', w.toFixed(3));
-    });
+    // Arrival from the staircase: dark until the section pins, then gone by the end of the cloud descent.
+    const v = 1 - sm(0.0, 0.085, p);
+    setStyle(veil, 'opacity', v.toFixed(3));
+    const indTheme = d > 0.5 || v > 0.5 ? 'dark' : 'light';
+    if (indSection && indSection.dataset.theme !== indTheme) indSection.dataset.theme = indTheme;
+    cityLabels.forEach((el, i) => placeLabel(el, anchors.industries[i]!));
   });
   if (cityCards.length) {
     cardStack(cityCards, () => {
@@ -299,11 +348,12 @@ export function initScroll(reduced: boolean, lenis: Lenis | null) {
   const band = $('[data-band]');
   if (band && !reduced) {
     let x = 0;
+    let w = 1;
+    onRefresh(() => (w = band.scrollWidth / 6 || 1));
     const skew = gsap.quickTo(band, 'skewX', { duration: 0.4, ease: 'power3.out' });
     gsap.ticker.add((_, dt) => {
       const v = live.velocity;
       x -= (0.04 + Math.abs(v) * 0.02) * dt * (v < 0 ? -1 : 1);
-      const w = band.scrollWidth / 6;
       x = ((x % w) - w) % w;
       gsap.set(band, { x });
       skew(gsap.utils.clamp(-10, 10, -v * 0.3));

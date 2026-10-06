@@ -288,7 +288,8 @@ export class City {
     const cloudMat = new THREE.SpriteMaterial({ map: puff, color: '#ffffff', transparent: true, opacity: 0.92, depthWrite: false });
     const addCloud = (x: number, y: number, z: number, size: number) => {
       const cloud = new THREE.Group();
-      for (let k = 0; k < 6; k++) {
+      // Four puffs per cloud: the shape still reads, with a third less overdraw than six.
+      for (let k = 0; k < 4; k++) {
         const s = new THREE.Sprite(cloudMat);
         s.position.set((rand() - 0.5) * size * 1.6, (rand() - 0.5) * size * 0.3, (rand() - 0.5) * size * 0.8);
         s.scale.setScalar(size * (0.7 + rand() * 0.6));

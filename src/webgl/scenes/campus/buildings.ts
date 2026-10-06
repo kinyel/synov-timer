@@ -56,6 +56,8 @@ export function hq(): Building {
   k.box('shade', 4.3, 0.06, 3.4, 0, 0, 0, 0.02);
   k.box('glass', 3.8, 0.46, 2.9, 0, 0.06, 0, 0.01);
   k.box('clay', 4.1, 0.1, 3.2, 0, 0.52, 0, 0.02);
+  // Gold fascia along the podium's front edge.
+  k.box('gold', 4.12, 0.03, 0.03, 0, 0.6, 1.6, 0.006);
   k.row('clay', 9, V(-1.85, 0.06, 1.42), V(1.85, 0.06, 1.42), [0.06, 0.46, 0.06]);
   // Entrance canopy + gold doors.
   k.box('clay', 1.5, 0.04, 0.7, 0.5, 0.4, 1.75, 0.01);
@@ -64,6 +66,8 @@ export function hq(): Building {
   // Tower, set back on the podium.
   framedBlock(k, 2.2, 3.7, 1.75, -0.55, 0.62, -0.35, 0.37);
   k.box('clay', 2.3, 0.22, 1.85, -0.55, 4.32, -0.35, 0.03);
+  // Gilded roofline: a slim gold band where the tower meets its roof.
+  k.box('gold', 2.26, 0.045, 1.81, -0.55, 4.29, -0.35, 0.01);
   plant(k, -0.55, 4.54, -0.35, 1.8, 1.4);
   // The gold fin: a full-height vertical panel on the tower's front-right corner.
   k.box('gold', 0.16, 3.9, 0.7, 0.62, 0.52, -0.1, 0.03);
@@ -124,6 +128,7 @@ export function itom(): Building {
   const k = new Kit();
   framedBlock(k, 2.2, 0.62, 1.5, 0, 0, 0, 0.31);
   k.box('clay', 2.3, 0.1, 1.6, 0, 0.62, 0, 0.02);
+  k.box('gold', 2.32, 0.03, 0.03, 0, 0.7, 0.8, 0.006);
   for (let i = 0; i < 4; i++) {
     const x = -0.85 + i * 0.32;
     k.box('shade', 0.26, 0.1, 0.26, x, 0.72, 0.45, 0.015);
@@ -144,6 +149,8 @@ export function integration(): Building {
   framedBlock(k, 1.0, 1.1, 1.0, 0.85, 0, 0.1, 0.275);
   k.box('clay', 1.1, 0.1, 1.1, -0.85, 1.6, 0, 0.02);
   k.box('clay', 1.1, 0.1, 1.1, 0.85, 1.1, 0.1, 0.02);
+  k.box('gold', 1.12, 0.03, 1.12, -0.85, 1.69, 0, 0.008);
+  k.box('gold', 1.12, 0.03, 1.12, 0.85, 1.19, 0.1, 0.008);
   for (const [y, z] of [
     [0.45, 0.15],
     [0.85, -0.1],

@@ -5,20 +5,61 @@
  */
 export { DISTRICTS as INDUSTRIES } from '../webgl/scenes/city/districts';
 
+/**
+ * Each practice area is one building on the campus model.
+ * `place` names the building the visitor is looking at, `tag` is the short
+ * caption on its 3D label, `body` says what the practice does.
+ */
 export const EXPERTISE = [
-  { name: 'App Engine', short: 'App Engine', body: 'Custom applications built on the platform, from low-code to pro-code.' },
-  { name: 'ITSM', short: 'ITSM', body: 'Service desk, incident, problem and change, designed to scale.' },
-  { name: 'ITAM', short: 'ITAM', body: 'Hardware and software assets tracked across their whole lifecycle.' },
-  { name: 'ITOM', short: 'ITOM', body: 'Discovery, service mapping and event management, end to end.' },
-  { name: 'Integration', short: 'Integration', body: 'HR, Finance, ITSM and custom apps connected to eliminate silos.' },
-  { name: 'Enterprise Architecture', short: 'Ent. Arch.', body: 'Roadmaps and structure that keep the platform clean as it grows.' },
+  {
+    name: 'App Engine',
+    short: 'App Engine',
+    place: 'The workshop',
+    tag: 'Custom apps, built to order',
+    body: 'Custom applications on the platform, from quick low-code tools to full pro-code builds.',
+  },
+  {
+    name: 'ITSM',
+    short: 'ITSM',
+    place: 'The service centre',
+    tag: 'Service desk and change',
+    body: 'Service desk, incident, problem and change, designed around how your support teams work.',
+  },
+  {
+    name: 'ITAM',
+    short: 'ITAM',
+    place: 'The asset warehouse',
+    tag: 'Every asset accounted for',
+    body: 'Hardware and software tracked from purchase to retirement, so licences and spend stay under control.',
+  },
+  {
+    name: 'ITOM',
+    short: 'ITOM',
+    place: 'The operations centre',
+    tag: 'Problems caught early',
+    body: 'Discovery, service mapping and event management, so issues surface before your users notice them.',
+  },
+  {
+    name: 'Integration',
+    short: 'Integration',
+    place: 'The bridges',
+    tag: 'Systems that share data',
+    body: 'HR, Finance, ITSM and custom apps connected, so data is entered once and stays consistent.',
+  },
+  {
+    name: 'Enterprise Architecture',
+    short: 'Ent. Arch.',
+    place: 'The studio',
+    tag: 'Structure that scales',
+    body: 'Roadmaps, standards and data models that keep the platform clean as it grows.',
+  },
 ] as const;
 
 export const SERVICES = [
-  { key: 'advisory', title: 'Advisory & Strategy', body: 'Roadmaps and alignment that reduce complexity and maximize ROI.' },
-  { key: 'implementation', title: 'Implementation', body: 'Architecture, configuration, testing, deployment.' },
+  { key: 'advisory', title: 'Advisory & Strategy', body: 'A roadmap and priorities that reduce complexity and maximize ROI.' },
+  { key: 'implementation', title: 'Implementation', body: 'Architecture, configuration, testing and deployment, delivered in usable stages.' },
   { key: 'integration', title: 'Integration', body: 'HR, Finance, ITSM and custom apps connected to eliminate silos.' },
-  { key: 'support', title: 'Support & Optimization', body: 'Monitoring, upgrades, performance tuning.' },
+  { key: 'support', title: 'Support & Optimization', body: 'Monitoring, upgrades and performance tuning as the platform grows.' },
 ] as const;
 
 export const CONTACT = {
