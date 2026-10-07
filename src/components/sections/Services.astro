@@ -84,7 +84,7 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     <!-- Left: heading, counter, stage list (desktop). Top on mobile. -->
     <div class="stair-head gutter absolute inset-x-0 top-0 z-10 pt-24 md:top-1/2 md:right-auto md:w-[40%] md:-translate-y-1/2 md:pt-0">
       <p class="eyebrow">How we deliver</p>
-      <h2 id="services-title" class="mt-3 text-[1.9rem] leading-[1.02] font-extrabold md:text-[3rem]">From roadmap <span class="text-lit">to run</span></h2>
+      <h2 id="services-title" class="mt-3 text-[1.9rem] leading-[1.1] font-semibold tracking-[-0.025em] md:text-[3rem]">From roadmap <span class="text-lit">to run</span></h2>
       <p class="mt-4 hidden max-w-[25rem] text-[1.02rem] leading-relaxed text-grey-200 md:block">Four stages, one team. Join at any stage.</p>
       <div class="mt-5 flex items-center gap-4">
         <p class="text-[0.85rem] font-bold tracking-[0.12em] text-grey-400 tabular-nums">
@@ -146,7 +146,7 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
                       );
                     })}
                   </svg>
-                  <h3 id={`stage-${s.slug}`} class="mt-2 text-[1.3rem] leading-[1.08] font-bold md:text-[1.45rem]">{s.name}</h3>
+                  <h3 id={`stage-${s.slug}`} class="mt-2 text-[1.3rem] leading-[1.15] font-semibold md:text-[1.45rem]">{s.name}</h3>
                   <p class="mt-2 text-[0.98rem] leading-[1.45] text-grey-200">{card.what}</p>
                   <a href={`/services/${s.slug}/`} class="stair-more">
                     More<span class="sr-only"> on {s.name}</span>

@@ -67,7 +67,7 @@
 @layer components {
   .display {
     font-family: var(--font-display);
-    font-weight: 800;
+    font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1;
   }
@@ -303,13 +303,13 @@
   }
   .h1 {
     font-size: clamp(2.2rem, 4.8vw, 4.4rem);
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.06;
     letter-spacing: -0.03em;
   }
   .h2 {
     font-size: clamp(1.8rem, 3.6vw, 3rem);
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.1;
     letter-spacing: -0.025em;
   }

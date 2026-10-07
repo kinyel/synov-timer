@@ -49,16 +49,16 @@ const h = (type: string, style: Record<string, unknown>, children?: unknown, ext
 
 const C = { night: '#040a16', navy: '#0a1d3b', iris: '#4247af', irisSoft: '#8e93f6', violet: '#a755f9', azure: '#2490f4', gold: '#ecbc04', goldGlow: '#ffe27a', white: '#ffffff', grey200: '#d3d7e2', grey400: '#9aa1b5' };
 
-let assets: Promise<{ fonts: { name: string; data: Buffer; weight: 400 | 700 | 800; style: 'normal' }[]; mark: string }> | undefined;
+let assets: Promise<{ fonts: { name: string; data: Buffer; weight: 400 | 600 | 700; style: 'normal' }[]; mark: string }> | undefined;
 const load = () =>
   (assets ??= (async () => {
     const font = (w: number) => readFile(join(process.cwd(), `node_modules/@fontsource/poppins/files/poppins-latin-${w}-normal.woff`));
-    const [r, b, x, mark] = await Promise.all([font(400), font(700), font(800), readFile(join(process.cwd(), 'public/brand/mark.svg'))]);
+    const [r, sb, b, mark] = await Promise.all([font(400), font(600), font(700), readFile(join(process.cwd(), 'public/brand/mark.svg'))]);
     return {
       fonts: [
         { name: 'Poppins', data: r, weight: 400, style: 'normal' },
+        { name: 'Poppins', data: sb, weight: 600, style: 'normal' },
         { name: 'Poppins', data: b, weight: 700, style: 'normal' },
-        { name: 'Poppins', data: x, weight: 800, style: 'normal' },
       ],
       mark: `data:image/svg+xml;base64,${mark.toString('base64')}`,
     };
@@ -124,7 +124,7 @@ export async function renderCard(page: OgPage): Promise<Buffer> {
       h('div', { display: 'flex', alignItems: 'center', gap: 18 }, [
         h('img', { width: 70, height: 60 }, undefined, { src: mark, width: 70, height: 60 }),
         h('div', { display: 'flex', flexDirection: 'column', lineHeight: 1.05 }, [
-          h('span', { fontSize: 30, fontWeight: 800 }, 'Raleston'),
+          h('span', { fontSize: 30, fontWeight: 700 }, 'Raleston'),
           h('span', { fontSize: 24, fontWeight: 400, color: C.grey400 }, 'Consulting'),
         ]),
       ]),
@@ -135,7 +135,7 @@ export async function renderCard(page: OgPage): Promise<Buffer> {
           { display: 'flex', alignSelf: 'flex-start', padding: '8px 18px', borderRadius: 999, border: `1.5px solid ${C.irisSoft}66`, backgroundColor: `${C.iris}33`, color: C.irisSoft, fontSize: 22, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase' },
           page.eyebrow,
         ),
-        h('div', { display: 'flex', flexWrap: 'wrap', maxWidth: 700, fontSize: size, fontWeight: 800, lineHeight: 1.08, letterSpacing: -1 }, words),
+        h('div', { display: 'flex', flexWrap: 'wrap', maxWidth: 700, fontSize: size, fontWeight: 600, lineHeight: 1.08, letterSpacing: -1 }, words),
       ]),
       // The gold thread, and the address
       h('div', { display: 'flex', alignItems: 'center', gap: 28 }, [
