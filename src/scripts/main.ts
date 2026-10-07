@@ -2,7 +2,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
-import { $introDone, $progress, $reducedMotion, $scene, $sceneReady, live, type SceneId } from '../lib/store';
+import { $introDone, $progress, $reducedMotion, $scene, live, type SceneId } from '../lib/store';
 import { initScroll } from './scroll';
 import { initNav } from './nav';
 import { initHero } from './hero';
@@ -13,8 +13,6 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 // Mobile address bars resize the viewport while scrolling; re-measuring every
 // trigger then would shift pinned content mid-gesture.
 ScrollTrigger.config({ ignoreMobileResize: true });
-
-const canvasEl = document.querySelector<HTMLCanvasElement>('#webgl canvas');
 
 const html = document.documentElement;
 const reduced = html.classList.contains('reduced-motion');
@@ -54,37 +52,6 @@ gsap.ticker.add(() => {
   live.speed += (target - live.speed) * (target > live.speed ? 0.25 : 0.06);
 });
 
-/* ── Pointer (desktop) and touch-drag (mobile) ─────────────────────────── */
-addEventListener(
-  'pointermove',
-  (e) => {
-    if (e.pointerType !== 'mouse') return;
-    live.pointer.x = (e.clientX / innerWidth) * 2 - 1;
-    live.pointer.y = -(e.clientY / innerHeight) * 2 + 1;
-    live.pointerActive = true;
-  },
-  { passive: true },
-);
-document.addEventListener('mouseleave', () => (live.pointerActive = false));
-// touchmove keeps firing during native scrolling, so the tower can follow the finger.
-let touch: { x: number; y: number } | null = null;
-addEventListener('touchstart', (e) => (touch = e.touches[0] ? { x: e.touches[0].clientX, y: e.touches[0].clientY } : null), { passive: true });
-addEventListener(
-  'touchmove',
-  (e) => {
-    const t = e.touches[0];
-    if (!t || !touch) return;
-    live.drag.x += ((t.clientX - touch.x) / innerWidth) * 2;
-    live.drag.y = gsap.utils.clamp(-1, 1, live.drag.y + ((t.clientY - touch.y) / innerHeight) * 1.5);
-    touch = { x: t.clientX, y: t.clientY };
-  },
-  { passive: true },
-);
-addEventListener('touchend', () => {
-  touch = null;
-  gsap.to(live.drag, { y: 0, duration: 1.2, ease: 'elastic.out(1, 0.4)' });
-});
-
 /* ── Hero headline: split-line reveal ──────────────────────────────────── */
 const lines = $$('[data-hero-title] [data-line] > span');
 const kicker = $('[data-hero-kicker]');
@@ -95,7 +62,8 @@ const cue = $('[data-journey-cue]');
 // Reduced motion: nothing is split or animated; the text simply sits there.
 const title = $('[data-hero-title]');
 if (!reduced) {
-  const splits = lines.map((l) => new SplitText(l, { type: 'words', wordsClass: 'inline-block' }));
+  // aria: 'none' keeps the words as plain text (aria-label is not allowed on a bare span).
+  const splits = lines.map((l) => new SplitText(l, { type: 'words', wordsClass: 'inline-block', aria: 'none' }));
   title?.classList.add('is-revealing');
   gsap
     .timeline({ defaults: { ease: 'expo.out' } })
@@ -111,34 +79,7 @@ if (!reduced) {
 // There is no curtain any more: the page is ready as soon as it paints.
 $introDone.set(true);
 
-/* ── WebGL: only once the first viewport is settled ───────────────────── */
-// The hero is HTML and SVG, so nothing 3D is needed for several screens.
-// Start once the headline has finished arriving and the visitor pauses
-// (or as soon as a 3D section comes within 2.5 screens, whichever is first),
-// so the start-up work never lands on top of the entrance or a scroll.
-if (canvasEl) {
-  let started = false;
-  const startWebgl = () => {
-    if (started) return;
-    started = true;
-    void import('../webgl/boot').then((m) => m.boot(canvasEl));
-  };
-  gsap.delayedCall(2.6, () => {
-    let still = 0;
-    const check = () => {
-      still = live.speed < 0.01 ? still + 1 : 0;
-      if (started || still >= 24) {
-        gsap.ticker.remove(check);
-        if (!started) ('requestIdleCallback' in window ? requestIdleCallback(startWebgl, { timeout: 800 }) : startWebgl());
-      }
-    };
-    gsap.ticker.add(check);
-  });
-  const first3d = $('[data-webgl]');
-  if (first3d) ScrollTrigger.create({ trigger: first3d, start: 'top 250%', once: true, onEnter: startWebgl });
-}
-
-/* ── Scroll choreography (sections, canvas clip, nav theme) ───────────── */
+/* ── Scroll choreography (sections, staircase, nav theme) ──────────────── */
 initScroll(reduced, lenis);
 initHero(reduced);
 initScenes(reduced);
@@ -245,7 +186,7 @@ if (!reduced && matchMedia('(pointer: fine)').matches) {
 /* ── Hooks for screenshot tooling ──────────────────────────────────────── */
 declare global {
   interface Window {
-    __raleston?: { live: typeof live; lenis: Lenis | null; ready: () => boolean; introDone: () => boolean };
+    __raleston?: { live: typeof live; lenis: Lenis | null; introDone: () => boolean };
   }
 }
-window.__raleston = { live, lenis, ready: () => $sceneReady.get(), introDone: () => $introDone.get() };
+window.__raleston = { live, lenis, introDone: () => $introDone.get() };

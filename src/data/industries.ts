@@ -10,6 +10,8 @@ export interface Industry {
   slug: string;
   name: string;
   icon: IconName;
+  /** Six or seven words, for the home page. */
+  line: string;
   summary: string;
   uses: { title: string; text: string }[];
 }
@@ -18,6 +20,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'financial-services',
     name: 'Financial Services',
+    line: 'Audit-ready change and risk evidence',
     icon: 'finance',
     summary: 'Banks, insurers and credit unions, where every change needs a record and every outage reaches customers.',
     uses: [
@@ -30,6 +33,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'healthcare',
     name: 'Healthcare',
+    line: 'Clinical devices tracked, support every shift',
     icon: 'health',
     summary: 'Hospitals and health organisations, where IT keeps clinicians working around the clock.',
     uses: [
@@ -42,6 +46,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'government',
     name: 'Government & Public Sector',
+    line: 'Services that follow policy',
     icon: 'government',
     summary: 'Federal, provincial and municipal organisations, where services follow policy and data stays in Canada.',
     uses: [
@@ -54,6 +59,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'technology',
     name: 'Technology & Startups',
+    line: 'Scale fast without rework',
     icon: 'tech',
     summary: 'Software and technology companies growing fast, where the platform has to scale without rework.',
     uses: [
@@ -66,6 +72,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'manufacturing',
     name: 'Manufacturing',
+    line: 'Plant equipment and IT, as one',
     icon: 'manufacturing',
     summary: 'Manufacturers, where plant equipment and the IT that runs it have to work as one.',
     uses: [
@@ -78,6 +85,7 @@ export const INDUSTRIES: Industry[] = [
   {
     slug: 'energy',
     name: 'Energy & Utilities',
+    line: 'Infrastructure online, crews in place',
     icon: 'energy',
     summary: 'Utilities and energy providers, where infrastructure has to stay online and crews need to be in the right place.',
     uses: [

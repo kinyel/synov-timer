@@ -1,37 +1,28 @@
 ---
 /**
- * TCPWave spotlight. The facts come from TCPWave's own integration guide;
- * Raleston's part is a placeholder until the client supplies it (shown in
- * development and previews only, listed in the README as content needed).
+ * TCPWave spotlight. A 3D model of the flow: four square blocks, from the
+ * approved change to the DNS and DHCP set-up, and a gold packet that travels
+ * across them, lighting each step as it arrives. The facts come from
+ * TCPWave's own integration guide; Raleston's part is a placeholder until the
+ * client supplies it (development and previews only).
  */
 import { SHOW_DRAFTS } from '../../lib/drafts';
 import Icon from '../ui/Icon.astro';
-
-const flow = ['Change approved in ServiceNow', 'Workflow calls the TCPWave API', 'IP address allocated', 'DNS record and DHCP scope created'];
+import TcpFlow from '../scenes/TcpFlow.astro';
 ---
 
 <section id="tcpwave" class="section tcp" data-theme="dark" aria-labelledby="tcp-title">
   <div class="gutter">
-    <div class="card tcp-card" data-reveal>
+    <div class="card tcp-card">
       <div>
         <p class="eyebrow">Integration spotlight</p>
-        <h2 id="tcp-title" class="h2 tcp-title mt-4">TCPWave and ServiceNow: <span class="text-lit">network changes, automated</span></h2>
-        <p class="body mt-5 max-w-[38rem]">
-          TCPWave provides <abbr title="DNS, DHCP and IP address management">DDI</abbr>: the services that give every device an address and a name. Its ServiceNow integration lets an approved change request call TCPWave directly to allocate IP addresses, create DNS records and manage DHCP scopes, instead of someone doing it by hand after approval.
-        </p>
-        {SHOW_DRAFTS && <p class="placeholder">Placeholder: Raleston’s own TCPWave work (from the LinkedIn post) goes here. Needed from the client.</p>}
-        <a href="/solutions/tcpwave/" class="link-arrow mt-5">How the TCPWave integration works <Icon name="arrow" /></a>
+        <h2 id="tcp-title" class="h2 tcp-title mt-4" data-reveal>TCPWave and ServiceNow: <span class="text-lit">network changes, automated</span></h2>
+        <p class="lead mt-4 max-w-[30rem]" data-reveal>An approved change sets up the IP address, DNS and DHCP by itself.</p>
+        {SHOW_DRAFTS && <p class="placeholder">Placeholder: Raleston’s own TCPWave work goes here. Needed from the client.</p>}
+        <a href="/solutions/tcpwave/" class="link-arrow mt-5" data-reveal>How it works <Icon name="arrow" /></a>
       </div>
-      <ol class="tcp-flow" aria-label="How a network change flows">
-        {
-          flow.map((f, i) => (
-            <li>
-              <span class="tcp-num">{String(i + 1).padStart(2, '0')}</span>
-              <span>{f}</span>
-            </li>
-          ))
-        }
-      </ol>
+
+      <TcpFlow />
     </div>
   </div>
 </section>
@@ -43,51 +34,22 @@ const flow = ['Change approved in ServiceNow', 'Workflow calls the TCPWave API',
   }
   .tcp-card {
     display: grid;
-    gap: 2rem;
+    gap: 1rem;
+    overflow: hidden;
     padding: clamp(1.6rem, 4vw, 3rem);
     background:
-      radial-gradient(60% 80% at 100% 0%, color-mix(in srgb, var(--color-azure) 16%, transparent), transparent 70%),
+      radial-gradient(60% 80% at 100% 50%, color-mix(in srgb, var(--color-azure) 16%, transparent), transparent 70%),
       color-mix(in srgb, var(--color-navy) 60%, var(--color-night));
   }
   @media (min-width: 1024px) {
     .tcp-card {
-      grid-template-columns: 1.2fr 0.8fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
       align-items: center;
-      gap: 3rem;
+      gap: 2rem;
     }
   }
   .tcp-title {
     font-size: clamp(1.8rem, 3.2vw, 2.7rem);
-  }
-  .tcp-flow {
-    display: grid;
-    gap: 0.6rem;
-  }
-  .tcp-flow li {
-    position: relative;
-    display: flex;
-    align-items: center;
-    gap: 0.9rem;
-    border-radius: 0.9rem;
-    padding: 0.85rem 1rem;
-    font-weight: 700;
-    color: var(--color-white);
-    background: color-mix(in srgb, var(--color-azure) 8%, var(--color-night));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 35%, transparent);
-  }
-  .tcp-flow li + li::before {
-    content: '';
-    position: absolute;
-    left: 2.05rem;
-    top: -0.62rem;
-    width: 2px;
-    height: 0.62rem;
-    background: var(--color-azure);
-  }
-  .tcp-num {
-    font-size: 0.8rem;
-    font-variant-numeric: lining-nums;
-    color: var(--color-azure);
   }
   .placeholder {
     margin-top: 1rem;
@@ -97,4 +59,5 @@ const flow = ['Change approved in ServiceNow', 'Workflow calls the TCPWave API',
     color: var(--color-navy);
     background: var(--color-gold);
   }
+
 </style>

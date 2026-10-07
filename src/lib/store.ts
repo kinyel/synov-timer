@@ -1,16 +1,15 @@
 import { atom } from 'nanostores';
 
 /**
- * Shared state between the DOM layer and the WebGL engine.
- * Discrete state lives in nanostores; per-frame values live in `live`,
- * a plain mutable object read inside the render loop.
+ * Shared page state. Discrete state lives in nanostores; per-frame values
+ * live in `live`, a plain mutable object.
  */
 
 export const SCENES = [
   { id: 'hero', label: 'Journey' },
+  { id: 'ai', label: 'AI in the work' },
   { id: 'foundation', label: 'Foundation' },
   { id: 'capabilities', label: 'Capabilities' },
-  { id: 'ai', label: 'AI in the work' },
   { id: 'services', label: 'Services' },
   { id: 'cases', label: 'Case studies' },
   { id: 'industries', label: 'Industries' },
@@ -20,19 +19,10 @@ export const SCENES = [
 
 export type SceneId = (typeof SCENES)[number]['id'];
 
-/** 0 = weakest / reduced motion … 3 = desktop discrete GPU */
-export type Tier = 0 | 1 | 2 | 3;
-
 export const $scene = atom<SceneId>('hero');
 export const $progress = atom(0);
-export const $tier = atom<Tier>(2);
-/** 0..1 combined load progress (fonts + engine + environment + shader warmup). */
-export const $loadProgress = atom(0);
-/** True once the engine has compiled shaders and rendered a warm frame. */
-export const $sceneReady = atom(false);
-/** True when the preloader has finished and the hero intro may play. */
+/** True once the page has painted and the hero intro may play. */
 export const $introDone = atom(false);
-export const $webgl = atom<'pending' | 'ok' | 'unavailable'>('pending');
 export const $reducedMotion = atom(false);
 
 export interface LiveState {
@@ -40,19 +30,6 @@ export interface LiveState {
   velocity: number;
   /** Smoothed absolute scroll speed, 0..1. */
   speed: number;
-  /** Pointer in NDC (-1..1), y up. */
-  pointer: { x: number; y: number };
-  pointerActive: boolean;
-  /** Accumulated touch-drag, in NDC units, decays back to 0. */
-  drag: { x: number; y: number };
-  fps: number;
 }
 
-export const live: LiveState = {
-  velocity: 0,
-  speed: 0,
-  pointer: { x: 0, y: 0 },
-  pointerActive: false,
-  drag: { x: 0, y: 0 },
-  fps: 60,
-};
+export const live: LiveState = { velocity: 0, speed: 0 };

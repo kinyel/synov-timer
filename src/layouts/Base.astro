@@ -26,13 +26,13 @@ interface Props {
   /** Site path of this page's share image. Defaults to its generated card. */
   image?: string;
   type?: 'website' | 'article';
-  /** The home page's 3D layer. */
-  webgl?: boolean;
+  /** The home page (no inner-page header rhythm). */
+  home?: boolean;
   /** The closing "Talk to an architect" band. */
   cta?: boolean;
   noindex?: boolean;
 }
-const { title, description, crumbs = [], schema = [], image, type = 'website', webgl = false, cta = true, noindex = false } = Astro.props;
+const { title, description, crumbs = [], schema = [], image, type = 'website', home = false, cta = true, noindex = false } = Astro.props;
 const path = Astro.url.pathname;
 // A drafts preview build is never indexed.
 const hidden = noindex || (SHOW_DRAFTS && import.meta.env.PROD);
@@ -84,7 +84,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schem
 ---
 
 <!doctype html>
-<html lang="en-CA" data-theme="dark" data-page={webgl ? 'home' : 'inner'}>
+<html lang="en-CA" data-theme="dark" data-page={home ? 'home' : 'inner'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -124,18 +124,8 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schem
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-svh">
-    {
-      webgl && (
-        <>
-          <div id="webgl" aria-hidden="true">
-            <canvas />
-          </div>
-          <div id="fx-vignette" aria-hidden="true" />
-        </>
-      )
-    }
     <Nav />
-    <main id="main" class:list={[!webgl && 'is-page']}>
+    <main id="main" class:list={[!home && 'is-page']}>
       <slot />
     </main>
     <Footer cta={cta} />

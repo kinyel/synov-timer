@@ -1,91 +1,127 @@
 # Raleston Consulting website
 
-A scroll-driven 3D marketing site in the style of an architect's white model: one Raleston campus, one gold accent, navy type.
+The marketing site for Raleston Consulting, a ServiceNow consultancy in Ottawa. Static Astro with CSS 3D models in the hero and most sections (no WebGL, no canvas), and a contact form that runs as a Cloudflare Pages Function.
 
-**Stack:** Astro (static output) with strict TypeScript, vanilla Three.js, `postprocessing` with N8AO, GSAP with ScrollTrigger, Lenis and Tailwind. Everything 3D is procedural code, so there are no model files to manage.
+**Stack:** Astro 7 (static output, strict TypeScript), GSAP with ScrollTrigger, Lenis, Tailwind CSS 4, MDX. Fonts are self-hosted (Alegreya Sans).
 
-## Run, build and deploy
+## Run, build, deploy
 
 ```bash
 npm install
-npm run dev          # http://localhost:4321  (dev-only tuning page: /lab)
-npm run build        # astro check + tsc + static build to dist/
-npm run preview      # serve dist/ locally with Cloudflare's wrangler
-npm run deploy       # build, then `wrangler pages deploy dist`
+npm run dev        # http://localhost:4321
+npm run build      # astro check + tsc + static build to dist/
+npm run preview    # dist/ plus the contact function, via wrangler (reads .dev.vars)
+npm run deploy     # build, then wrangler pages deploy dist
 ```
 
-**Cloudflare Pages (Git integration):**
-- Build command: `npm run build`
-- Output directory: `dist`
-- Node version: 20 or newer
+**Cloudflare Pages (Git integration):** build command `npm run build`, output directory `dist`, Node 20 or newer. The `functions/` folder is picked up automatically, so `/api/contact` deploys with the site.
 
-`public/_headers` sets long cache headers for hashed assets.
+`public/_headers` sets cache headers. `public/_redirects` keeps the old site's paths working (`/about-us`, `/contact-us`, `/careers`).
+
+## Environment variables
+
+None are secrets in the repository. Copy `.env.example` to `.env` and `.dev.vars.example` to `.dev.vars` for local work; both real files are git-ignored.
+
+| Name | When | What |
+|---|---|---|
+| `PUBLIC_TURNSTILE_SITE_KEY` | build | Cloudflare Turnstile site key for the contact form. Without it the form posts with no spam check, which the function then refuses (unless `EMAIL_PROVIDER=log`). |
+| `PUBLIC_SHOW_DRAFTS` | build | `true` shows draft posts, case studies and roles. Use it for preview branches only: such a build is noindex everywhere. |
+| `TURNSTILE_SECRET_KEY` | runtime (secret) | Turnstile secret, verified on every submission. |
+| `EMAIL_PROVIDER` | runtime | `resend`, `postmark`, `sendgrid`, or `log` (prints the message, sends nothing; local only). |
+| `EMAIL_API_KEY` | runtime (secret) | API key for that provider. |
+| `CONTACT_TO` | runtime | Where enquiries go, for example `info@ralestonconsulting.com`. |
+| `CONTACT_FROM` | runtime | Sender on a domain verified with the provider, for example `Raleston website <web@ralestonconsulting.com>`. |
+
+For local testing, Cloudflare's published test keys always pass: site key `1x00000000000000000000AA`, secret `1x0000000000000000000000000000000AA`.
+
+### The contact form
+
+`src/pages/contact/index.astro` and `src/scripts/contact.ts` validate in the browser, load Turnstile on first focus, and send without leaving the page. `functions/api/contact.ts` validates again, checks Turnstile, drops honeypot submissions silently, and sends a plain-text email with Reply-To set to the visitor. Without JavaScript the form still posts and gets a small HTML reply. `?topic=itsm` (any service slug, `references`, `careers`, `tcpwave`) preselects "What do you need?"; the options live in `src/data/topics.ts`.
 
 ## Where to change things
 
 | What | Where |
 |---|---|
-| Colours (every one, for CSS, Tailwind and the 3D) | `src/styles/tokens.css` (read by `src/lib/tokens.ts`); check with `npm run contrast` |
-| Colours (3D model materials, until the step 3 restyle) | `src/lib/palette.ts`, `src/webgl/scenes/campus/materials.ts` |
-| Font | Alegreya Sans, self-hosted: `fonts` in `astro.config.mjs` |
-| Hero headline and CTAs | `src/components/sections/Hero.astro` |
-| Hero journey steps (text, captions, facts) | `src/lib/journey.ts` |
-| Craft value props | `src/components/sections/Craft.astro` |
-| Expertise names and one-liners | `src/components/sections/Expertise.astro` |
-| Services | `src/components/sections/Services.astro` |
-| Industry names, short labels and one-liners | `src/webgl/scenes/city/districts.ts` (`DISTRICTS`) |
-| Stats and the band text | `src/components/sections/Impact.astro` |
-| Contact details | `src/components/sections/Contact.astro` and the JSON-LD in `src/layouts/Base.astro` |
-| SEO title and description | `src/pages/index.astro` |
-| Share image | `public/og.png` (regenerate with `node scripts/og.mjs` while `npm run dev` runs) |
+| Colours (CSS, Tailwind and the 3D) | `src/styles/tokens.css`; check pairs with `npm run contrast` |
+| Contact details, stats, founder | `src/data/site.ts` |
+| Every service page, and the service cards across the site | `src/data/services.ts` |
+| Industries | `src/data/industries.ts` |
+| Home FAQs | `src/data/faqs.ts` |
+| Glossary | `src/data/glossary.ts` |
+| Hero journey (the five levels) | `src/lib/journey.ts` |
+| Home sections | `src/components/sections/` |
+| Navigation and footer | `src/components/chrome/` |
+| Font | `fonts` in `astro.config.mjs` |
 
-## How it fits together
+Copy rule for this site: short. A headline, one line, a few short points. Depth goes behind a toggle. No em dashes.
 
-- **One canvas.** `#webgl` is one transparent canvas fixed behind the page.
-- **Layers, bottom to top:**
-  1. Section backgrounds and giant type (`.layer-bg`, z 0)
-  2. The canvas (z 10)
-  3. Readable copy (`.layer-copy`, z 20)
-- **Clipping.** `src/scripts/scroll.ts` clips the canvas to whichever 3D sections are on screen (`data-webgl="campus" | "city"`). Services and Impact are page-only, so the canvas never paints over them.
-- **Worlds.**
-  - `src/webgl/scenes/campus/` is the campus. It drives the hero, the Craft orbit, the Expertise tour and x-ray, and Contact at dusk.
-  - `src/webgl/scenes/city/` is the floating city used by Industries.
-  - Camera framings are "shots" (`src/webgl/core/shots.ts`), blended by section progress.
-- **Scroll to 3D.** DOM ScrollTriggers write progress into `src/webgl/scroll.ts`, and the scenes read it every frame.
-- **Quality tiers.** `src/lib/tier.ts` maps detect-gpu results to a tier. Tiers scale DPR, shadow size, AO and bloom resolution; the look stays the same. Force a tier with `?tier=0` to `?tier=3`.
-- **Fallbacks.**
-  - `prefers-reduced-motion`: no smooth scroll, no intro or headline animation, and no handheld camera drift.
-  - No WebGL: a complete static page with the logo as hero art.
+## Adding content
 
-## Performance notes
+All three collections are Markdown in `src/content/`. Anything with `draft: true` shows in `npm run dev` and in `PUBLIC_SHOW_DRAFTS=true` builds, and never in production.
 
-- **One loop.** The 3D renders from GSAP's ticker, after Lenis has moved the scroll and the DOM choreography has run, so page and 3D never drift a frame apart.
-- **No layout reads per frame.** Section positions come from `src/lib/layout.ts` (measured on load and resize, then derived from the scroll position), and style writes skip unchanged values.
-- **First viewport first.** Only the campus is built and compiled before the curtain lifts. The x-ray lines and the Industries city are built, compiled with their own lights, and drawn once off-screen in idle time (or on demand).
-- **GPU follows what's visible.** When only part of the screen shows 3D (section boundaries), the scene, AO and output passes are confined to that band; a still sliver stops re-rendering entirely.
-- **Quality tiers** (`src/lib/tier.ts`) cap DPR at 1.5, skip SMAA where the canvas is already supersampled, and only step down for real GPU slowness (a steady 30 fps from energy saver doesn't count), applied when it can't be seen.
+- **Blog post:** `src/content/blog/<slug>.mdx` with `title`, `description`, `date`, `category` (CMDB, ITSM, ITOM, ITAM, AI, Architecture or Integrations), `tags`, optional `updated`, and `draft`. Category and tag pages, related posts, the RSS feed (`/rss.xml`) and the share image are generated.
+- **Case study:** `src/content/case-studies/<slug>.md` with `title`, `summary`, `clientType`, `industry`, `challenge`, `approach[]`, `modules[]`, `results[]`, optional `quote`, and `draft`. Publish only what the client has approved, and only numbers they have measured. While none are published, the home page and `/case-studies/` show "coming soon" and offer references.
+- **Job opening:** `src/content/roles/<slug>.md` with `title`, `location`, `type`, `summary`, `draft`. It appears on `/about/#careers`.
 
-## Checking your work
+The three blog posts, three case studies and one role in the repository are drafts for review.
 
-These need a server running (`npm run dev`, or `npm run build && npx astro preview --port 4322` with `URL=http://localhost:4322/`). Add `?debug` to the page URL to expose the engine in production builds.
+## SEO
+
+- Every page has its own title and description, a canonical URL, Open Graph and Twitter tags, and JSON-LD (`src/layouts/Base.astro`): ProfessionalService and WebSite on every page, BreadcrumbList on inner pages, plus Service and FAQPage on service pages, BlogPosting, ContactPage, DefinedTermSet (glossary) and Person (founder).
+- **Share images** are drawn at build time (`src/lib/og.ts`, served at `/og/<page path>.png`). A new page needs an entry in `ogPages()`.
+- `sitemap-index.xml` (`@astrojs/sitemap`), `robots.txt` (`src/pages/robots.txt.ts`) and the RSS feed are generated.
+- **Favicons and app icons** come from `public/brand/mark.svg`: run `npm run icons` after changing it.
+
+## How the 3D works
+
+- **The foundation** (ITSM, ITOM, ITAM on the CMDB) is deliberately plain: flat boxes in `Foundation.astro`.
+- **The hero and the other sections (CSS 3D).** Pure HTML and CSS, so the text stays crisp:
+  - The hero is in `Hero.astro` with `src/scripts/hero.ts`. On the first scroll the stack turns from diamonds to squares (an eased tween on `--turn`); the plate the request reaches turns its words level to the reader (`.lvl`, `--lv`); after the last level the stack turns back to diamonds and closes up.
+  - The staircase of square tiles is `Services.astro`, driven from `src/scripts/scroll.ts`.
+  - The small models (platform board, AI layer, case files, industry ring, assembling cube, TCPWave flow, and the plate stack on inner-page headers) are built from the `.s3d` / `.blk` primitives at the end of `src/styles/global.css`. `src/scripts/scenes.ts` drives their scroll progress (`--p`) and pointer tilt, and pauses them off screen. To make a new one, put blocks (`blk()` from `src/lib/iso.ts`) inside `<div class="s3d" data-s3d><div class="s3d-world">…</div></div>` and animate with `--p`.
+- **Reduced motion:** no smooth scroll, no animation; every model shows in its finished state.
+
+## Quality checks
 
 ```bash
-node scripts/hero.mjs                   # hero journey frames at every waypoint, desktop and phone
-node scripts/herovideo.mjs              # screen recordings of the journey (shots/hero/*.webm)
-node scripts/herofps.mjs mobile         # frame pacing through the journey (phone, CPU 4x slower)
-node scripts/pixelcontrast.mjs          # AA contrast on the rendered page, glows included
-npm run contrast                        # AA contrast for every token pair (no server needed)
-node scripts/visual-complete.mjs        # cold load: first text and hero fully built (fast 4G)
-node scripts/budget.mjs desktop         # per-frame CPU and GPU ms across Services → Industries
-node scripts/twitch.mjs mobile 0.12     # stop with 12% of Industries visible; prints stability
-node scripts/navstable.mjs              # header position through the Services transition
-node scripts/section.mjs industries 0.1 0.5 0.95   # one section at chosen progress points
-node scripts/widths.mjs                 # overflow check at 360–1920 px
+npm run check      # astro check + tsc
+npm run qa         # every page, desktop and phone: errors, broken links, overflow, one H1, titles, alt text, share image
+npm run fps        # frame pacing down the home page (`npm run fps -- mobile` for a 4x-slowed phone)
+npm run contrast   # WCAG AA for every colour pair
 ```
 
-Screenshots land in `shots/`, which git ignores.
+`npm run qa` and `npm run fps` need a server: `npx astro preview --port 4322` (or set `URL`). Other helpers in `scripts/`: `hero.mjs`, `herofps.mjs`, `herovideo.mjs`, `home.mjs`, `section.mjs`, `widths.mjs`, `tour.mjs`, `pixelcontrast.mjs`, `images.mjs`.
 
-## Not built yet
+**Lighthouse (7 October 2026, local production build, Lighthouse 13):**
 
-- **Contact form.** Contact is copy-to-clipboard plus `mailto:` and `tel:` links. If you want a form, add a Cloudflare Pages Function (`functions/api/contact.ts`) with Turnstile.
-- **Blog and About pages.** The current site has them; they're out of scope here.
+| | Performance | Accessibility | Best practices | SEO | LCP |
+|---|---|---|---|---|---|
+| Mobile, all 20 pages | 97 to 99 | 100 | 100 | 100 | 2.0 to 2.3 s |
+| Desktop, all 20 pages | 100 | 100 | 100 | 100 | 0.5 s |
+
+CLS is under 0.02 everywhere. Home page frame pacing: 60 fps on desktop through every section.
+
+## Images: rights to confirm
+
+Reused from the old site (originals in `reference/old-site/images/`, prepared by `scripts/images.mjs`):
+
+| File | Used on | Rights |
+|---|---|---|
+| `about-2.png` | About: founder photo | Client's own; confirm |
+| `team-datacentre.png` | About: team photo | Looks like stock; confirm the licence |
+| `woman-desk.png` | Contact | Confirm the licence |
+
+Not used: `ai-chat.png` and `any-cloud.webm` (ServiceNow marketing material with third-party logos), and the other old-site photos. Everything else on the site (3D models, icons, share images) is drawn in code for this project.
+
+## Needed from the client before launch
+
+- **Accounts:** a Turnstile site and secret key, and an email provider account with a verified sending domain (see Environment variables).
+- **Case studies:** real, client-approved engagements to replace the drafts.
+- **TCPWave:** Raleston's own TCPWave work (the LinkedIn post), and whether the implementation keeps network data aligned with the CMDB (TCPWave's own material does not cover it; its guide is from February 2021). Placeholders show in development only.
+- **Confirm the typical durations:** advisory and strategy 2 to 6 weeks; implementation 8 to 16 weeks per release; integration 2 to 6 weeks per integration; support ongoing, with each upgrade 4 to 8 weeks.
+- **Confirm the proposed offerings** marked "proposed: confirm with client" in `content/RESEARCH.md` (for example CSDM alignment, App Engine governance, AI agent design).
+- **Image rights** (table above), and team photos if real ones exist.
+- **Blog:** review and publish (or replace) the three draft posts.
+- **Privacy:** a privacy policy page; the form promises to use details only to reply.
+
+Integrity rules this site follows: no invented clients, case studies or numbers; the only figures are "up to 40% faster deployment" and "up to 60% higher user adoption"; Raleston is described as an independent ServiceNow consultancy, never a partner.

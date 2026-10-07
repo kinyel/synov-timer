@@ -1,440 +1,121 @@
 ---
 /**
- * 02 · The foundation. Three practice buildings (ITSM, ITOM, ITAM) on one
- * glowing CMDB slab, in the canvas behind. Text panels scroll over it, one
- * per building, each with the full explanation and a link to its page; the
- * camera follows whichever panel is centred. The last panel x-rays the model.
- * Camera and labels: src/webgl/scenes/campus/CampusScene.ts and
- * src/scripts/scroll.ts.
+ * 03 · The foundation. Three plain boxes, one per practice (ITSM, ITOM,
+ * ITAM), standing on one wide box: the CMDB they all rely on. Flat, no 3D.
  */
 import { serviceBySlug } from '../../data/services';
 import Icon from '../ui/Icon.astro';
 
-const buildings = ['itsm', 'itom', 'itam'].map((slug) => serviceBySlug(slug)!);
-const xray = [
-  { title: 'Records', text: 'Every desk, server, rack and laptop inside the buildings is a configuration item in the CMDB.' },
-  { title: 'Relationships', text: 'The lines between them say what depends on what, so a change or an alert shows its impact.' },
-  { title: 'Discovery', text: 'The feeds from the edge are Discovery and certified connectors, keeping the records current on their own.' },
+const practices = [
+  { s: serviceBySlug('itsm')!, line: 'Requests in, answers out.' },
+  { s: serviceBySlug('itom')!, line: 'Know which alert matters, before users notice.' },
+  { s: serviceBySlug('itam')!, line: 'What you own, what it costs, whether it is used.' },
 ];
 ---
 
-<section id="foundation" class="foundation" data-scene="foundation" data-theme="dark" data-webgl="campus" aria-labelledby="foundation-title">
-  <div class="layer-bg f-bg" aria-hidden="true"></div>
+<section id="foundation" class="section foundation" data-scene="foundation" data-theme="dark" aria-labelledby="foundation-title">
+  <div class="gutter">
+    <p class="eyebrow">The foundation</p>
+    <h2 id="foundation-title" class="h2 mt-4" data-reveal>Three practices, <span class="text-lit">one foundation</span></h2>
 
-  <!-- Roof labels and x-ray labels, placed every frame at their projected 3D points. -->
-  <div class="f-labels-wrap" aria-hidden="true">
-  <div class="f-labels">
-    {
-      buildings.map((b, i) => (
-        <div class="bldg-label" data-flabel={i}>
-          <span class="bldg-dot" />
-          <span class="bldg-line" />
-          <span class="bldg-tag">
-            <span class="bldg-name">{b.short}</span>
-            <span class="bldg-cap">{b.place}</span>
-          </span>
-        </div>
-      ))
-    }
-    {
-      xray.map((x, i) => (
-        <div class="bldg-label is-xray" data-xlabel={i}>
-          <span class="bldg-dot" />
-          <span class="bldg-line" />
-          <span class="bldg-tag">
-            <span class="bldg-name">{x.title}</span>
-          </span>
-        </div>
-      ))
-    }
-  </div>
-  </div>
-
-  <div class="layer-copy f-steps gutter">
-    <div class="f-step" data-fstep>
-      <div class="f-card f-intro">
-        <p class="eyebrow">The foundation</p>
-        <h2 id="foundation-title" class="f-title">Three practices, <span class="text-lit">one foundation</span></h2>
-        <p class="f-text">
-          IT Service Management, IT Operations Management and IT Asset Management are where most organisations start with ServiceNow. They look like separate products, but they stand on the same thing: the <abbr title="Configuration Management Database">CMDB</abbr>, the map of everything you run and how it connects.
-        </p>
-        <p class="f-text">
-          When that map is accurate, each practice gets better answers. When it is not, all three struggle. That is why we design every platform from its foundation up.
-        </p>
-        <ul class="f-legend" aria-label="Reading the model">
-          <li><span class="sw sw-slab"></span>The slab: the CMDB, with each record a point of light</li>
-          <li><span class="sw sw-line"></span>Azure lines: relationships and data coming in</li>
-          <li><span class="sw sw-gold"></span>Gold: data moving between the practices</li>
-        </ul>
-        <a href="/services/cmdb/" class="f-link">How we build a CMDB you can trust <Icon name="arrow" /></a>
-      </div>
-    </div>
-
-    {
-      buildings.map((b, i) => (
-        <div class="f-step" data-fstep>
-          <article class="f-card" aria-labelledby={`f-${b.slug}`}>
-            <p class="f-eyebrow">
-              <span>{String(i + 1).padStart(2, '0')} / 03</span>
-              <span>{b.place}</span>
-              {b.accent === 'data' && <span class="badge badge-data">Data</span>}
-            </p>
-            <h3 id={`f-${b.slug}`} class="f-title f-title-sm">
-              <abbr title={b.name}>{b.short}</abbr>: {b.name}
-            </h3>
-            <p class="f-text">{b.plain}</p>
-            <div class="f-cols">
-              <div>
-                <p class="f-head">Why it matters</p>
-                <ul class="f-list f-list-why">
-                  {b.why.slice(0, 3).map((w) => (
-                    <li>{w}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <p class="f-head">What we deliver</p>
-                <ul class="f-list">
-                  {b.delivers.slice(0, 4).map((d) => (
-                    <li>{d}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-            <div class="f-ai">
-              <span class="badge badge-ai">AI</span>
-              <p>{b.ai.text} {b.ai.points[0]}.</p>
-            </div>
-            <p class="f-get">
-              <span>What you get</span>
-              {b.outcomes.slice(0, 3).join(' · ')}
-            </p>
-            <details class="f-tech">
-              <summary>
-                For technical teams <Icon name="plus" />
-              </summary>
-              <ul>
-                {b.technical.map((t) => (
-                  <li>{t}</li>
-                ))}
-              </ul>
-            </details>
-            <a href={`/services/${b.slug}/`} class="f-link">
-              Explore {b.short} <Icon name="arrow" />
+    <ul class="f-boxes">
+      {
+        practices.map(({ s, line }) => (
+          <li data-reveal>
+            <a href={`/services/${s.slug}/`} class="card card-hover f-box">
+              <span class="f-name">{s.short}</span>
+              <span class="f-full">{s.name}</span>
+              <span class="f-line">{line}</span>
+              <Icon name="arrow" class="f-arrow" />
             </a>
-          </article>
-        </div>
-      ))
-    }
-
-    <div class="f-step" data-fstep>
-      <div class="f-card">
-        <p class="eyebrow">Inside the model</p>
-        <h3 class="f-title f-title-sm">Everything inside is a record</h3>
-        <p class="f-text">
-          X-ray the buildings and their contents drop onto the slab. That is the CMDB at work: the same records serve the service desk, the operations team and the asset team, so all three see one version of the truth.
-        </p>
-        <ul class="f-xray">
-          {
-            xray.map((x) => (
-              <li>
-                <b>{x.title}</b> {x.text}
-              </li>
-            ))
-          }
-        </ul>
-        <a href="/services/cmdb/" class="f-link">CMDB health assessments and CSDM alignment <Icon name="arrow" /></a>
-      </div>
-    </div>
+          </li>
+        ))
+      }
+      <li class="f-base-item" data-reveal>
+        <a href="/services/cmdb/" class="card card-hover f-box f-base">
+          <span class="f-name">CMDB</span>
+          <span class="f-full">Configuration Management Database</span>
+          <span class="f-line">The map of everything you run. All three stand on it.</span>
+          <Icon name="arrow" class="f-arrow" />
+        </a>
+      </li>
+    </ul>
   </div>
 </section>
 
 <style>
   .foundation {
-    position: relative;
-  }
-  .f-bg {
-    position: absolute;
-    inset: 0;
     background:
-      radial-gradient(50% 40% at 70% 50%, color-mix(in srgb, var(--color-iris) 22%, transparent), transparent 70%),
-      radial-gradient(40% 30% at 10% 80%, color-mix(in srgb, var(--color-violet) 14%, transparent), transparent 70%),
-      linear-gradient(180deg, color-mix(in srgb, var(--color-indigo) 60%, var(--color-night)) 0%, var(--color-night) 12%, var(--color-night) 88%, color-mix(in srgb, var(--color-indigo) 40%, var(--color-night)) 100%);
+      radial-gradient(45% 50% at 80% 30%, color-mix(in srgb, var(--color-iris) 14%, transparent), transparent 70%),
+      var(--color-night);
   }
-  /* The wrapper spans the section, so the sticky layer inside it stops where the section ends. */
-  .f-labels-wrap {
-    position: absolute;
-    inset: 0;
-    z-index: 15;
-    pointer-events: none;
-  }
-  .f-labels {
-    position: sticky;
-    top: 0;
-    height: 100svh;
-    overflow: hidden;
-  }
-  .f-steps {
-    position: relative;
-    z-index: 20;
-    padding-block: 18svh 30svh;
-  }
-  .f-step {
-    display: flex;
-    min-height: 125svh;
-    align-items: center;
-  }
-  .f-step:first-child {
-    min-height: 105svh;
-  }
-  .f-card {
-    position: relative;
-    width: min(100%, 40rem);
-    border-radius: 1.5rem;
-    padding: clamp(1.4rem, 2.6vw, 2.1rem);
-    color: var(--color-white);
-    background: color-mix(in srgb, var(--color-night) 84%, transparent);
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent),
-      inset 0 1px 0 color-mix(in srgb, var(--color-white) 14%, transparent),
-      0 40px 80px -40px rgb(0 0 0 / 0.8);
-    backdrop-filter: blur(18px) saturate(1.3);
-  }
-  .f-title {
-    margin-top: 0.9rem;
-    font-size: clamp(2rem, 3.6vw, 3.1rem);
-    font-weight: 800;
-    line-height: 1.02;
-  }
-  .f-title-sm {
-    font-size: clamp(1.6rem, 2.4vw, 2.2rem);
-  }
-  .f-eyebrow {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 0.6rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-iris-soft);
-  }
-  .f-eyebrow > span:nth-child(2) {
-    color: var(--color-grey-200);
-  }
-  .f-text {
-    margin-top: 1rem;
-    font-size: 1.04rem;
-    line-height: 1.6;
-    color: var(--color-grey-200);
-  }
-  .f-cols {
+  .f-boxes {
     display: grid;
-    gap: 1.25rem;
-    margin-top: 1.4rem;
+    gap: 1rem;
+    margin-top: clamp(2rem, 4vw, 3rem);
   }
-  @media (min-width: 640px) {
-    .f-cols {
-      grid-template-columns: 1fr 1fr;
+  @media (min-width: 720px) {
+    .f-boxes {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .f-base-item {
+      grid-column: 1 / -1;
     }
   }
-  .f-head {
-    margin-bottom: 0.55rem;
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-iris-soft);
+  .f-boxes > li {
+    display: flex;
   }
-  .f-list {
-    display: grid;
-    gap: 0.5rem;
-    font-size: 0.95rem;
-    line-height: 1.45;
-    color: var(--color-grey-200);
-  }
-  .f-list li {
+  .f-box {
     position: relative;
-    padding-left: 1.1rem;
-  }
-  .f-list li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.55em;
-    width: 0.4rem;
-    height: 0.4rem;
-    border-radius: 50%;
-    background: var(--color-iris-soft);
-  }
-  .f-list-why li::before {
-    border-radius: 1px;
-    background: none;
-    box-shadow: inset 0 0 0 1.5px var(--color-grey-400);
-  }
-  .f-ai {
     display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-    margin-top: 1.4rem;
-    border-radius: 1rem;
-    padding: 0.9rem 1rem;
-    font-size: 0.95rem;
-    line-height: 1.5;
-    color: var(--color-grey-200);
-    background: color-mix(in srgb, var(--color-violet) 9%, var(--color-night));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 35%, transparent);
+    width: 100%;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: clamp(1.4rem, 2.6vw, 2rem);
   }
-  .f-ai .badge {
-    flex: none;
-    margin-top: 0.1rem;
-  }
-  .f-get {
-    margin-top: 1.2rem;
-    font-size: 0.95rem;
-    line-height: 1.5;
+  .f-name {
+    font-size: clamp(1.6rem, 2.6vw, 2.1rem);
+    font-weight: 800;
+    line-height: 1;
     color: var(--color-white);
   }
-  .f-get > span {
-    display: block;
-    margin-bottom: 0.25rem;
-    font-size: 0.76rem;
+  .f-full {
+    font-size: 0.8rem;
     font-weight: 700;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-iris-soft);
   }
-  .f-tech {
-    margin-top: 1.2rem;
-    border-top: 1px solid color-mix(in srgb, var(--color-white) 10%, transparent);
+  .f-line {
+    margin-top: 0.6rem;
+    padding-right: 2rem;
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--color-grey-200);
   }
-  .f-tech summary {
-    display: flex;
-    min-height: 44px;
-    align-items: center;
-    justify-content: space-between;
-    cursor: pointer;
-    list-style: none;
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: var(--color-white);
-  }
-  .f-tech summary::-webkit-details-marker {
-    display: none;
-  }
-  .f-tech summary :global(svg) {
-    width: 1.1rem;
-    height: 1.1rem;
+  .f-box :global(.f-arrow) {
+    position: absolute;
+    right: clamp(1.4rem, 2.6vw, 2rem);
+    bottom: clamp(1.4rem, 2.6vw, 2rem);
+    width: 1.2rem;
+    height: 1.2rem;
     color: var(--color-iris-soft);
     transition: transform 0.4s var(--ease-expo);
   }
-  .f-tech[open] summary :global(svg) {
-    transform: rotate(45deg);
+  .f-box:hover :global(.f-arrow),
+  .f-box:focus-visible :global(.f-arrow) {
+    transform: translateX(4px);
   }
-  .f-tech ul {
-    display: grid;
-    gap: 0.5rem;
-    padding-bottom: 0.5rem;
-    font-size: 0.92rem;
-    line-height: 1.5;
-    color: var(--color-grey-200);
+  /* The CMDB: the wide box underneath, in the data colour. */
+  .f-base {
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--color-azure) 14%, transparent), transparent 70%),
+      color-mix(in srgb, var(--color-navy) 55%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 40%, transparent),
+      0 30px 60px -40px color-mix(in srgb, var(--color-azure) 60%, transparent);
   }
-  .f-tech li {
-    padding-left: 1rem;
-    border-left: 2px solid color-mix(in srgb, var(--color-azure) 60%, transparent);
-  }
-  .f-link {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 1rem;
-    font-weight: 700;
-    color: var(--color-iris-soft);
-    transition: gap 0.4s var(--ease-expo);
-  }
-  .f-link:hover {
-    gap: 0.8rem;
-    color: var(--color-white);
-  }
-  .f-link :global(svg) {
-    width: 1.1rem;
-    height: 1.1rem;
-  }
-  .f-legend {
-    display: grid;
-    gap: 0.55rem;
-    margin-top: 1.4rem;
-    font-size: 0.92rem;
-    color: var(--color-grey-200);
-  }
-  .f-legend li {
-    display: flex;
-    align-items: center;
-    gap: 0.7rem;
-  }
-  .sw {
-    flex: none;
-    width: 1.6rem;
-    height: 0.5rem;
-    border-radius: 0.2rem;
-  }
-  .sw-slab {
-    background: linear-gradient(90deg, var(--color-navy), color-mix(in srgb, var(--color-azure) 50%, var(--color-navy)));
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 70%, transparent);
-  }
-  .sw-line {
-    height: 2px;
-    background: var(--color-azure);
-    box-shadow: 0 0 8px var(--color-azure);
-  }
-  .sw-gold {
-    width: 0.8rem;
-    height: 0.45rem;
-    background: var(--color-gold);
-    box-shadow: 0 0 10px var(--color-gold);
-  }
-  .f-xray {
-    display: grid;
-    gap: 0.8rem;
-    margin-top: 1.25rem;
-    font-size: 0.97rem;
-    line-height: 1.5;
-    color: var(--color-grey-200);
-  }
-  .f-xray b {
-    color: var(--color-white);
-  }
-
-  /* Phones: the model sits in the upper half; panels scroll up from below it. */
-  @media (max-width: 1023px) {
-    .f-steps {
-      padding-block: 0 20svh;
-    }
-    /* Each building shows on its own first, then its panel slides up over it. */
-    .f-step {
-      min-height: auto;
-      padding-top: 72svh;
-      padding-bottom: 8svh;
-      align-items: flex-start;
-    }
-    .f-step:first-child {
-      min-height: auto;
-    }
-    .f-card {
-      width: 100%;
-      background: color-mix(in srgb, var(--color-night) 90%, transparent);
-    }
-  }
-  /* No WebGL or reduced motion: no labels, cards in a plain column. */
-  :global(html.reduced-motion) .f-labels-wrap,
-  :global(html.no-webgl) .f-labels-wrap {
-    display: none;
-  }
-  :global(html.reduced-motion) .f-step,
-  :global(html.no-webgl) .f-step {
-    min-height: auto;
-    padding-block: 2rem;
+  .f-base .f-full {
+    color: var(--color-azure);
   }
 </style>

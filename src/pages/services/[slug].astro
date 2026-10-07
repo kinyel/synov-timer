@@ -1,12 +1,11 @@
 ---
 /**
- * One page per service (src/data/services.ts), in the same structure:
- * in plain English, why it matters, what we deliver (and, for delivery
- * services, how it runs), a diagram, how AI helps, what you get, the
- * technical detail, FAQs, related services and the closing call to action.
+ * One page per service (src/data/services.ts), kept short: a two-sentence
+ * summary, what you get, how it fits together (a diagram), how AI helps, then
+ * the full detail folded away (everything we deliver, the technical notes and
+ * FAQs) for those who want it, and related services.
  */
 import type { GetStaticPaths } from 'astro';
-import { Image } from 'astro:assets';
 import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import Diagram from '../../components/diagrams/Diagram.astro';
@@ -15,11 +14,6 @@ import Icon from '../../components/ui/Icon.astro';
 import { SERVICES, serviceBySlug, type Service } from '../../data/services';
 import { SITE } from '../../data/site';
 import { faqSchema } from '../../lib/schema';
-import manDesk from '../../assets/images/man-desk.png';
-import teamDc from '../../assets/images/team-datacentre.png';
-import engineers from '../../assets/images/engineers-racks.png';
-import womanDesk from '../../assets/images/woman-desk.png';
-import teamGlass from '../../assets/images/team-glass-icons.png';
 
 export const getStaticPaths = (() => SERVICES.map((s) => ({ params: { slug: s.slug }, props: { s } }))) satisfies GetStaticPaths;
 
@@ -27,14 +21,8 @@ const { s } = Astro.props as { s: Service };
 const related = s.related.map((r) => serviceBySlug(r)!).filter(Boolean);
 const words = s.headline.split(' ');
 const lit = words.slice(-2).join(' ');
-const photos: Record<string, { src: ImageMetadata; alt: string }> = {
-  itsm: { src: manDesk, alt: 'A service desk analyst with a headset helping a colleague from his desk.' },
-  itom: { src: teamDc, alt: 'An IT operations team standing together in a data centre aisle.' },
-  itam: { src: engineers, alt: 'Two engineers reviewing equipment models on a large screen, one with a laptop and one with a tablet.' },
-  'support-and-optimization': { src: womanDesk, alt: 'A platform owner at her desk checking service dashboards on two monitors.' },
-  integrations: { src: teamGlass, alt: 'Two colleagues at a table with laptops, with glass icons floating beside them to suggest connected systems.' },
-};
-const photo = photos[s.slug];
+/** The first sentence, or the first n sentences. */
+const sentences = (t: string, n = 1) => (t.match(/[^.!?]+[.!?]+/g) ?? [t]).slice(0, n).join('').trim();
 const schema = [
   {
     '@type': 'Service',
@@ -56,10 +44,11 @@ const schema = [
       { name: 'Services', href: '/services/' },
       { name: s.short === s.name ? s.name : s.short, href: `/services/${s.slug}/` },
     ]}
-    eyebrow={s.kind === 'platform' ? `Platform · ${s.short === s.name ? s.name : s.name}` : 'How we deliver'}
+    eyebrow={s.kind === 'platform' ? 'Platform' : 'How we deliver'}
     title={s.headline}
     lit={lit}
-    lead={s.lead}
+    lead={sentences(s.lead)}
+    icon={s.icon}
   >
     <div class="mt-9 flex flex-wrap gap-3">
       <a href={`/contact/?topic=${s.slug}`} class="btn btn-primary" data-magnetic>Talk to an architect <Icon name="arrowUpRight" /></a>
@@ -68,83 +57,45 @@ const schema = [
   </PageHero>
 
   <article class="svc" data-theme="dark">
-    <!-- In plain English -->
     <section class="svc-row gutter" aria-labelledby="plain">
-      <h2 id="plain" class="svc-label">In plain English</h2>
-      <div>
-        <p class="svc-plain" data-reveal>{s.plain}</p>
-        {
-          photo && (
-            <figure class="svc-photo" data-reveal>
-              <Image src={photo.src} alt={photo.alt} widths={[480, 800, 1200]} sizes="(min-width: 1024px) 60vw, 92vw" loading="lazy" class="svc-img" data-parallax="0.06" />
-            </figure>
-          )
-        }
-      </div>
+      <h2 id="plain" class="svc-label">In short</h2>
+      <p class="svc-plain" data-reveal>{sentences(s.plain, 2)}</p>
     </section>
 
-    <!-- Why it matters -->
-    <section class="svc-row gutter" aria-labelledby="why">
-      <h2 id="why" class="svc-label">Why it matters</h2>
-      <ul class="svc-pains">
-        {
-          s.why.map((w) => (
-            <li class="card" data-reveal>
-              {w}
-            </li>
-          ))
-        }
-      </ul>
-    </section>
-
-    <!-- What we deliver / how it runs -->
-    <section class="svc-row gutter" aria-labelledby="deliver">
-      <h2 id="deliver" class="svc-label">What Raleston delivers</h2>
+    <section class="svc-row gutter" aria-labelledby="get">
+      <h2 id="get" class="svc-label">What you get</h2>
       <div>
+        <ul class="svc-outcomes">
+          {
+            s.outcomes.map((o) => (
+              <li data-reveal>
+                <Icon name="check" />
+                <span>{o}</span>
+              </li>
+            ))
+          }
+        </ul>
         {
           s.steps && (
-            <ol class="svc-steps">
+            <ol class="svc-steps" data-reveal>
               {s.steps.map((st, i) => (
-                <li class="card" data-reveal>
-                  <span class="svc-step-n">{String(i + 1).padStart(2, '0')}</span>
-                  <h3 class="h3">{st.name}</h3>
-                  <p class="body mt-2">{st.text}</p>
+                <li>
+                  <span>{String(i + 1).padStart(2, '0')}</span> {st.name}
                 </li>
               ))}
             </ol>
           )
         }
-        <ul class="ticks svc-delivers" data-reveal>
-          {s.delivers.map((d) => <li>{d}</li>)}
-        </ul>
         {
-          s.duration && s.who && (
-            <dl class="svc-facts" data-reveal>
-              <div class="card">
-                <dt>
-                  <Icon name="clock" /> Typical length
-                </dt>
-                <dd>{s.duration}</dd>
-              </div>
-              <div class="card">
-                <dt>
-                  <Icon name="people" /> From Raleston
-                </dt>
-                <dd>{s.who.raleston}</dd>
-              </div>
-              <div class="card">
-                <dt>
-                  <Icon name="people" /> From your side
-                </dt>
-                <dd>{s.who.you}</dd>
-              </div>
-            </dl>
+          s.duration && (
+            <p class="svc-duration" data-reveal>
+              <Icon name="clock" /> {s.duration}
+            </p>
           )
         }
       </div>
     </section>
 
-    <!-- Diagram -->
     <section id="how" class="svc-row gutter" aria-labelledby="how-title">
       <h2 id="how-title" class="svc-label">How it fits together</h2>
       <div data-reveal>
@@ -152,53 +103,46 @@ const schema = [
       </div>
     </section>
 
-    <!-- How AI helps -->
     <section class="svc-row gutter" aria-labelledby="ai">
       <h2 id="ai" class="svc-label svc-label-ai"><span class="badge badge-ai">AI</span> How AI helps</h2>
-      <div class="card svc-ai" data-reveal>
-        <p class="lead">{s.ai.text}</p>
-        <ul class="dots svc-ai-list">
-          {s.ai.points.map((p) => <li>{p}</li>)}
-        </ul>
-      </div>
-    </section>
-
-    <!-- What you get -->
-    <section class="svc-row gutter" aria-labelledby="get">
-      <h2 id="get" class="svc-label">What you get</h2>
-      <ul class="svc-outcomes">
-        {
-          s.outcomes.map((o) => (
-            <li data-reveal>
-              <Icon name="check" />
-              <span>{o}</span>
-            </li>
-          ))
-        }
+      <ul class="dots svc-ai-list" data-reveal>
+        {s.ai.points.map((p) => <li>{p}</li>)}
       </ul>
     </section>
 
-    <!-- For technical teams -->
-    <section class="svc-row gutter" aria-labelledby="tech">
-      <h2 id="tech" class="svc-label">For technical teams</h2>
-      <details class="card svc-tech" data-reveal>
-        <summary>
-          <span>The modules, data model and design decisions</span>
-          <Icon name="plus" />
-        </summary>
-        <ul>
-          {s.technical.map((t) => <li>{t}</li>)}
-        </ul>
-      </details>
+    <section class="svc-row gutter" aria-labelledby="more">
+      <h2 id="more" class="svc-label">The detail</h2>
+      <div class="svc-more">
+        <details class="card svc-tech">
+          <summary>
+            <span>Everything we deliver</span>
+            <Icon name="plus" />
+          </summary>
+          <ul>
+            {s.delivers.map((d) => <li>{d}</li>)}
+          </ul>
+          {
+            s.who && (
+              <p class="svc-who">
+                <b>From Raleston:</b> {s.who.raleston}. <b>From your side:</b> {s.who.you}.
+              </p>
+            )
+          }
+        </details>
+        <details class="card svc-tech">
+          <summary>
+            <span>For technical teams</span>
+            <Icon name="plus" />
+          </summary>
+          <ul>
+            {s.technical.map((t) => <li>{t}</li>)}
+          </ul>
+        </details>
+        <h3 class="svc-faq-h">Questions</h3>
+        <Faq items={s.faqs} />
+      </div>
     </section>
 
-    <!-- FAQs -->
-    <section class="svc-row gutter" aria-labelledby="faqs">
-      <h2 id="faqs" class="svc-label">Questions</h2>
-      <Faq items={s.faqs} />
-    </section>
-
-    <!-- Related -->
     <section class="svc-row gutter" aria-labelledby="related">
       <h2 id="related" class="svc-label">Related services</h2>
       <ul class="svc-related">
@@ -267,118 +211,60 @@ const schema = [
     line-height: 1.5;
     color: var(--color-white);
   }
-  .svc-photo {
-    margin: 2rem 0 0;
-    height: clamp(14rem, 30vw, 24rem);
-    overflow: hidden;
-    border-radius: 1.6rem;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
-  }
-  :global(.svc-img) {
-    width: 100%;
-    height: 115%;
-    object-fit: cover;
-  }
-  .svc-pains {
-    display: grid;
-    gap: 0.75rem;
-  }
-  @media (min-width: 720px) {
-    .svc-pains {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  .svc-pains li {
-    position: relative;
-    padding: 1.15rem 1.25rem 1.15rem 3rem;
-    font-size: 1.04rem;
-    line-height: 1.5;
-    color: var(--color-grey-200);
-  }
-  .svc-pains li::before {
-    content: '';
-    position: absolute;
-    left: 1.25rem;
-    top: 1.45rem;
-    width: 0.75rem;
-    height: 0.75rem;
-    border-radius: 0.2rem;
-    box-shadow: inset 0 0 0 1.5px var(--color-grey-400);
-    transform: rotate(45deg);
-  }
   .svc-steps {
-    display: grid;
-    gap: 0.75rem;
-    margin-bottom: 2rem;
-  }
-  @media (min-width: 720px) {
-    .svc-steps {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-  }
-  @media (min-width: 1200px) {
-    .svc-steps {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1.5rem;
   }
   .svc-steps li {
-    padding: 1.3rem 1.35rem;
+    border-radius: 999px;
+    padding: 0.35rem 0.85rem;
+    font-size: 0.95rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 7%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 22%, transparent);
   }
-  .svc-step-n {
-    display: block;
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
+  .svc-steps span {
+    margin-right: 0.3rem;
+    font-size: 0.8rem;
     font-weight: 800;
-    font-variant-numeric: lining-nums;
     color: var(--color-iris-soft);
   }
-  .svc-delivers {
-    display: grid;
-    gap: 0.75rem;
-    max-width: 48rem;
-    font-size: 1.06rem;
-    line-height: 1.55;
-    color: var(--color-grey-200);
-  }
-  .svc-facts {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 2rem;
-  }
-  @media (min-width: 900px) {
-    .svc-facts {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-  .svc-facts > div {
-    padding: 1.15rem 1.25rem;
-  }
-  .svc-facts dt {
+  .svc-duration {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    margin-top: 1.25rem;
+    font-size: 1rem;
+    color: var(--color-grey-200);
+  }
+  .svc-duration :global(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
     color: var(--color-iris-soft);
   }
-  .svc-facts dt :global(svg) {
-    width: 1rem;
-    height: 1rem;
+  .svc-more {
+    display: grid;
+    gap: 0.75rem;
+    max-width: 52rem;
   }
-  .svc-facts dd {
-    margin-top: 0.45rem;
-    font-size: 1rem;
-    line-height: 1.5;
+  .svc-who {
+    margin: 0 1.4rem 1.3rem;
+    font-size: 0.98rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .svc-who b {
     color: var(--color-white);
   }
-  .svc-ai {
-    padding: clamp(1.4rem, 3vw, 2rem);
-    background: color-mix(in srgb, var(--color-violet) 8%, var(--color-night));
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 35%, transparent),
-      0 30px 60px -40px color-mix(in srgb, var(--color-violet) 60%, transparent);
+  .svc-faq-h {
+    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
   }
   .svc-ai-list {
     margin-top: 1.1rem;

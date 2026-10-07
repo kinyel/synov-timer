@@ -1,94 +1,94 @@
 ---
 /**
  * 06 · Case study highlights. Real case studies only: until Raleston has
- * approved ones, production shows the layout with a "coming soon" note and an
- * offer of references. Draft samples show in development and previews.
+ * approved ones, production shows a 3D stack of three case files, still
+ * sealed, and an offer of references. Draft samples show in development and
+ * previews, as short cards.
  */
 import { getCollection } from 'astro:content';
 import { visible, SHOW_DRAFTS } from '../../lib/drafts';
 import Icon from '../ui/Icon.astro';
+import { blk } from '../../lib/iso';
 
 const cases = (await getCollection('caseStudies')).filter(visible).slice(0, 3);
-const ghost = [
-  { industry: 'Industry', title: 'Client type and challenge', modules: ['Module', 'Module'] },
-  { industry: 'Industry', title: 'Client type and challenge', modules: ['Module', 'Module'] },
-  { industry: 'Industry', title: 'Client type and challenge', modules: ['Module', 'Module'] },
-];
 ---
 
 <section id="cases" class="section cases" data-scene="cases" data-theme="dark" aria-labelledby="cases-title">
   <div class="gutter">
-    <div class="flex flex-wrap items-end justify-between gap-6">
-      <div>
-        <p class="eyebrow">Case studies</p>
-        <h2 id="cases-title" class="h2 mt-4" data-reveal>Work we can <span class="text-lit">show you</span></h2>
-      </div>
-      <a href="/case-studies/" class="link-arrow" data-reveal>All case studies <Icon name="arrow" /></a>
-    </div>
-
     {
       cases.length > 0 ? (
-        <ul class="cases-grid">
-          {cases.map((c) => (
-            <li data-reveal>
-              <a href={`/case-studies/${c.id}/`} class="card card-hover case-card">
-                {c.data.draft && <span class="draft-tag">Draft sample</span>}
-                <p class="case-industry">{c.data.industry}</p>
-                <h3 class="h3 mt-3">{c.data.title}</h3>
-                <p class="body mt-3">{c.data.summary}</p>
-                <ul class="case-mods">
-                  {c.data.modules.map((m) => (
-                    <li>{m}</li>
-                  ))}
-                </ul>
-                <span class="link-arrow mt-auto pt-4">
-                  Read the case study <Icon name="arrow" />
-                </span>
-              </a>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div class="cases-soon" data-reveal>
-          <ul class="cases-grid cases-ghost" aria-hidden="true">
-            {ghost.map((g) => (
-              <li class="card case-card">
-                <p class="case-industry">{g.industry}</p>
-                <p class="ghost-line w-[80%]" />
-                <p class="ghost-line w-[60%]" />
-                <p class="ghost-text" />
-                <p class="ghost-text w-[85%]" />
-                <ul class="case-mods">
-                  {g.modules.map((m) => (
-                    <li>{m}</li>
-                  ))}
-                </ul>
+        <>
+          <div class="flex flex-wrap items-end justify-between gap-6">
+            <div>
+              <p class="eyebrow">Case studies</p>
+              <h2 id="cases-title" class="h2 mt-4" data-reveal>
+                Work we can <span class="text-lit">show you</span>
+              </h2>
+            </div>
+            <a href="/case-studies/" class="link-arrow" data-reveal>
+              All case studies <Icon name="arrow" />
+            </a>
+          </div>
+          <ul class="cases-grid">
+            {cases.map((c) => (
+              <li data-reveal>
+                <a href={`/case-studies/${c.id}/`} class="card card-hover case-card">
+                  {c.data.draft && <span class="draft-tag">Draft sample</span>}
+                  <p class="case-industry">{c.data.industry}</p>
+                  <h3 class="h3 mt-3">{c.data.title}</h3>
+                  <span class="link-arrow mt-auto pt-4">
+                    Read it <Icon name="arrow" />
+                  </span>
+                </a>
               </li>
             ))}
           </ul>
-          <div class="soon-note card">
-            <span class="icon-tile">
-              <Icon name="book" />
-            </span>
-            <div>
-              <p class="h3">Detailed case studies coming soon.</p>
-              <p class="body mt-2">Ask us for references: we will put you in touch with clients who can tell you what it is like to work with us.</p>
-              <a href="/contact/?topic=references" class="btn btn-primary mt-5" data-magnetic>
-                Ask for references <Icon name="arrowUpRight" />
-              </a>
+          {SHOW_DRAFTS && cases.some((c) => c.data.draft) && <p class="draft-note">Draft samples show in development and previews only.</p>}
+        </>
+      ) : (
+        <div class="cases-soon">
+          <div class="s3d cases-scene" data-s3d aria-hidden="true">
+            <div class="s3d-world">
+              <span class="cases-pool" />
+              {[0, 1, 2].map((i) => (
+                <div class={`blk case-file ${i === 2 ? 'is-lit' : ''}`} style={blk(0, 0, 210, 6, 0, `--i:${i}`)}>
+                  <b class="blk-top">
+                    <span class="case-ghost">
+                      <i class="w-[46%]" />
+                      <i class="w-[70%]" />
+                      <i class="w-[58%]" />
+                      <i class="case-seal" />
+                    </span>
+                  </b>
+                  <b class="blk-e" />
+                  <b class="blk-s" />
+                </div>
+              ))}
             </div>
+          </div>
+          <div class="cases-copy">
+            <p class="eyebrow">Case studies</p>
+            <h2 id="cases-title" class="h2 mt-4" data-reveal>
+              Work we can <span class="text-lit">show you</span>
+            </h2>
+            <p class="lead mt-4" data-reveal>
+              Detailed case studies are on the way. Until then, ask for references.
+            </p>
+            <a href="/contact/?topic=references" class="btn btn-primary mt-7" data-magnetic data-reveal>
+              Ask for references <Icon name="arrowUpRight" />
+            </a>
           </div>
         </div>
       )
     }
-    {SHOW_DRAFTS && cases.some((c) => c.data.draft) && <p class="draft-note">Draft samples are shown in development and preview builds only. Production shows the “coming soon” state until real, client-approved case studies are added.</p>}
   </div>
 </section>
 
 <style>
   .cases {
+    overflow: hidden;
     background:
-      radial-gradient(40% 50% at 50% 0%, color-mix(in srgb, var(--color-iris) 14%, transparent), transparent 70%),
+      radial-gradient(40% 50% at 30% 40%, color-mix(in srgb, var(--color-iris) 16%, transparent), transparent 70%),
       var(--color-night);
   }
   .cases-grid {
@@ -117,19 +117,6 @@ const ghost = [
     text-transform: uppercase;
     color: var(--color-iris-soft);
   }
-  .case-mods {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 1.1rem;
-  }
-  .case-mods li {
-    border-radius: 999px;
-    padding: 0.25rem 0.65rem;
-    font-size: 0.82rem;
-    color: var(--color-grey-200);
-    background: color-mix(in srgb, var(--color-white) 7%, transparent);
-  }
   .draft-tag {
     align-self: flex-start;
     margin-bottom: 0.8rem;
@@ -147,46 +134,81 @@ const ghost = [
     font-size: 0.9rem;
     color: var(--color-grey-400);
   }
+
+  /* ── Coming soon: three sealed case files ── */
   .cases-soon {
-    position: relative;
+    display: grid;
+    gap: 1rem;
+    align-items: center;
   }
-  .cases-ghost {
-    filter: blur(1.5px);
-    opacity: 0.45;
+  @media (min-width: 1024px) {
+    .cases-soon {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 3rem;
+    }
   }
-  .ghost-line,
-  .ghost-text {
-    height: 0.9rem;
-    margin-top: 0.8rem;
-    border-radius: 0.4rem;
+  .cases-scene {
+    --k: 0.7;
+    height: 330px;
+    order: 2;
+  }
+  @media (min-width: 1024px) {
+    .cases-scene {
+      --k: 1;
+      height: 470px;
+      order: 0;
+    }
+  }
+  .cases-scene .s3d-world {
+    top: 62%;
+  }
+  .cases-pool {
+    position: absolute;
+    left: -260px;
+    top: -260px;
+    width: 520px;
+    height: 520px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-iris) 26%, transparent), transparent);
+    transform: translateZ(-20px);
+  }
+  /* The files open up as the section arrives, then float. */
+  .case-file {
+    --dz: calc(var(--i) * (24px + var(--p) * 60px));
+    animation: case-bob 6s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -2s);
+  }
+  @keyframes case-bob {
+    50% {
+      translate: 0 0 10px;
+    }
+  }
+  .case-ghost {
+    position: absolute;
+    inset: 14% 12%;
+    display: grid;
+    align-content: start;
+    gap: 9%;
+  }
+  .case-ghost i {
+    display: block;
+    height: 9px;
+    border-radius: 5px;
     background: color-mix(in srgb, var(--color-white) 14%, transparent);
   }
-  .ghost-text {
-    height: 0.6rem;
-    background: color-mix(in srgb, var(--color-white) 8%, transparent);
-  }
-  .soon-note {
+  .case-ghost .case-seal {
     position: absolute;
-    left: 50%;
-    top: 50%;
-    display: flex;
-    gap: 1.1rem;
-    width: min(92%, 34rem);
-    padding: 1.6rem;
-    transform: translate(-50%, -40%);
-    background: color-mix(in srgb, var(--color-night) 94%, transparent);
-    box-shadow:
-      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 35%, transparent),
-      0 40px 80px -30px rgb(0 0 0 / 0.9);
+    right: 0;
+    bottom: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    background: none;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-iris-soft) 50%, transparent);
   }
-  @media (max-width: 899px) {
-    .soon-note {
-      position: relative;
-      left: auto;
-      top: auto;
-      width: 100%;
-      margin-top: -6rem;
-      transform: none;
-    }
+  .case-file.is-lit .case-seal {
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-gold),
+      0 0 18px color-mix(in srgb, var(--color-gold) 60%, transparent);
   }
 </style>

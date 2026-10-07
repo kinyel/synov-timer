@@ -1,0 +1,13 @@
+# Runtime settings for the contact form function (functions/api/contact.ts).
+# Copy to .dev.vars for `npm run preview`; in production set them as
+# Cloudflare Pages › Settings › Environment variables (encrypt the secrets).
+
+# "resend", "postmark", "sendgrid", or "log" (print to the console, send nothing).
+EMAIL_PROVIDER=log
+EMAIL_API_KEY=
+CONTACT_TO=info@ralestonconsulting.com
+CONTACT_FROM=Raleston website <web@ralestonconsulting.com>
+
+# Turnstile secret key. Required unless EMAIL_PROVIDER=log.
+# Local testing: 1x0000000000000000000000000000000AA always passes.
+TURNSTILE_SECRET_KEY=

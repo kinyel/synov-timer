@@ -1,0 +1,143 @@
+---
+/**
+ * The TCPWave flow as a 3D model: four square blocks, from the approved
+ * change to the DNS and DHCP set-up, and a gold packet that travels across
+ * them, lighting each step as it arrives. Used on the home page band and on
+ * /solutions/tcpwave/.
+ */
+import Icon from '../ui/Icon.astro';
+import type { IconName } from '../ui/icons';
+import { blk, line } from '../../lib/iso';
+
+const steps: { label: string; icon: IconName }[] = [
+  { label: 'Change approved', icon: 'check' },
+  { label: 'TCPWave API', icon: 'integrations' },
+  { label: 'IP address', icon: 'network' },
+  { label: 'DNS · DHCP', icon: 'tech' },
+];
+const X = [-195, -65, 65, 195];
+---
+
+<div class="s3d tcp-scene" data-s3d aria-hidden="true">
+        <div class="s3d-world">
+          <span class="tcp-pool"></span>
+          <span class="s3d-line tcp-line" style={line(X[0]!, 0, X[3]!, 0, 1)}></span>
+          {
+            steps.map((s, i) => (
+              <div class="blk tcp-blk" style={blk(X[i]!, 0, 100, 22, 0, `--i:${i}`)}>
+                <b class="blk-top">
+                  <span class="blk-label">
+                    <Icon name={s.icon} />
+                    {s.label}
+                  </span>
+                </b>
+                <b class="blk-e" />
+                <b class="blk-s" />
+              </div>
+            ))
+          }
+          <div class="blk tcp-packet" style={blk(X[0]!, 0, 16, 16, 34)}>
+            <b class="blk-top"></b>
+            <b class="blk-e"></b>
+            <b class="blk-s"></b>
+          </div>
+        </div>
+      </div>
+<ol class="sr-only">
+  {steps.map((s) => <li>{s.label}</li>)}
+</ol>
+
+<style>
+  /* ── The flow ── */
+  .tcp-scene {
+    --k: 0.62;
+    height: 260px;
+  }
+  @media (min-width: 640px) {
+    .tcp-scene {
+      --k: 0.9;
+      height: 340px;
+    }
+  }
+  @media (min-width: 1280px) {
+    .tcp-scene {
+      --k: 1;
+      height: 380px;
+    }
+  }
+  .tcp-pool {
+    position: absolute;
+    left: -300px;
+    top: -300px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-azure) 22%, transparent), transparent);
+    transform: translateZ(-2px);
+  }
+  .tcp-line {
+    --draw: clamp(0, calc(var(--p) * 1.6 - 0.4), 1);
+    background: linear-gradient(90deg, var(--color-azure), var(--color-gold));
+  }
+  .tcp-blk {
+    --q: clamp(0, calc(var(--p) * 1.8 - var(--i) * 0.2), 1);
+    --dz: calc((1 - var(--q)) * (1 - var(--q)) * 140px);
+  }
+  .tcp-blk > b {
+    opacity: var(--q);
+  }
+  /* Each step lights as the packet reaches it. */
+  .tcp-blk .blk-top::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-gold),
+      inset 0 0 22px color-mix(in srgb, var(--color-gold) 28%, transparent),
+      0 0 26px color-mix(in srgb, var(--color-gold) 35%, transparent);
+    opacity: 0;
+    animation: tcp-lit 6s linear infinite;
+    animation-delay: calc(var(--i) * 1.5s - 0.4s);
+  }
+  @keyframes tcp-lit {
+    0%,
+    22%,
+    100% {
+      opacity: 0;
+    }
+    6%,
+    14% {
+      opacity: 1;
+    }
+  }
+  /* The packet: a small gold cube, carried from the change to the network. */
+  .tcp-packet {
+    animation: tcp-packet 6s cubic-bezier(0.55, 0, 0.45, 1) infinite;
+  }
+  .tcp-packet > b {
+    background: var(--color-gold-glow) !important;
+    box-shadow: 0 0 18px 4px color-mix(in srgb, var(--color-gold) 70%, transparent) !important;
+    /* Fade the faces, not the cube: opacity on the cube itself would flatten it. */
+    animation: tcp-fade 6s linear infinite;
+  }
+  @keyframes tcp-packet {
+    0% {
+      translate: 0 0 0;
+    }
+    75%,
+    100% {
+      translate: 390px 0 0;
+    }
+  }
+  @keyframes tcp-fade {
+    0%,
+    85%,
+    100% {
+      opacity: 0;
+    }
+    5%,
+    75% {
+      opacity: 1;
+    }
+  }
+</style>

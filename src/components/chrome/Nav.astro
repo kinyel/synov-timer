@@ -108,7 +108,7 @@ const links = [
   </div>
 
   <!-- Mobile / tablet sheet -->
-  <div id="mobile-menu" class="nav-sheet" aria-hidden="true" data-menu>
+  <div id="mobile-menu" class="nav-sheet" aria-hidden="true" inert data-menu>
     <div class="gutter flex min-h-full flex-col pt-28 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
       <ul class="flex flex-col">
         <li class="nav-sheet-row">
@@ -211,7 +211,6 @@ const links = [
   .nav-bar {
     padding-top: max(1rem, env(safe-area-inset-top));
     padding-bottom: 1rem;
-    transition: padding 0.6s var(--ease-expo);
   }
   /* Without JavaScript the bar never condenses, so give it a solid backing. */
   :global(html:not(.js)) .nav-bar {
@@ -221,14 +220,14 @@ const links = [
     padding-top: max(0.7rem, env(safe-area-inset-top));
     padding-bottom: 0.7rem;
   }
-  /* Inner pages are mostly text: once condensed, the bar gets a dark glass
-     backing so copy never shows through behind the logo. */
-  :global(html[data-page='inner']) .nav-bar {
+  /* Once condensed, the bar gets a dark glass backing so copy never shows
+     through behind the logo. */
+  .nav-bar {
     transition:
       padding 0.6s var(--ease-expo),
       background-color 0.5s ease;
   }
-  :global(html[data-page='inner']) .nav[data-condensed] .nav-bar {
+  .nav[data-condensed] .nav-bar {
     background-color: rgb(4 10 22 / 0.8);
     backdrop-filter: blur(16px) saturate(1.3);
   }

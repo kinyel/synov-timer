@@ -190,6 +190,7 @@ export function initNav(lenis: Lenis | null, reduced: boolean) {
     toggle.setAttribute('aria-expanded', 'false');
     toggle.setAttribute('aria-label', 'Open menu');
     sheet.setAttribute('aria-hidden', 'true');
+    sheet.inert = true;
     delete html.dataset.menuOpen;
     lenis?.start();
   }
@@ -200,6 +201,7 @@ export function initNav(lenis: Lenis | null, reduced: boolean) {
     toggle.setAttribute('aria-expanded', 'true');
     toggle.setAttribute('aria-label', 'Close menu');
     sheet.setAttribute('aria-hidden', 'false');
+    sheet.inert = false;
     html.dataset.menuOpen = '';
     lenis?.stop();
     if (!reduced) gsap.fromTo($$('.nav-sheet-row, .nav-sheet .nav-cta', sheet), { y: 24, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8, ease: 'expo.out', stagger: 0.05, delay: 0.15 });

@@ -1,6 +1,8 @@
 ---
-/** Inner-page header: breadcrumbs, eyebrow, the page's one H1, and a lead. */
+/** Inner-page header: breadcrumbs, eyebrow, the page's one H1, a lead, and a small 3D plate stack. */
 import type { Crumb } from '../../layouts/Base.astro';
+import type { IconName } from './icons';
+import PlateStack from '../scenes/PlateStack.astro';
 
 interface Props {
   crumbs: Crumb[];
@@ -9,14 +11,17 @@ interface Props {
   /** Words of the title to set in light iris. */
   lit?: string;
   lead?: string;
+  /** Icon on the lit plate of the 3D stack; false for no stack. */
+  icon?: IconName | false;
 }
-const { crumbs, eyebrow, title, lit, lead } = Astro.props;
+const { crumbs, eyebrow, title, lit, lead, icon = 'cmdb' } = Astro.props;
 const [before, after] = lit && title.includes(lit) ? [title.slice(0, title.indexOf(lit)), title.slice(title.indexOf(lit) + lit.length)] : [title, ''];
 ---
 
 <header class="page-hero" data-theme="dark">
   <div class="page-hero-glow" aria-hidden="true"></div>
-  <div class="gutter relative">
+  {icon && <PlateStack icon={icon} />}
+  <div class="gutter relative page-hero-copy">
     <nav aria-label="Breadcrumb">
       <ol class="crumbs">
         <li><a href="/">Home</a></li>
@@ -98,6 +103,17 @@ const [before, after] = lit && title.includes(lit) ? [title.slice(0, title.index
   .page-title {
     margin-top: 1rem;
     max-width: 18ch;
+  }
+  /* Leave room on the right for the plate stack. */
+  @media (min-width: 768px) {
+    .page-hero-copy > :global(*) {
+      max-width: min(44rem, calc(100% - 22rem));
+    }
+  }
+  @media (min-width: 1280px) {
+    .page-hero-copy > :global(*) {
+      max-width: min(44rem, calc(100% - 30rem));
+    }
   }
   .page-lead {
     margin-top: 1.5rem;

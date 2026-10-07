@@ -22,6 +22,7 @@
 
 /* Nav theme tokens, registered so light ↔ dark cross-fades instead of snapping. */
 /* Animatable lift for the 3D scenes' hover state. */
+/* How far a hero label has turned to the reader (0..1), animatable. */
 @property --lift {
   syntax: '<length>';
   inherits: false;
@@ -354,6 +355,10 @@
   main.is-page {
     background: var(--color-night);
   }
+  /* Inner pages are short now: tighter rhythm between sections. */
+  main.is-page .section {
+    padding-block: clamp(3.5rem, 7vw, 6rem);
+  }
   .section {
     position: relative;
     padding-block: clamp(5rem, 10vw, 8.5rem);
@@ -518,248 +523,11 @@
   }
 }
 
-/* Building labels (foundation section): a glowing gold anchor dot, a
- * gold-to-ink leader line and a navy tag with a gold hairline. JS positions
- * them at the building's roof and sets --w (0..1) as they come into focus. */
-.bldg-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  opacity: 0;
-  will-change: transform, opacity;
-  --line: 4.5rem;
-}
-.bldg-dot {
-  position: absolute;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  box-shadow:
-    0 0 0 3px rgb(255 194 26 / 0.25),
-    0 0 14px rgb(255 194 26 / 0.85);
-}
-.bldg-dot::after {
-  content: '';
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 1px solid rgb(255 194 26 / 0.7);
-  animation: bldg-ping 2.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
-}
-@keyframes bldg-ping {
-  0% {
-    transform: scale(0.5);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
-  }
-}
-.bldg-line {
-  position: absolute;
-  left: -0.75px;
-  bottom: 0;
-  width: 1.5px;
-  height: var(--line);
-  background: linear-gradient(to top, var(--color-gold), color-mix(in srgb, var(--color-navy) 60%, transparent));
-  transform: scaleY(calc(0.4 + var(--w, 1) * 0.6));
-  transform-origin: bottom;
-}
-.bldg-tag {
-  position: absolute;
-  left: 0;
-  bottom: var(--line);
-  display: grid;
-  grid-template-columns: auto 1fr;
-  column-gap: 0.55rem;
-  row-gap: 0.2rem;
-  align-items: center;
-  padding: 0.62rem 1.05rem 0.68rem 0.85rem;
-  border-radius: 0.95rem;
-  background: color-mix(in srgb, var(--color-night) 92%, transparent);
-  color: var(--color-white);
-  white-space: nowrap;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 45%, transparent),
-    0 12px 28px -10px rgb(0 0 0 / 0.6),
-    0 0 24px -6px color-mix(in srgb, var(--color-iris) 60%, transparent);
-  transform: translateX(-50%) translateY(calc((1 - var(--w, 1)) * 8px)) scale(calc(0.94 + var(--w, 1) * 0.06));
-  transform-origin: 50% 100%;
-}
-.bldg-tag::before {
-  content: '';
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--color-gold);
-  box-shadow: 0 0 8px var(--color-gold);
-}
-.bldg-name {
-  font-family: var(--font-mono);
-  font-size: 0.76rem;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-/* Caption: what the building is for, in plain words. */
-.bldg-cap {
-  grid-column: 2;
-  font-size: 0.74rem;
-  letter-spacing: 0;
-  color: var(--color-grey-200);
-}
-.bldg-label.is-xray .bldg-dot {
-  background: var(--color-azure);
-  box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--color-azure) 25%, transparent),
-    0 0 14px var(--color-azure);
-}
-.bldg-label.is-xray .bldg-dot::after {
-  border-color: color-mix(in srgb, var(--color-azure) 70%, transparent);
-}
-.bldg-label.is-xray .bldg-line {
-  background: linear-gradient(to top, var(--color-azure), transparent);
-}
-@media (max-width: 639px) {
-  .bldg-label {
-    --line: 3.6rem;
-  }
-  .bldg-tag {
-    padding: 0.52rem 0.9rem 0.56rem 0.75rem;
-  }
-  .bldg-name {
-    font-size: 0.7rem;
-  }
-  .bldg-cap {
-    font-size: 0.7rem;
-  }
-}
-
-/* Story cards: the copy that accompanies each 3D beat. A gold hairline on
- * top, a gold-ruled eyebrow naming what the visitor is looking at, a title,
- * one or two sentences. Light and dark variants. */
-.story-stack {
-  position: relative;
-  width: 100%;
-  max-width: 25rem;
-  height: 12.25rem;
-}
-@media (min-width: 768px) {
-  .story-stack {
-    height: 13.5rem;
-  }
-}
-.story-card {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-  border-radius: 1.4rem;
-  padding: 1.25rem 1.3rem 1.3rem;
-  color: var(--color-ink);
-  background: rgb(255 255 255 / 0.86);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.75),
-    0 24px 60px -30px rgb(10 16 48 / 0.38);
-  backdrop-filter: blur(22px) saturate(1.2);
-}
-.story-card::before {
-  content: '';
-  position: absolute;
-  left: 1.3rem;
-  right: 1.3rem;
-  top: 0;
-  height: 2px;
-  border-radius: 0 0 2px 2px;
-  background: linear-gradient(90deg, var(--color-gold), rgb(242 178 0 / 0.15) 70%, transparent);
-}
-.story-card.is-dark {
-  color: #fff;
-  background: rgb(12 12 14 / 0.78);
-  box-shadow:
-    inset 0 0 0 1px rgb(255 194 26 / 0.22),
-    0 24px 60px -30px rgb(0 0 0 / 0.8);
-}
-@media (min-width: 768px) {
-  .story-card {
-    padding: 1.45rem 1.5rem 1.5rem;
-  }
-  .story-card::before {
-    left: 1.5rem;
-    right: 1.5rem;
-  }
-}
-.story-eyebrow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-family: var(--font-mono);
-  font-size: 0.66rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-gold-ink);
-}
-.story-eyebrow > :first-child {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
-}
-.story-eyebrow > :first-child::before {
-  content: '';
-  width: 1.1rem;
-  height: 1px;
-  background: currentColor;
-}
-.story-eyebrow .num {
-  color: rgb(10 16 48 / 0.45);
-  font-variant-numeric: tabular-nums;
-}
-.is-dark .story-eyebrow {
-  color: var(--color-gold);
-}
-.is-dark .story-eyebrow .num {
-  color: rgb(255 255 255 / 0.45);
-}
-.story-title {
-  font-family: var(--font-display);
-  font-size: 1.45rem;
-  line-height: 1.05;
-  font-weight: 600;
-  letter-spacing: -0.02em;
-}
-.story-body {
-  margin-top: 0.45rem;
-  font-size: 0.86rem;
-  line-height: 1.45;
-  color: rgb(10 16 48 / 0.72);
-}
-.is-dark .story-body {
-  color: var(--color-grey-400);
-}
-@media (min-width: 768px) {
-  .story-title {
-    font-size: 1.7rem;
-  }
-  .story-body {
-    font-size: 0.9rem;
-  }
-}
-
 /*
- * Layering, bottom to top:
- *   .layer-bg   (z 0)  section backgrounds and giant kinetic type
- *   #webgl      (z 10) the single transparent canvas
- *   #fx-vignette(z 15) page vignette, dark sections only
+ * Layering inside pinned sections (the staircase), bottom to top:
+ *   .layer-bg   (z 0)  backgrounds and decoration
  *   .layer-copy (z 20) readable copy
- *   chrome      (z 40+) nav, progress, cursor, grain
- * <main> and sections must not create stacking contexts (no z-index /
- * transform / filter on them) or the copy would get trapped under the canvas.
+ *   chrome      (z 40+) nav, cursor, grain
  */
 @layer components {
   /* In the components layer so utilities like `sticky` can override the default position. */
@@ -770,29 +538,6 @@
     position: relative;
     z-index: 20;
   }
-}
-#webgl {
-  position: fixed;
-  inset: 0;
-  z-index: 10;
-  height: 100lvh;
-  pointer-events: none;
-}
-#webgl canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-#fx-vignette {
-  position: fixed;
-  inset: 0;
-  z-index: 15;
-  pointer-events: none;
-  background: radial-gradient(130% 100% at 50% 45%, transparent 55%, rgb(4 6 15 / 0.55) 100%);
-  transition: opacity 0.8s var(--ease-expo);
-}
-html[data-theme='light'] #fx-vignette {
-  opacity: 0;
 }
 /* Film grain: an SVG turbulence tile, jittered in steps so it shimmers like film. */
 #fx-grain {
@@ -838,14 +583,6 @@ html {
   }
 }
 
-/* No WebGL: complete static page with the poster as hero art. */
-.no-webgl-art {
-  display: none;
-}
-html.no-webgl .no-webgl-art {
-  display: block;
-}
-
 @media (prefers-reduced-motion: reduce) {
   #fx-grain {
     animation: none;
@@ -887,12 +624,14 @@ html.no-webgl .no-webgl-art {
   --x: 0px;
   --y: 0px;
   --z: 0px;
+  --dz: 0px;
   position: absolute;
-  left: calc(var(--x) - var(--w) / 2);
-  top: calc(var(--y) - var(--w) / 2);
+  left: calc(var(--w) / -2);
+  top: calc(var(--w) / -2);
   width: var(--w);
   height: var(--w);
-  transform: translateZ(calc(var(--z) + var(--h)));
+  /* Position by transform only, so scenes can animate it without layout. --dz is the animated lift. */
+  transform: translate3d(var(--x), var(--y), calc(var(--z) + var(--h) + var(--dz)));
 }
 .blk > b {
   position: absolute;

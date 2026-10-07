@@ -4,10 +4,12 @@
  *
  * An architect's exploded drawing of a ServiceNow platform: five smoked-glass
  * plates, one per stage of a request, floating on a dark stage under a single
- * gold light. As the visitor scrolls, the request falls through the plates as
- * a thread of gold light. Each plate it pierces lights up and its surface shows
- * what happens there, while an annotation, tied to the plate by a leader line,
- * explains it. At the end the plates close up into one lit platform.
+ * gold light. As the visitor starts to scroll, the whole stack turns from
+ * diamonds to squares. The request then falls through the plates as a spark
+ * of gold light; each plate it reaches lights up and the words on its surface
+ * read clearly, while an annotation, tied to the plate by a leader line,
+ * explains it. After the last level the stack turns back to diamonds and the
+ * plates close up into one lit platform.
  *
  * Everything readable is HTML. Without JavaScript, or with reduced motion, the
  * plates sit still, fully lit, and the five steps are a plain list.
@@ -50,7 +52,7 @@ const alerts = [
         <span class="line-mask" data-line><span class="block">with ServiceNow</span></span>
       </h1>
       <p class="hero-lead" data-hero-intro>
-        Certified ServiceNow architects for <abbr title="IT Service Management">ITSM</abbr>, <abbr title="IT Operations Management">ITOM</abbr>, <abbr title="IT Asset Management">ITAM</abbr> and the <abbr title="Configuration Management Database">CMDB</abbr> that connects them, with ServiceNow Otto (formerly Now Assist), custom AI skills and <abbr title="Model Context Protocol">MCP</abbr> built into how the work gets done.
+        Certified ServiceNow architects for <abbr title="IT Service Management">ITSM</abbr>, <abbr title="IT Operations Management">ITOM</abbr>, <abbr title="IT Asset Management">ITAM</abbr> and the <abbr title="Configuration Management Database">CMDB</abbr>, with AI built in.
       </p>
       <div class="hero-ctas" data-hero-ctas>
         <a href="/contact/" class="btn btn-primary" data-magnetic>
@@ -87,17 +89,19 @@ const alerts = [
               <span class="plate-edge" style="--e:1" />
               <div class="plate-top">
                 <span class="plate-sheen" />
-                <span class="plate-sweep" />
-                <span class="plate-num">{pad(i)}</span>
-                <span class="plate-name">{s.name}</span>
+                <span class="plate-clip">
+                  <span class="plate-sweep" />
+                </span>
+                <span class="plate-num lvl">{pad(i)}</span>
+                <span class="plate-name lvl">{s.name}</span>
                 <span class="plate-port">
                   <span />
                 </span>
 
                 {i === 0 && (
                   <div class="ui ui-chat">
-                    <p class="bubble bubble-you">My VPN keeps dropping</p>
-                    <p class="bubble bubble-otto">
+                    <p class="bubble bubble-you lvl">My VPN keeps dropping</p>
+                    <p class="bubble bubble-otto lvl">
                       <span class="otto-mark" />
                       On it. Checking your laptop and the VPN service.
                     </p>
@@ -106,16 +110,18 @@ const alerts = [
                 {i === 1 && (
                   <div class="ui ui-lanes">
                     <span class="lane" style="--l:0">
-                      Service desk
+                      <b class="lvl lane-t">Service desk</b>
                     </span>
                     <span class="lane lane-target" style="--l:1">
-                      Network
+                      <b class="lvl lane-t">Network</b>
                     </span>
                     <span class="lane" style="--l:2">
-                      Identity
+                      <b class="lvl lane-t">Identity</b>
                     </span>
                     <span class="ticket">
-                      <span class="ticket-tag">AI</span>VPN drops
+                      <span class="lvl ticket-in">
+                        <span class="ticket-tag">AI</span>VPN drops
+                      </span>
                     </span>
                   </div>
                 )}
@@ -124,17 +130,11 @@ const alerts = [
                     <svg viewBox="0 0 100 100" class="graph-lines">
                       <path d="M50 50 L18 18" />
                       <path d="M50 50 L84 30" />
-                      <path d="M50 50 L30 84" />
+                      <path d="M50 50 L78 72" />
                     </svg>
-                    <span class="node" style="--x:18;--y:18">
-                      Laptop
-                    </span>
-                    <span class="node" style="--x:84;--y:30">
-                      VPN licence
-                    </span>
-                    <span class="node" style="--x:30;--y:84">
-                      Remote access
-                    </span>
+                    <span class="node lvl" style="--x:18;--y:18" data-label="Laptop"></span>
+                    <span class="node lvl" style="--x:84;--y:30" data-label="VPN licence"></span>
+                    <span class="node lvl" style="--x:78;--y:72" data-label="Remote access"></span>
                   </div>
                 )}
                 {i === 3 && (
@@ -142,12 +142,12 @@ const alerts = [
                     {alerts.map(([x, y]) => (
                       <span class="alert" style={`--x:${x};--y:${y}`} />
                     ))}
-                    <span class="alert-card">VPN gateway · packet loss</span>
+                    <span class="alert-card lvl">VPN gateway · packet loss</span>
                   </div>
                 )}
                 {i === 4 && (
                   <div class="ui ui-kb">
-                    <span class="kb">
+                    <span class="kb lvl">
                       <span class="kb-title">Knowledge article</span>
                       <span class="kb-line" style="--w:92%" />
                       <span class="kb-line" style="--w:78%" />
@@ -166,6 +166,7 @@ const alerts = [
                 <i class="anchor" style="left:100%;top:100%" data-anchor="r" />
                 <i class="anchor" style="left:0;top:100%" data-anchor="f" />
               </div>
+              <span class="plate-outline" />
             </div>
           ))
         }
@@ -174,23 +175,12 @@ const alerts = [
       <!-- Screen-space overlay, centred on the platform -->
       <svg class="beam" data-beam>
         <defs>
-          <linearGradient id="beam-lit" gradientUnits="userSpaceOnUse" x1="0" y1="-400" x2="0" y2="400" data-beam-grad>
-            <stop offset="0" stop-color="var(--color-gold)" stop-opacity="0.3"></stop>
-            <stop offset="0.85" stop-color="var(--color-gold)" stop-opacity="1"></stop>
-            <stop offset="1" stop-color="var(--color-gold-glow)" stop-opacity="1"></stop>
-          </linearGradient>
           <radialGradient id="spark-halo">
             <stop offset="0" stop-color="var(--color-gold-glow)" stop-opacity="0.9"></stop>
             <stop offset="0.3" stop-color="var(--color-gold)" stop-opacity="0.38"></stop>
             <stop offset="1" stop-color="var(--color-gold)" stop-opacity="0"></stop>
           </radialGradient>
-          <filter id="beam-blur" x="-400%" y="-10%" width="900%" height="120%">
-            <feGaussianBlur stdDeviation="4"></feGaussianBlur>
-          </filter>
         </defs>
-        <path class="beam-base" data-beam-base></path>
-        <path class="beam-glow" filter="url(#beam-blur)" stroke="url(#beam-lit)" data-beam-lit></path>
-        <path class="beam-lit" stroke="url(#beam-lit)" data-beam-lit></path>
         {
           JOURNEY.map((_, i) => (
             <g class="flare" data-flare={i}>
@@ -257,12 +247,6 @@ const alerts = [
               <p class="note-how">
                 <span>Runs on</span> {s.how}
               </p>
-              <p class="note-fact">
-                <svg viewBox="0 0 16 16" aria-hidden="true">
-                  <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
-                </svg>
-                {s.fact}
-              </p>
             </li>
           ))
         }
@@ -270,9 +254,7 @@ const alerts = [
       <div class="note note-end" data-note-end>
         <p class="eyebrow">Five levels, one platform</p>
         <h3 class="note-end-title">That is a platform <span class="text-lit">we architect.</span></h3>
-        <p class="note-body">
-          Each level is designed before anything is configured, so every request moves through it the same way. Underneath all of it sits the <abbr title="Configuration Management Database">CMDB</abbr>.
-        </p>
+        <p class="note-body">Designed before anything is configured, with the <abbr title="Configuration Management Database">CMDB</abbr> underneath it all.</p>
         <p class="note-stats">
           <span><b>Up to 40%</b> faster deployment</span>
           <span><b>Up to 60%</b> higher user adoption</span>
@@ -513,6 +495,7 @@ const alerts = [
     left: 50%;
     top: 50%;
     transform-style: preserve-3d;
+    /* Diamonds. hero.ts turns the stack to squares (and back) with an inline transform. */
     transform: rotateX(var(--tilt)) rotateZ(var(--spin));
   }
   /* No opacity, filter or overflow on plates: any of those would flatten the 3D. */
@@ -535,20 +518,53 @@ const alerts = [
     border-radius: 1.15em;
     opacity: var(--fade);
   }
+  /* A plate's faint outline, shown while another plate is active. */
+  .plate-outline {
+    position: absolute;
+    inset: 0;
+    border-radius: 1.15em;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 16%, transparent);
+    opacity: 0;
+    transition: opacity 0.8s var(--ease-expo);
+    pointer-events: none;
+  }
+  /* Once the plates have arrived, their fades are eased (opacity only: cheap to animate). */
+  .stack.is-settled .plate-top {
+    transition:
+      box-shadow 0.9s var(--ease-expo),
+      background-color 0.9s var(--ease-expo),
+      opacity 0.8s var(--ease-expo);
+  }
+  .stack.is-settled .plate-edge {
+    transition:
+      box-shadow 0.8s var(--ease-expo),
+      background-color 0.8s var(--ease-expo),
+      opacity 0.8s var(--ease-expo);
+  }
   /* Thickness: four faint layers under the top face read as a slab of glass. */
   .plate-edge {
     transform: translateZ(calc(var(--e) * -3px));
     background: color-mix(in srgb, var(--color-white) 2%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 7%, transparent);
-    transition: box-shadow 0.8s var(--ease-expo);
+    transition:
+      box-shadow 0.8s var(--ease-expo),
+      background-color 0.8s var(--ease-expo);
   }
   .plate-top {
-    overflow: hidden;
-    background:
-      linear-gradient(140deg, color-mix(in srgb, var(--color-white) 11%, transparent), color-mix(in srgb, var(--color-white) 3%, transparent) 48%, color-mix(in srgb, var(--color-iris) 10%, transparent)),
-      color-mix(in srgb, var(--color-night) 55%, transparent);
+    background-color: color-mix(in srgb, var(--color-night) 55%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
-    transition: box-shadow 0.9s var(--ease-expo);
+    transition:
+      box-shadow 0.9s var(--ease-expo),
+      background-color 0.9s var(--ease-expo);
+  }
+  /* The glass sheen, separate so it can fade when the plate is only an outline. */
+  .plate-top::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-image: linear-gradient(140deg, color-mix(in srgb, var(--color-white) 11%, transparent), color-mix(in srgb, var(--color-white) 3%, transparent) 48%, color-mix(in srgb, var(--color-iris) 10%, transparent));
+    transition: opacity 0.9s var(--ease-expo);
   }
   .plate-sheen {
     position: absolute;
@@ -556,6 +572,13 @@ const alerts = [
     background: radial-gradient(70% 70% at 50% 50%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent 70%);
     opacity: 0;
     transition: opacity 0.9s var(--ease-expo);
+  }
+  /* Only the sweep is clipped to the glass, so turned labels may overhang the edge. */
+  .plate-clip {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    border-radius: inherit;
   }
   /* A band of light that sweeps across the glass as the plate lights up. */
   .plate-sweep {
@@ -574,7 +597,9 @@ const alerts = [
     line-height: 1;
     font-variant-numeric: lining-nums;
     color: color-mix(in srgb, var(--color-white) 9%, transparent);
-    transition: color 0.9s var(--ease-expo);
+    transition:
+      color 0.9s var(--ease-expo),
+      opacity 0.8s var(--ease-expo);
   }
   .plate-name {
     position: absolute;
@@ -585,7 +610,9 @@ const alerts = [
     letter-spacing: 0.22em;
     text-transform: uppercase;
     color: color-mix(in srgb, var(--color-white) 30%, transparent);
-    transition: color 0.9s var(--ease-expo);
+    transition:
+      color 0.9s var(--ease-expo),
+      opacity 0.8s var(--ease-expo);
   }
   .plate-port {
     position: absolute;
@@ -596,7 +623,9 @@ const alerts = [
     margin: -1.3em 0 0 -1.3em;
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 22%, transparent);
-    transition: box-shadow 0.8s var(--ease-expo);
+    transition:
+      box-shadow 0.8s var(--ease-expo),
+      opacity 0.8s var(--ease-expo);
   }
   .plate-port > span {
     position: absolute;
@@ -716,8 +745,8 @@ const alerts = [
     position: absolute;
     left: 0;
     right: 0;
-    top: calc(var(--l) * 17%);
-    height: 13%;
+    top: calc(30% + var(--l) * 14%);
+    height: 11%;
     display: flex;
     align-items: center;
     border-radius: 0.5em;
@@ -732,20 +761,20 @@ const alerts = [
       color 0.6s var(--ease-expo),
       box-shadow 0.6s var(--ease-expo);
   }
+  /* The ticket: an outer box that drops, and the chip itself, which turns level. */
   .ticket {
     position: absolute;
-    right: 4%;
-    top: 74%;
-    display: inline-flex;
-    gap: 0.45em;
-    align-items: center;
-    border-radius: 0.5em;
-    padding: 0.4em 0.7em;
+    right: 5%;
+    top: 4%;
     font-size: 0.85em;
     font-weight: 700;
+    transition: transform 1.1s var(--ease-expo) 0.2s;
+  }
+  .ticket-in {
+    border-radius: 0.5em;
+    padding: 0.4em 0.7em;
     color: var(--color-night);
     background: var(--color-white);
-    transition: transform 1.1s var(--ease-expo) 0.2s;
   }
   .ticket-tag {
     border-radius: 0.3em;
@@ -773,7 +802,7 @@ const alerts = [
     position: absolute;
     left: calc(var(--x) * 1%);
     top: calc(var(--y) * 1%);
-    transform: translate(-50%, -50%);
+    translate: -50% -50%;
     border-radius: 0.5em;
     padding: 0.45em 0.7em;
     font-size: 0.82em;
@@ -783,6 +812,10 @@ const alerts = [
     background: color-mix(in srgb, var(--color-azure) 18%, var(--color-night));
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 60%, transparent);
     transition: box-shadow 0.6s var(--ease-expo);
+  }
+  /* Drawn labels, not page text: they are part of the picture. */
+  .node::before {
+    content: attr(data-label);
   }
   /* 04 Diagnosed: scattered alerts are pulled into one. */
   .alert {
@@ -803,7 +836,7 @@ const alerts = [
     position: absolute;
     left: 50%;
     bottom: 4%;
-    transform: translate(-50%, 0);
+    translate: -50% 0;
     border-radius: 0.55em;
     padding: 0.5em 0.8em;
     font-size: 0.85em;
@@ -877,23 +910,6 @@ const alerts = [
     height: 1px;
     overflow: visible;
     pointer-events: none;
-  }
-  .beam-base {
-    fill: none;
-    stroke: color-mix(in srgb, var(--color-white) 16%, transparent);
-    stroke-width: 1.2;
-    stroke-dasharray: 2 5;
-  }
-  .beam-lit {
-    fill: none;
-    stroke-width: 2.2;
-    stroke-linecap: round;
-  }
-  .beam-glow {
-    fill: none;
-    stroke-width: 9;
-    stroke-linecap: round;
-    opacity: 0.6;
   }
   .flare circle {
     fill: none;
@@ -1086,25 +1102,6 @@ const alerts = [
     text-transform: uppercase;
     color: var(--color-grey-200);
   }
-  .note-fact {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-top: 0.85rem;
-    border-radius: 0.6rem;
-    padding: 0.42rem 0.75rem 0.45rem 0.6rem;
-    font-size: 0.9rem;
-    line-height: 1.3;
-    color: var(--color-white);
-    background: color-mix(in srgb, var(--color-white) 6%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 12%, transparent);
-  }
-  .note-fact svg {
-    flex: none;
-    width: 1rem;
-    height: 1rem;
-    color: var(--color-iris-soft);
-  }
   .note-end {
     margin-top: 2.5rem;
   }
@@ -1197,6 +1194,32 @@ const alerts = [
   :global(html.js:not(.reduced-motion)) .is-passed .ui {
     opacity: 0.6;
   }
+  /* Levels the request has passed sit above the one it has reached: their glass
+     clears and their surface quietens, so the reached plate reads through them. */
+  :global(html.js:not(.reduced-motion)) .plate.is-passed:not(.is-active) .ui {
+    opacity: 0.2;
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-passed:not(.is-active) .plate-top {
+    background-color: color-mix(in srgb, var(--color-night) 15%, transparent);
+  }
+  /* While a plate is active the others are faint outlines, so it stands alone. */
+  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-top,
+  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-edge {
+    opacity: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-outline {
+    opacity: 1;
+  }
+  /* Level marks: only the active level's shows (all of them again at the close). */
+  :global(html.js:not(.reduced-motion)) .datum > * {
+    opacity: 0;
+    transition:
+      opacity 0.7s var(--ease-expo),
+      color 0.6s var(--ease-expo);
+  }
+  :global(html.js:not(.reduced-motion)) .datum.is-shown > * {
+    opacity: 1;
+  }
   :global(html.js:not(.reduced-motion)) .is-active .ui {
     opacity: 1;
   }
@@ -1211,9 +1234,10 @@ const alerts = [
     opacity: 1;
     transition-delay: 0.45s;
   }
+  /* The ticket drops from the back of the plate into the Network lane. */
   :global(html.js:not(.reduced-motion)) .is-active .ticket,
   :global(html.js:not(.reduced-motion)) .is-passed .ticket {
-    transform: translateY(-310%);
+    transform: translateY(calc(var(--plate) * 0.82 * 0.415));
   }
   :global(html.js:not(.reduced-motion)) .is-active .lane-target {
     color: var(--color-white);
@@ -1246,12 +1270,12 @@ const alerts = [
     opacity: 0;
   }
   :global(html.js:not(.reduced-motion)) .alert-card {
-    transform: translate(-50%, 0.6em);
+    transform: translateY(0.6em);
     opacity: 0;
   }
   :global(html.js:not(.reduced-motion)) .is-active .alert-card,
   :global(html.js:not(.reduced-motion)) .is-passed .alert-card {
-    transform: translate(-50%, 0);
+    transform: none;
     opacity: 1;
   }
   :global(html.js:not(.reduced-motion)) .kb-line {
@@ -1274,6 +1298,72 @@ const alerts = [
   :global(html.js:not(.reduced-motion)) .is-active .seal {
     transform: none;
     opacity: 1;
+  }
+
+  /*
+   * Readable words on the reached plate. Each label turns about its own
+   * centre to undo the stack's spin (so it reads level) and stretches to
+   * undo most of the tilt's squash, while staying on the plate. Brighter
+   * and on darker backings than the dimmed plates around it.
+   */
+  .lvl {
+    /* On the active plate (always square to the reader by then) the words grow and
+       stretch to undo most of the tilt's squash. */
+    transition:
+      scale 0.9s var(--ease-expo),
+      color 0.6s var(--ease-expo),
+      background-color 0.6s var(--ease-expo);
+  }
+  .lane-t,
+  .ticket-in {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+  }
+  .lane-t {
+    position: relative;
+    font-weight: inherit;
+    transform-origin: 0 50%;
+  }
+  /* Turned labels overhang their own boxes: keep them above neighbouring bars and chips. */
+  .lvl {
+    z-index: 1;
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .lvl {
+    scale: 1.15 1.75;
+  }
+  /* Phones: the plates are smaller, so the words grow a little more. */
+  @media (max-width: 1023px) {
+    :global(html.js:not(.reduced-motion)) .plate.is-active .lvl {
+      scale: 1.32 2;
+    }
+  }
+  /* While the stack closes up, every plate is lit but the words stay flat. */
+  :global(html.js:not(.reduced-motion)) .stack.is-closing .plate.is-active .lvl {
+    scale: 1;
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .plate-name {
+    color: var(--color-white);
+    text-shadow: 0 0 1em rgb(4 10 22 / 0.9);
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .plate-num {
+    color: var(--color-white);
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .bubble-you {
+    background-color: color-mix(in srgb, var(--color-white) 22%, var(--color-night));
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .bubble-otto {
+    background-color: color-mix(in srgb, var(--color-violet) 45%, var(--color-night));
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .lane {
+    color: var(--color-white);
+    background-color: color-mix(in srgb, var(--color-white) 10%, var(--color-night));
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .node {
+    background-color: color-mix(in srgb, var(--color-azure) 30%, var(--color-night));
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .kb {
+    background-color: color-mix(in srgb, var(--color-white) 16%, var(--color-night));
   }
 
   :global(html.js:not(.reduced-motion)) .notes {

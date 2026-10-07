@@ -1,6 +1,6 @@
 ---
 /**
- * 03 · Capabilities: the rest of the platform. A 3D model of the platform:
+ * 04 · Capabilities: the rest of the platform. A 3D model of the platform:
  * five modules drop onto one base and light up in turn, joined by gold
  * lines through Integrations at the centre. Beside it, one short line each.
  */
@@ -188,8 +188,7 @@ const short = (c: Cap) => (c.key === 'ea' ? 'EA' : c.key === 'ham-sam' ? 'HAM ·
   /* Each module drops onto the board in turn as the section arrives. */
   .caps-blk {
     --q: clamp(0, calc(var(--p) * 1.9 - var(--i) * 0.2), 1);
-    --lift: 0px;
-    transform: translateZ(calc(var(--z) + var(--h) + (1 - var(--q)) * (1 - var(--q)) * 260px + var(--lift)));
+    --dz: calc((1 - var(--q)) * (1 - var(--q)) * 260px + var(--lift));
     transition: --lift 0.5s var(--ease-expo);
   }
   .caps-blk > b {

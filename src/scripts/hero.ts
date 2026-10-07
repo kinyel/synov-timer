@@ -9,10 +9,17 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
  *   INTRO → END five levels: the request dwells at each plate, then moves on
  *   END → 1     the plates close up into one lit platform
  *
+ * The stack turns from diamonds to squares as soon as the visitor scrolls,
+ * and back to diamonds once the last level is done (--turn, a timed tween,
+ * so it is smooth however fast the page is scrolled).
+ *
  * The request's position is a station `s`: -1 above the first plate, 0..4 at
- * the plates, fractions in between. The plates are CSS 3D; the thread, the
- * spark, the leader line and the level marks are drawn in screen space over
- * them, from plate positions measured on load and resize (never per frame).
+ * the plates, fractions in between. The plates are CSS 3D; the spark, the
+ * leader line and the level marks are drawn in screen space over them, from
+ * plate positions measured on load and resize (never per frame), in both the
+ * diamond and the square pose, and mixed by the turn.
+ * The plate the request has reached is marked is-active; its words turn level
+ * to the reader in CSS (see .lvl in Hero.astro).
  */
 type Pt = { x: number; y: number };
 
@@ -37,9 +44,6 @@ export function initHero(reduced: boolean) {
   const notes = all<HTMLElement>('[data-note]');
   const noteEnd = one<HTMLElement>('[data-note-end]');
   const datums = all<HTMLElement>('[data-datum]');
-  const base = one<SVGPathElement>('[data-beam-base]');
-  const lit = all<SVGPathElement>('[data-beam-lit]');
-  const grad = one<SVGLinearGradientElement>('[data-beam-grad]');
   const spark = one<SVGGElement>('[data-spark]');
   const sparkInner = one<SVGGElement>('[data-spark-inner]');
   const flares = all<SVGGElement>('[data-flare]');
@@ -55,8 +59,21 @@ export function initHero(reduced: boolean) {
   const phone = () => innerWidth < 1024;
 
   // ── Measured geometry (platform-relative px) ───────────────────────────
-  let open = { c: [] as Pt[], r: [] as Pt[], l: [] as Pt[], f: [] as Pt[] };
-  let shut = { c: [] as Pt[], r: [] as Pt[], l: [] as Pt[], f: [] as Pt[] };
+  type Pose = { c: Pt[]; r: Pt[]; l: Pt[]; f: Pt[] };
+  const empty = (): Pose => ({ c: [], r: [], l: [], f: [] });
+  /** Diamonds: open (exploded) and shut (closed up). */
+  let open = empty();
+  let shut = empty();
+  /** Squares: open and shut. */
+  let openSq = empty();
+  let shutSq = empty();
+  /** The stack's turn: 0 diamonds, 1 squares. Written as an inline transform (no inherited variables, so it is cheap). */
+  const turn = { v: 0 };
+  let turnTo = 0;
+  const deg = (name: string) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || 0;
+  const pose = (t: number) => {
+    stack.style.transform = `rotateX(${deg('--tilt')}deg) rotateZ(${(deg('--spin') * (1 - t)).toFixed(3)}deg)`;
+  };
   let noteAt: Pt[] = [];
   let introShift: Pt = { x: 0, y: 0 };
   let plateSize = 0;
@@ -78,9 +95,15 @@ export function initHero(reduced: boolean) {
       f: plates.map((p) => at(p.querySelector('[data-anchor="f"]'))),
     });
     stack.style.setProperty('--spread', '1');
+    pose(0);
     open = read();
+    pose(1);
+    openSq = read();
     stack.style.setProperty('--spread', String(CLOSED));
+    shutSq = read();
+    pose(0);
     shut = read();
+    pose(turn.v);
     stack.style.setProperty('--spread', String(spread));
     plates.forEach((pl, i) => (drops[i] ? pl.style.setProperty('--drop', drops[i]!) : pl.style.removeProperty('--drop')));
     plateSize = plates[0]!.offsetWidth;
@@ -119,7 +142,8 @@ export function initHero(reduced: boolean) {
   let note = -2;
   let leaderOn = false;
   const leaderDraw = { v: 0 };
-  let leaderTarget: Pt | null = null;
+  /** The plate the leader points at, and where its note starts. */
+  let leaderPlate = -1;
   let leaderFrom: Pt | null = null;
   let lastKey = '';
 
@@ -154,11 +178,17 @@ export function initHero(reduced: boolean) {
     noteEnd.classList.toggle('is-active', next === N);
   };
 
+  /** A point on plate i, between its diamond and square poses (and open or shut). */
+  const at = (key: keyof Pose, i: number, closing = 0): Pt =>
+    mix(mix(open[key][i]!, shut[key][i]!, closing), mix(openSq[key][i]!, shutSq[key][i]!, closing), turn.v);
+  /** Where the leader ends: the plate's top corner (desktop) or front corner (phone). */
+  const corner = (i: number): Pt => at(phone() ? 'f' : 'l', i);
+
   const drawLeader = () => {
-    if (!leaderFrom || !leaderTarget) return;
+    if (!leaderFrom || leaderPlate < 0) return;
     // Leader start is fixed on screen; the platform moves under it.
     const a = { x: leaderFrom.x - shift.x, y: leaderFrom.y - shift.y - float };
-    const b = leaderTarget;
+    const b = corner(leaderPlate);
     const elbow = phone() ? { x: a.x, y: a.y - 18 } : { x: a.x + 26, y: a.y };
     const seg1 = Math.hypot(elbow.x - a.x, elbow.y - a.y);
     const seg2 = Math.hypot(b.x - elbow.x, b.y - elbow.y);
@@ -181,8 +211,24 @@ export function initHero(reduced: boolean) {
       spread = nextSpread;
       stack.style.setProperty('--spread', spread.toFixed(4));
     }
-    const C = open.c.map((c, i) => mix(c, shut.c[i]!, closing));
-    const R = open.r.map((c, i) => mix(c, shut.r[i]!, closing));
+    // Squares from the first scroll until the last level is done; diamonds before and after.
+    const want = p > 0.004 && closing === 0 ? 1 : 0;
+    if (want !== turnTo) {
+      turnTo = want;
+      gsap.to(turn, {
+        v: want,
+        duration: 1.2,
+        ease: 'power3.inOut',
+        overwrite: true,
+        onUpdate: () => {
+          pose(turn.v);
+          lastKey = '';
+          render();
+        },
+      });
+    }
+    const C = open.c.map((_, i) => at('c', i, closing));
+    const R = open.r.map((_, i) => at('r', i, closing));
 
     // Screen one → journey: the headline steps aside, the notes come in.
     shift = mix(introShift, { x: 0, y: 0 }, ease(tIntro));
@@ -191,27 +237,15 @@ export function initHero(reduced: boolean) {
     intro.style.visibility = tIntro >= 0.99 ? 'hidden' : '';
     notesBox.style.opacity = String(clamp((tIntro - 0.55) / 0.45));
 
-    // The thread: from above the first plate down through every plate's centre.
+    // The spark: from above the first plate down through every plate's centre.
     const top: Pt = { x: C[0]!.x, y: C[0]!.y - plateSize * 0.42 };
     const pts = [top, ...C];
-    const d = pts.map((pt, i) => `${i ? 'L' : 'M'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
-    let total = 0;
-    const cum = [0];
-    for (let i = 1; i < pts.length; i++) cum.push((total += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y)));
     const u = Math.max(0, Math.min(N, s + 1));
     const k = Math.min(N - 1, Math.floor(u));
     const head = mix(pts[k]!, pts[k + 1]!, u - k);
-    const drawn = cum[k]! + (cum[k + 1]! - cum[k]!) * (u - k);
-    const key = `${d}|${drawn.toFixed(1)}`;
+    const key = `${head.x.toFixed(1)}|${head.y.toFixed(1)}|${R.map((r) => `${r.x.toFixed(0)},${r.y.toFixed(0)}`).join(';')}`;
     if (key !== lastKey) {
       lastKey = key;
-      base.setAttribute('d', d);
-      for (const l of lit) {
-        l.setAttribute('d', d);
-        l.style.strokeDasharray = `${drawn.toFixed(1)} ${(total + 50).toFixed(1)}`;
-      }
-      grad.setAttribute('y1', (head.y - 260).toFixed(1));
-      grad.setAttribute('y2', (head.y + 6).toFixed(1));
       spark.setAttribute('transform', `translate(${head.x.toFixed(1)} ${head.y.toFixed(1)})`);
       flares.forEach((f, i) => f.setAttribute('transform', `translate(${C[i]!.x.toFixed(1)} ${C[i]!.y.toFixed(1)})`));
       datums.forEach((dt, i) => {
@@ -230,14 +264,20 @@ export function initHero(reduced: boolean) {
     // Which plate is lit, and which note shows.
     const here = s < -0.2 ? -1 : Math.max(0, Math.min(N - 1, Math.floor(s + 0.2)));
     setActive(closing > 0.25 ? N - 1 : here, closing > 0.25);
+    // While a plate is active, the others fade to outlines and only its level mark shows.
+    // From the close on, everything is back.
+    const alone = closing === 0 && here >= 0;
+    stack.classList.toggle('is-closing', closing > 0);
+    plates.forEach((pl, i) => pl.classList.toggle('is-ghost', alone && i !== here));
+    datums.forEach((dt, i) => dt.classList.toggle('is-shown', !alone ? closing > 0 : i === here));
     setNote(closing > 0.35 ? N : Math.max(0, here));
 
     // The leader ties the note to its plate while the request dwells there.
     const dwelling = here >= 0 && Math.abs(s - here) < 0.03 && closing === 0 && tIntro >= 1;
-    if (dwelling !== leaderOn || (dwelling && leaderTarget !== (phone() ? open.f[here] : open.l[here]))) {
+    if (dwelling !== leaderOn || (dwelling && leaderPlate !== here)) {
       leaderOn = dwelling;
       if (dwelling) {
-        leaderTarget = phone() ? open.f[here]! : open.l[here]!;
+        leaderPlate = here;
         leaderFrom = noteAt[here]!;
         gsap.fromTo(leaderDraw, { v: 0 }, { v: 1, duration: 0.9, delay: 0.25, ease: 'power3.out', overwrite: true });
       } else gsap.to(leaderDraw, { v: 0, duration: 0.25, ease: 'power2.in', overwrite: true });
@@ -353,9 +393,8 @@ export function initHero(reduced: boolean) {
   measure();
   render();
   if (scrollY < innerHeight * 0.4) {
-    const tl = gsap.timeline({ delay: 0.1 });
+    const tl = gsap.timeline({ delay: 0.1, onComplete: () => stack.classList.add('is-settled') });
     tl.from(plates, { '--drop': '260px', '--fade': 0, duration: 1.5, ease: 'expo.out', stagger: 0.12 }, 0);
     tl.from(sparkInner, { scale: 0, transformOrigin: '50% 50%', duration: 1.2, ease: 'expo.out' }, 1.0);
-    tl.from(base, { opacity: 0, duration: 1.2 }, 0.9);
-  }
+  } else stack.classList.add('is-settled');
 }

@@ -8,7 +8,7 @@
 import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import Icon from '../../components/ui/Icon.astro';
-import Diagram from '../../components/diagrams/Diagram.astro';
+import TcpFlow from '../../components/scenes/TcpFlow.astro';
 import { SHOW_DRAFTS } from '../../lib/drafts';
 import { serviceBySlug } from '../../data/services';
 import { SITE } from '../../data/site';
@@ -18,16 +18,16 @@ const crumbs = [
   { name: 'TCPWave', href: '/solutions/tcpwave/' },
 ];
 const tasks = [
-  { title: 'Networks', text: 'Create and delete networks as part of an approved change.' },
-  { title: 'IP addresses', text: 'Allocate the next free IP address, with no spreadsheet and no double booking.' },
-  { title: 'DNS records', text: 'Create and delete DNS A and CNAME records, so names follow the change.' },
-  { title: 'DHCP scopes', text: 'Create and delete DHCP scopes for new or retired networks.' },
-  { title: 'Static objects', text: 'Manage static objects, such as fixed addresses for servers and printers.' },
+  { title: 'Networks', text: 'Created and deleted with the change' },
+  { title: 'IP addresses', text: 'The next free one, never double booked' },
+  { title: 'DNS records', text: 'A and CNAME records follow the change' },
+  { title: 'DHCP scopes', text: 'Created and retired with networks' },
+  { title: 'Static objects', text: 'Fixed addresses for servers and printers' },
 ];
 const benefits = [
-  { title: 'Automated workflows', text: 'Network work happens when the change is approved, not when someone gets to the ticket.' },
-  { title: 'Network visibility in ServiceNow', text: 'Teams see the network detail behind a change without switching tools.' },
-  { title: 'Workflows you can shape', text: 'The workflow steps can be adapted to your own change process and approvals.' },
+  { title: 'Done at approval', text: 'Not when someone gets to the ticket.' },
+  { title: 'Network detail in ServiceNow', text: 'No switching tools.' },
+  { title: 'Fits your process', text: 'The steps follow your own change approvals.' },
 ];
 const related = ['integrations', 'itom', 'cmdb', 'integration-delivery'].map((s) => serviceBySlug(s)!);
 const schema = [
@@ -56,7 +56,8 @@ const schema = [
     eyebrow="Integration spotlight"
     title="TCPWave and ServiceNow: network changes, automated"
     lit="network changes, automated"
-    lead="An approved change request in ServiceNow can allocate IP addresses, create DNS records and manage DHCP scopes in TCPWave directly, so nobody re-keys the work after approval."
+    lead="An approved change sets up the IP address, DNS and DHCP in TCPWave by itself."
+    icon="network"
   >
     <div class="mt-9 flex flex-wrap gap-3">
       <a href="/contact/?topic=tcpwave" class="btn btn-primary" data-magnetic>Talk to an architect <Icon name="arrowUpRight" /></a>
@@ -66,10 +67,10 @@ const schema = [
 
   <article class="tcp" data-theme="dark">
     <section class="row gutter" aria-labelledby="plain">
-      <h2 id="plain" class="row-label">In plain English</h2>
+      <h2 id="plain" class="row-label">In short</h2>
       <div>
         <p class="plain" data-reveal>
-          TCPWave sells <abbr title="DNS, DHCP and IP address management">DDI</abbr> software: <abbr title="Domain Name System">DNS</abbr> gives devices names, <abbr title="Dynamic Host Configuration Protocol">DHCP</abbr> hands out addresses, and <abbr title="IP address management">IPAM</abbr> keeps track of which addresses are in use. Its ServiceNow integration lets a ServiceNow workflow do that network work automatically, instead of someone doing it by hand after a ticket is approved.
+          TCPWave runs <abbr title="Domain Name System">DNS</abbr>, <abbr title="Dynamic Host Configuration Protocol">DHCP</abbr> and <abbr title="IP address management">IPAM</abbr>. Its ServiceNow integration does that network work for you, once a change is approved.
         </p>
         {SHOW_DRAFTS && <p class="placeholder">Placeholder: Raleston’s own TCPWave work (from the LinkedIn post) goes here. Needed from the client.</p>}
       </div>
@@ -94,15 +95,8 @@ const schema = [
 
     <section id="how" class="row gutter" aria-labelledby="how-title">
       <h2 id="how-title" class="row-label">How a change flows</h2>
-      <div data-reveal>
-        <Diagram
-          diagram={{
-            kind: 'flow',
-            steps: ['Change approved in ServiceNow', 'Workflow calls the TCPWave API', 'Next free IP address allocated', 'DNS record and DHCP scope created'],
-            caption: 'An approved change request triggers the network work in TCPWave.',
-          }}
-          title="Diagram: an approved change request triggers the network work in TCPWave."
-        />
+      <div class="card flow-card">
+        <TcpFlow />
       </div>
     </section>
 
@@ -125,7 +119,8 @@ const schema = [
 
     <section class="row gutter" aria-labelledby="tech">
       <h2 id="tech" class="row-label">For technical teams</h2>
-      <div class="card tech" data-reveal>
+      <details class="card tech" data-reveal>
+        <summary>How it connects <Icon name="plus" /></summary>
         <ul class="ticks">
           <li>Workflow activities on ServiceNow change requests, built with Workflows and Script Includes, call the TCPWave IPAM REST API.</li>
           <li>Calls travel over HTTPS with mutual certificate authentication: each side proves who it is before any change is made.</li>
@@ -135,7 +130,7 @@ const schema = [
         <p class="source">
           Source: TCPWave’s <a href="https://tcpwave.com/servicenow_integration/" rel="noopener" target="_blank">ServiceNow integration overview<span class="sr-only"> (opens in a new tab)</span></a>. TCPWave is a trademark of its owner.
         </p>
-      </div>
+      </details>
     </section>
 
     <section class="row gutter" aria-labelledby="related">
@@ -243,9 +238,37 @@ const schema = [
     margin-top: 0.95rem;
     color: var(--color-azure);
   }
+  .flow-card {
+    max-width: 56rem;
+    padding: 0.5rem;
+  }
   .tech {
     max-width: 52rem;
-    padding: clamp(1.3rem, 3vw, 1.9rem);
+    padding: 0 clamp(1.3rem, 3vw, 1.9rem);
+  }
+  .tech summary {
+    display: flex;
+    min-height: 3.75rem;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 700;
+  }
+  .tech summary::-webkit-details-marker {
+    display: none;
+  }
+  .tech summary :global(svg) {
+    width: 1.2rem;
+    height: 1.2rem;
+    color: var(--color-iris-soft);
+    transition: transform 0.4s var(--ease-expo);
+  }
+  .tech[open] summary :global(svg) {
+    transform: rotate(45deg);
+  }
+  .tech[open] {
+    padding-bottom: 1.4rem;
   }
   .tech .ticks {
     display: grid;

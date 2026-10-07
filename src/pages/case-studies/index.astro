@@ -6,14 +6,6 @@ import Icon from '../../components/ui/Icon.astro';
 import { visible } from '../../lib/drafts';
 
 const cases = (await getCollection('caseStudies')).filter(visible);
-const template = [
-  { label: 'Client type', text: 'The kind of organisation and its situation' },
-  { label: 'Industry', text: 'The sector, and what it demanded of the platform' },
-  { label: 'Challenge', text: 'What was wrong, who it affected and why it mattered' },
-  { label: 'Approach', text: 'The decisions we made, and why' },
-  { label: 'Modules', text: 'The ServiceNow products involved' },
-  { label: 'Results', text: 'Only what the client has measured and approved' },
-];
 ---
 
 <Base
@@ -26,7 +18,8 @@ const template = [
     eyebrow="Case studies"
     title="ServiceNow work we can show you"
     lit="show you"
-    lead="Every case study here is a real engagement, written up with the client’s approval. We would rather show you less than show you something invented."
+    lead="Real engagements only, approved by the client."
+    icon="book"
   />
 
   <section class="section pt-6" data-theme="dark" aria-label="Case studies">
@@ -56,22 +49,11 @@ const template = [
               </span>
               <div>
                 <h2 class="h3">Detailed case studies coming soon.</h2>
-                <p class="body mt-2">Ask us for references, and we will put you in touch with clients who can tell you what working with us is like.</p>
+                <p class="body mt-2">Until then, ask for references.</p>
                 <a href="/contact/?topic=references" class="btn btn-primary mt-5" data-magnetic>
                   Ask for references <Icon name="arrowUpRight" />
                 </a>
               </div>
-            </div>
-            <div class="cs-template" data-reveal>
-              <p class="eyebrow">What each case study will cover</p>
-              <dl>
-                {template.map((t) => (
-                  <div class="card">
-                    <dt>{t.label}</dt>
-                    <dd>{t.text}</dd>
-                  </div>
-                ))}
-              </dl>
             </div>
           </div>
         )
@@ -127,27 +109,5 @@ const template = [
     gap: 1.1rem;
     max-width: 46rem;
     padding: clamp(1.4rem, 3vw, 2rem);
-  }
-  .cs-template dl {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 1.25rem;
-  }
-  @media (min-width: 720px) {
-    .cs-template dl {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
-  .cs-template dl > div {
-    padding: 1.1rem 1.2rem;
-  }
-  .cs-template dt {
-    font-weight: 700;
-    color: var(--color-white);
-  }
-  .cs-template dd {
-    margin-top: 0.3rem;
-    font-size: 0.95rem;
-    color: var(--color-grey-200);
   }
 </style>

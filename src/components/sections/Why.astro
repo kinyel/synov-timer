@@ -1,38 +1,17 @@
 ---
 /**
  * 08 · Why Raleston. The kinetic "master craftsmen / not just configurators"
- * type drifts behind; in front, what architect-led means in practice, the four
- * reasons from Raleston's site, and the client's two measured outcomes.
+ * type drifts behind. In front, a cube of 27 glass blocks assembles itself as
+ * the section arrives, corners last, and a thread of gold light rises out of
+ * it: designed before it is configured. Beside it, the two measured outcomes
+ * and four short reasons.
  */
-import { Image } from 'astro:assets';
-import teamDc from '../../assets/images/team-datacentre.png';
 import { SITE } from '../../data/site';
 import Icon from '../ui/Icon.astro';
 
-const practice = [
-  'A certified ServiceNow architect leads every engagement, from the first workshop to go-live.',
-  'The solution is designed before anything is configured: the data model, the integrations, and what stays out-of-the-box.',
-  'Out-of-the-box comes first, so the platform stays easy to upgrade twice a year.',
-  'Work ships in usable stages, so you see value early and can steer as you go.',
-];
-const reasons = [
-  {
-    kicker: 'Architect-led delivery',
-    text: 'Our certified ServiceNow architects lead every engagement, so solutions are scalable, compliant and aligned with your business goals.',
-  },
-  {
-    kicker: 'Strategic clarity',
-    text: 'Architect-led planning ties ServiceNow capabilities to your business objectives, and cuts through the complexity.',
-  },
-  {
-    kicker: 'Measurable outcomes',
-    text: 'Our clients see up to 40% faster deployment and up to 60% higher user adoption through outcome-focused delivery.',
-  },
-  {
-    kicker: 'Long-term success',
-    text: 'Beyond implementation, continuous optimization and scaling support keep your ServiceNow investment paying back.',
-  },
-];
+const reasons = ['Architect-led, start to finish', 'Designed before anything is configured', 'Out of the box first, so upgrades stay easy', 'Delivered in stages you can use'];
+// 3 × 3 × 3 blocks. --d is how far each sits from the centre: corners assemble last.
+const cubes = [-1, 0, 1].flatMap((gz) => [-1, 0, 1].flatMap((gy) => [-1, 0, 1].map((gx) => ({ gx, gy, gz, d: Math.abs(gx) + Math.abs(gy) + Math.abs(gz) }))));
 ---
 
 <section id="why" class="section why" data-scene="why" data-theme="dark" aria-labelledby="why-title">
@@ -41,57 +20,53 @@ const reasons = [
     <p class="kin kin-b" data-kinetic-b>NOT JUST CONFIGURATORS · NOT JUST CONFIGURATORS ·</p>
   </div>
 
-  <div class="gutter relative">
-    <div class="why-top">
-      <div>
-        <p class="eyebrow">Why Raleston</p>
-        <h2 id="why-title" class="h2 mt-4" data-reveal>Master craftsmen, <span class="text-lit">not just configurators</span></h2>
-        <p class="lead mt-5" data-reveal>
-          Anyone can configure ServiceNow. Architecting it means deciding how it should work before anyone touches it, so it keeps working as you grow. In practice, architect-led means:
-        </p>
-        <ul class="ticks why-practice" data-reveal>
-          {practice.map((p) => <li>{p}</li>)}
-        </ul>
-      </div>
-      <figure class="why-photo" data-reveal>
-        <div class="why-photo-mask">
-          <Image
-            src={teamDc}
-            alt="A team of seven IT professionals standing together in a data centre aisle, one holding a laptop."
-            widths={[480, 720, 960, 1280]}
-            sizes="(min-width: 1024px) 40vw, 92vw"
-            loading="lazy"
-            class="why-img"
-            data-parallax="0.08"
-          />
-        </div>
-        <dl class="why-stats">
-          {
-            SITE.stats.map((s) => (
-              <div class="card">
-                <dt>{s.label}</dt>
-                <dd>
-                  <span>Up to</span> {s.value}
-                </dd>
-              </div>
-            ))
-          }
-        </dl>
-      </figure>
+  <div class="gutter relative why-grid">
+    <div class="why-head">
+      <p class="eyebrow">Why Raleston</p>
+      <h2 id="why-title" class="h2 mt-4" data-reveal>Master craftsmen, <span class="text-lit">not just configurators</span></h2>
     </div>
 
-    <ul class="why-grid">
-      {
-        reasons.map((r, i) => (
-          <li class="card why-card" data-reveal>
-            <span class="why-num">{String(i + 1).padStart(2, '0')}</span>
-            <h3 class="h3 mt-3">{r.kicker}</h3>
-            <p class="body mt-3">{r.text}</p>
-          </li>
-        ))
-      }
-    </ul>
-    <a href="/about/" class="link-arrow mt-8" data-reveal>About Raleston and our founder <Icon name="arrow" /></a>
+    <div class="s3d why-scene" data-s3d aria-hidden="true">
+      <div class="s3d-world">
+        <span class="why-pool"></span>
+        {
+          cubes.map((c) => (
+            <div class="blk why-cube" style={`--gx:${c.gx};--gy:${c.gy};--gz:${c.gz};--d:${c.d}`}>
+              <b class="blk-top" />
+              <b class="blk-e" />
+              <b class="blk-s" />
+            </div>
+          ))
+        }
+        <span class="why-beam"></span>
+      </div>
+    </div>
+
+    <div class="why-copy">
+      <dl class="why-stats" data-reveal>
+        {
+          SITE.stats.map((s) => (
+            <div class="card">
+              <dt>{s.label}</dt>
+              <dd>
+                <span>Up to</span> {s.value}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+      <ul class="why-reasons">
+        {
+          reasons.map((r) => (
+            <li data-reveal>
+              <Icon name="check" />
+              {r}
+            </li>
+          ))
+        }
+      </ul>
+      <a href="/about/" class="link-arrow mt-6" data-reveal>About Raleston <Icon name="arrow" /></a>
+    </div>
   </div>
 </section>
 
@@ -99,7 +74,7 @@ const reasons = [
   .why {
     overflow: hidden;
     background:
-      radial-gradient(45% 45% at 85% 20%, color-mix(in srgb, var(--color-iris) 20%, transparent), transparent 70%),
+      radial-gradient(45% 45% at 75% 45%, color-mix(in srgb, var(--color-iris) 20%, transparent), transparent 70%),
       var(--color-night);
   }
   .why-kinetic {
@@ -126,108 +101,142 @@ const reasons = [
     color: transparent;
     -webkit-text-stroke: 1px color-mix(in srgb, var(--color-iris-soft) 22%, transparent);
   }
-  .why-top {
+  .why-grid {
     display: grid;
-    gap: 2.5rem;
+    gap: 1.5rem;
+    align-items: center;
   }
   @media (min-width: 1024px) {
-    .why-top {
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 4rem;
-      align-items: center;
+    .why-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      grid-template-areas: 'head scene' 'copy scene';
+      grid-template-rows: auto 1fr;
+      column-gap: 3rem;
+    }
+    .why-head {
+      grid-area: head;
+      align-self: end;
+    }
+    .why-scene {
+      grid-area: scene;
+    }
+    .why-copy {
+      grid-area: copy;
+      align-self: start;
     }
   }
-  .why-practice {
-    display: grid;
-    gap: 0.75rem;
-    margin-top: 1.5rem;
-    font-size: 1.04rem;
-    line-height: 1.55;
-    color: var(--color-grey-200);
+
+  /* ── The cube ── */
+  .why-scene {
+    --k: 0.62;
+    height: 360px;
   }
-  .why-photo {
-    position: relative;
-    margin: 0;
+  @media (min-width: 640px) {
+    .why-scene {
+      --k: 0.85;
+      height: 460px;
+    }
   }
-  .why-photo-mask {
-    position: relative;
-    height: clamp(18rem, 36vw, 28rem);
-    overflow: hidden;
-    border-radius: 2rem 2rem 2rem 0.5rem;
-    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+  @media (min-width: 1280px) {
+    .why-scene {
+      --k: 1;
+      height: 540px;
+    }
   }
-  .why-photo-mask::after {
-    content: '';
+  .why-scene .s3d-world {
+    top: 58%;
+  }
+  .why-pool {
     position: absolute;
-    inset: 0;
-    background: linear-gradient(200deg, transparent 40%, color-mix(in srgb, var(--color-indigo) 70%, transparent));
-    pointer-events: none;
+    left: -300px;
+    top: -300px;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-iris) 28%, transparent), color-mix(in srgb, var(--color-violet) 8%, transparent) 60%, transparent);
+    transform: translateZ(-112px);
   }
-  :global(.why-img) {
-    display: block;
-    width: 100%;
-    height: 120%;
-    margin-top: -5%;
-    object-fit: cover;
-    object-position: 50% 30%;
+  /* Each block flies in from an exploded position; the farther from the centre, the later. */
+  .why-cube {
+    --w: 70px;
+    --h: 70px;
+    --q: clamp(0, calc(var(--p) * 1.45 - var(--d) * 0.15), 1);
+    --e: calc((1 - var(--q)) * (1 - var(--q)) * 70px);
+    --x: calc(var(--gx) * (72px + var(--e)));
+    --y: calc(var(--gy) * (72px + var(--e)));
+    --z: calc(var(--gz) * 72px - 35px + var(--gz) * var(--e));
   }
+  .why-cube .blk-top {
+    background:
+      linear-gradient(135deg, color-mix(in srgb, var(--color-white) 20%, transparent), color-mix(in srgb, var(--color-white) 5%, transparent) 60%),
+      color-mix(in srgb, var(--color-iris) 26%, var(--color-navy));
+  }
+  .why-cube .blk-e {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--color-iris) 18%, var(--color-indigo)), var(--color-night));
+  }
+  .why-cube .blk-s {
+    background: linear-gradient(180deg, color-mix(in srgb, var(--color-iris) 30%, var(--color-navy)), color-mix(in srgb, var(--color-indigo) 80%, var(--color-night)));
+  }
+  /* The centre column carries the gold thread once the cube is whole. */
+  .why-beam {
+    position: absolute;
+    left: -1.5px;
+    top: 0;
+    width: 3px;
+    height: 230px;
+    transform-origin: 50% 0;
+    transform: translateZ(108px) rotateX(90deg) scaleY(clamp(0, calc(var(--p) * 3 - 2), 1));
+    background: linear-gradient(180deg, var(--color-gold), var(--color-gold-glow) 30%, transparent);
+    box-shadow: 0 0 14px 2px color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+
+  /* ── The copy ── */
   .why-stats {
-    position: absolute;
-    left: clamp(-1rem, -2vw, 0rem);
-    bottom: -1.75rem;
     display: flex;
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
   }
   .why-stats > div {
     display: flex;
     flex-direction: column-reverse;
-    min-width: 9.5rem;
-    padding: 0.85rem 1.05rem 0.9rem;
-    background: color-mix(in srgb, var(--color-night) 92%, transparent);
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 30%, transparent);
+    min-width: 10rem;
+    padding: 1rem 1.15rem;
   }
   .why-stats dt {
-    margin-top: 0.2rem;
-    font-size: 0.85rem;
+    margin-top: 0.25rem;
+    font-size: 0.92rem;
     color: var(--color-grey-200);
   }
   .why-stats dd {
-    font-size: 1.9rem;
+    font-size: 2.3rem;
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: lining-nums;
   }
   .why-stats dd span {
     margin-right: 0.15rem;
-    font-size: 0.42em;
+    font-size: 0.4em;
     letter-spacing: 0.1em;
     text-transform: uppercase;
-    vertical-align: 0.4em;
+    vertical-align: 0.45em;
     color: var(--color-iris-soft);
   }
-  .why-grid {
+  .why-reasons {
     display: grid;
-    gap: 1rem;
-    margin-top: clamp(4rem, 7vw, 5.5rem);
+    gap: 0.7rem;
+    margin-top: 1.75rem;
   }
-  @media (min-width: 720px) {
-    .why-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
+  .why-reasons li {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 1.08rem;
+    color: var(--color-white);
   }
-  @media (min-width: 1100px) {
-    .why-grid {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-  }
-  .why-card {
-    padding: 1.5rem;
-  }
-  .why-num {
-    font-size: 0.85rem;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    font-variant-numeric: lining-nums;
+  .why-reasons :global(svg) {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
     color: var(--color-iris-soft);
   }
 </style>

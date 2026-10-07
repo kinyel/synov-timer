@@ -1,6 +1,6 @@
 ---
 /**
- * 04 · AI in the work. A 3D model of where AI sits: a violet AI layer floats
+ * 02 · AI in the work. A 3D model of where AI sits: a violet AI layer floats
  * over your records and reaches down to work on them, one at a time, while
  * AI Control Tower watches from above. Beside it, the four pieces in a line
  * each. Violet is the AI colour throughout.
@@ -193,7 +193,7 @@ const work = [5, 14, 2, 11, 7, 12];
   /* Records rise into place. */
   .ai-rec {
     --q: clamp(0, calc(var(--p) * 1.6), 1);
-    transform: translateZ(calc(var(--z) + var(--h) * var(--q)));
+    --dz: calc(var(--h) * (var(--q) - 1));
   }
   .ai-rec .blk-top i {
     position: absolute;
@@ -263,7 +263,7 @@ const work = [5, 14, 2, 11, 7, 12];
   }
   /* The AI layer settles over the records as the section arrives. */
   .ai-layer {
-    transform: translateZ(calc(var(--z) + var(--h) + (1 - var(--p)) * 160px));
+    --dz: calc((1 - var(--p)) * 160px);
   }
   .ai-layer .blk-top {
     background:

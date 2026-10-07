@@ -1,0 +1,166 @@
+---
+/**
+ * The hero in miniature, for inner-page headers: four square glass plates
+ * open up around a gold thread of light, with the page's icon on the lit
+ * plate. A spark runs down the thread. Desktop and tablet only.
+ */
+import Icon from '../ui/Icon.astro';
+import type { IconName } from '../ui/icons';
+import { blk } from '../../lib/iso';
+
+interface Props {
+  icon: IconName;
+  /** Which plate is lit, 0 (bottom) to 3 (top). */
+  lit?: number;
+}
+const { icon, lit = 2 } = Astro.props;
+---
+
+<div class="s3d stack" data-s3d aria-hidden="true">
+  <div class="s3d-world">
+    <span class="stack-pool"></span>
+    {
+      [0, 1, 2, 3].map((i) => (
+        <div class={`blk stack-plate ${i === lit ? 'is-lit' : ''}`} style={blk(0, 0, 200, 6, 0, `--i:${i}`)}>
+          <b class="blk-top">
+            {i === lit ? (
+              <span class="stack-icon">
+                <Icon name={icon} />
+              </span>
+            ) : (
+              <span class="stack-ui">
+                <i />
+                <i />
+                <i />
+              </span>
+            )}
+          </b>
+          <b class="blk-e" />
+          <b class="blk-s" />
+        </div>
+      ))
+    }
+    <span class="stack-thread"><i></i></span>
+  </div>
+</div>
+
+<style>
+  .stack {
+    --k: 0.62;
+    position: absolute;
+    right: 0;
+    top: 50%;
+    width: 340px;
+    height: 400px;
+    margin-top: -150px;
+    pointer-events: none;
+  }
+  @media (max-width: 767px) {
+    .stack {
+      display: none;
+    }
+  }
+  @media (min-width: 1280px) {
+    .stack {
+      --k: 0.95;
+      right: 3%;
+      width: 440px;
+      height: 460px;
+      margin-top: -170px;
+    }
+  }
+  .stack .s3d-world {
+    top: 64%;
+  }
+  .stack-pool {
+    position: absolute;
+    left: -240px;
+    top: -240px;
+    width: 480px;
+    height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-iris) 26%, transparent), transparent);
+    transform: translateZ(-30px);
+  }
+  /* The plates open up as the page arrives, then float. */
+  .stack-plate {
+    --dz: calc(var(--i) * (16px + var(--p) * 52px));
+    animation: stack-bob 7s ease-in-out infinite;
+    animation-delay: calc(var(--i) * -1.75s);
+  }
+  @keyframes stack-bob {
+    50% {
+      translate: 0 0 8px;
+    }
+  }
+  .stack-ui {
+    position: absolute;
+    inset: 16%;
+    display: grid;
+    align-content: start;
+    gap: 12%;
+  }
+  .stack-ui i {
+    display: block;
+    height: 8px;
+    border-radius: 4px;
+    background: color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .stack-ui i:nth-child(2) {
+    width: 70%;
+  }
+  .stack-ui i:nth-child(3) {
+    width: 45%;
+  }
+  .stack-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+  }
+  .stack-icon :global(svg) {
+    width: 64px;
+    height: 64px;
+    color: var(--color-gold-glow);
+    filter: drop-shadow(0 0 10px color-mix(in srgb, var(--color-gold) 60%, transparent));
+  }
+  /* The thread of light through the centre of every plate, and its spark. */
+  .stack-thread {
+    position: absolute;
+    left: -1px;
+    top: 0;
+    width: 2px;
+    height: 330px;
+    transform-origin: 50% 0;
+    transform: translateZ(-30px) rotateX(90deg);
+    background: linear-gradient(180deg, transparent, var(--color-gold) 20%, var(--color-gold-glow) 70%, transparent);
+    box-shadow: 0 0 12px color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .stack-thread i {
+    position: absolute;
+    left: -3px;
+    top: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--color-white);
+    box-shadow: 0 0 14px 4px var(--color-gold);
+    animation: stack-spark 3.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+  }
+  @keyframes stack-spark {
+    0% {
+      top: 92%;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      top: 8%;
+      opacity: 0;
+    }
+  }
+</style>

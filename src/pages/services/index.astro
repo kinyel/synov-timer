@@ -5,11 +5,6 @@ import Icon from '../../components/ui/Icon.astro';
 import { DELIVERY, PLATFORM } from '../../data/services';
 import { SITE } from '../../data/site';
 
-/** The first sentence, or the first two when the first is only a lead-in. */
-const summary = (t: string) => {
-  const [a = '', b = ''] = t.match(/[^.!?]+[.!?]+/g) ?? [t];
-  return (a.length < 70 ? `${a}${b}` : a).trim();
-};
 const schema = [
   {
     '@type': 'ItemList',
@@ -35,14 +30,15 @@ const schema = [
     eyebrow="Services"
     title="ServiceNow services, from roadmap to run"
     lit="roadmap to run"
-    lead="Certified architects for every part of the platform you run, and four ways to work with us, from a first health check to support long after go-live."
+    lead="Every part of the platform, and four ways to work with us."
+    icon="appEngine"
   />
 
   <section class="section pt-6" data-theme="dark" aria-labelledby="platform-title">
     <div class="gutter">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <h2 id="platform-title" class="h2">The platform</h2>
-        <p class="lead max-w-[30rem]">What we design, build and connect. Each page explains it in plain English, then in technical depth.</p>
+        <p class="lead max-w-[30rem]">What we design, build and connect.</p>
       </div>
       <ul class="grid-cards">
         {
@@ -54,7 +50,7 @@ const schema = [
                 </span>
                 <h3 class="h3 mt-5">{s.short === s.name ? s.name : s.short}</h3>
                 {s.short !== s.name && <p class="tile-full">{s.name}</p>}
-                <p class="body mt-3">{summary(s.plain)}</p>
+                <p class="body mt-3">{s.blurb}</p>
                 <span class="link-arrow mt-auto pt-4">
                   Explore <Icon name="arrow" />
                 </span>
@@ -70,7 +66,7 @@ const schema = [
     <div class="gutter">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <h2 id="deliver-title" class="h2">How we deliver</h2>
-        <p class="lead max-w-[30rem]">Four stages, one team. Join at whichever stage you are at.</p>
+        <p class="lead max-w-[30rem]">Four stages, one team. Join at any stage.</p>
       </div>
       <ol class="grid-deliver">
         {
@@ -79,7 +75,7 @@ const schema = [
               <a href={`/services/${s.slug}/`} class="card card-hover tile">
                 <span class="tile-n">Stage {String(i + 1).padStart(2, '0')}</span>
                 <h3 class="h3 mt-3">{s.name}</h3>
-                <p class="body mt-3">{s.lead}</p>
+                <p class="body mt-3">{s.blurb}</p>
                 <p class="tile-meta">
                   <Icon name="clock" /> {s.duration}
                 </p>
@@ -101,7 +97,7 @@ const schema = [
         <div>
           <h2 id="start-title" class="h3">Not sure where to start?</h2>
           <p class="body mt-2 max-w-[44rem]">
-            Most clients begin with <a href="/services/advisory-and-strategy/" class="text-iris-soft underline underline-offset-4">advisory and strategy</a>: a short health check of the platform you already own, and a roadmap in stages. AI readiness is part of it, so you know where ServiceNow Otto, custom skills and MCP will help.
+            Most clients begin with a short <a href="/services/advisory-and-strategy/" class="text-iris-soft underline underline-offset-4">health check</a> of the platform they already own.
           </p>
         </div>
       </div>

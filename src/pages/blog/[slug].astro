@@ -5,6 +5,7 @@ import Base from '../../layouts/Base.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import PostList from '../../components/blog/PostList.astro';
 import Icon from '../../components/ui/Icon.astro';
+import type { IconName } from '../../components/ui/icons';
 import { formatDate, posts, readingTime, related, slugify, type Post } from '../../lib/blog';
 import { SITE } from '../../data/site';
 
@@ -39,10 +40,11 @@ const schema = [
   },
 ];
 const more = related(post, all);
+const ICON: Record<string, IconName> = { CMDB: 'cmdb', ITSM: 'itsm', ITOM: 'itom', ITAM: 'itam', AI: 'ai', Architecture: 'architecture', Integrations: 'integrations' };
 ---
 
 <Base title={`${d.title} | Raleston Consulting`} description={d.description} crumbs={crumbs} schema={schema} type="article" noindex={d.draft}>
-  <PageHero crumbs={crumbs} eyebrow={d.category} title={d.title} lead={d.description}>
+  <PageHero crumbs={crumbs} eyebrow={d.category} title={d.title} lead={d.description} icon={ICON[d.category] ?? 'book'}>
     <p class="art-meta">
       <span>By {d.author}, {SITE.founder.role}</span>
       <span><time datetime={d.date.toISOString()}>{formatDate(d.date)}</time></span>

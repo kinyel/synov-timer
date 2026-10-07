@@ -1,6 +1,5 @@
 /**
- * Home page frames below the hero: the foundation section at each station,
- * then every later section, at desktop and phone sizes.
+ * Home page frames below the hero: every section, at desktop and phone sizes.
  *
  *   node scripts/home.mjs [desktop|mobile|both] [outDir]
  */
@@ -27,17 +26,7 @@ for (const name of which === 'both' ? ['desktop', 'mobile'] : [which]) {
     await page.evaluate((y) => window.__raleston.lenis.scrollTo(y, { immediate: true }), y);
     await page.waitForTimeout(wait);
   };
-  // Foundation: centre each panel in turn.
-  const steps = await page.evaluate(() => [...document.querySelectorAll('[data-fstep]')].map((s) => s.getBoundingClientRect().top + scrollY + s.offsetHeight / 2 - innerHeight / 2));
-  // Let the 3D finish starting up before filming it.
-  await go(steps[0] - sizes[name].viewport.height, 400);
-  await page.waitForFunction(() => window.__raleston?.ready(), null, { timeout: 30000 }).catch(() => {});
-  const names = ['intro', 'itsm', 'itom', 'itam', 'xray'];
-  for (let i = 0; i < steps.length; i++) {
-    await go(steps[i], 2200);
-    await page.screenshot({ path: `${out}/${name}-f${i}-${names[i]}.png` });
-  }
-  for (const id of ['capabilities', 'ai', 'services', 'cases', 'industries', 'why', 'tcpwave', 'faq']) {
+  for (const id of ['ai', 'foundation', 'capabilities', 'services', 'cases', 'industries', 'why', 'tcpwave', 'faq']) {
     const y = await page.evaluate((id) => {
       const el = document.getElementById(id);
       return el.getBoundingClientRect().top + scrollY + (id === 'services' ? el.offsetHeight * 0.3 : 0);

@@ -11,21 +11,22 @@ import team from '../../assets/images/team-datacentre.png';
 
 const roles = (await getCollection('roles')).filter(visible);
 const modules = [
-  { name: 'IT Operations Management (ITOM)', href: '/services/itom/' },
-  { name: 'IT Service Management (ITSM)', href: '/services/itsm/' },
-  { name: 'Hardware Asset Management (HAM)', href: '/services/itam/' },
-  { name: 'Software Asset Management (SAM)', href: '/services/itam/' },
-  { name: 'Enterprise Asset Management (EAM)', href: '/services/itam/' },
-  { name: 'Enterprise Architecture (EA)', href: '/services/enterprise-architecture/' },
+  { name: 'ITSM', href: '/services/itsm/' },
+  { name: 'ITOM', href: '/services/itom/' },
+  { name: 'HAM', href: '/services/itam/' },
+  { name: 'SAM', href: '/services/itam/' },
+  { name: 'EAM', href: '/services/itam/' },
+  { name: 'CMDB', href: '/services/cmdb/' },
+  { name: 'SPM', href: '/services/spm/' },
+  { name: 'Enterprise Architecture', href: '/services/enterprise-architecture/' },
   { name: 'Integrations', href: '/services/integrations/' },
-  { name: 'Custom applications', href: '/services/app-engine/' },
-  { name: 'Strategic Portfolio Management (SPM)', href: '/services/spm/' },
+  { name: 'Custom apps', href: '/services/app-engine/' },
 ];
 const values = [
-  { kicker: 'Excellence by design', title: 'Architectural integrity', text: 'Implementation should stand on solid architectural foundations. Clean architecture today means sustainable success tomorrow.' },
-  { kicker: 'Partners, not just consultants', title: 'Client-first culture', text: 'Transparent communication, proactive problem-solving, and solutions designed for your context, not cookie-cutter approaches.' },
-  { kicker: 'Clarity where it counts', title: 'Simplicity through expertise', text: 'We help you make informed decisions, avoid unnecessary complexity and get meaningful results from your ServiceNow investment.' },
-  { kicker: 'Built to evolve and thrive', title: 'Long-term scalability', text: 'We architect platforms that evolve with your organisation, designed for growth, adaptation and value delivered over years.' },
+  { kicker: 'Excellence by design', title: 'Architectural integrity' },
+  { kicker: 'Your context, not a template', title: 'Client-first culture' },
+  { kicker: 'Clarity where it counts', title: 'Simplicity through expertise' },
+  { kicker: 'Built to evolve and thrive', title: 'Long-term scalability' },
 ];
 const schema = [
   {
@@ -52,20 +53,15 @@ const schema = [
     eyebrow="About Raleston"
     title="The architects of excellence"
     lit="excellence"
-    lead="A team that brings structure and results to every ServiceNow journey. We help you implement and get the most from the ServiceNow subscriptions you already own: simpler operations, fewer inefficiencies, measurable results."
+    lead="Structure and results on every ServiceNow platform, including the one you already own."
+    icon="people"
   />
 
   <section class="section pt-6" data-theme="dark" aria-labelledby="mission-title">
     <div class="gutter about-grid">
       <div class="about-copy">
         <h2 id="mission-title" class="h2" data-reveal>Our mission</h2>
-        <p class="lead mt-5" data-reveal>
-          Transform how organisations operate through ServiceNow excellence. We don’t just configure features; we architect solutions with integrity, deliver with clarity and build for long-term scalability.
-        </p>
-        <h2 class="h3 mt-10" data-reveal>How we got here</h2>
-        <p class="body mt-3" data-reveal>
-          What started as a commitment to architectural excellence grew into a client-first culture. We engage as partners to our clients, not just consultants, because real transformation takes transparency, proactive communication and genuine investment in your success.
-        </p>
+        <p class="lead mt-5" data-reveal>We don’t just configure ServiceNow. We architect it to last.</p>
         <h2 class="h3 mt-10" data-reveal>What we work on</h2>
         <ul class="mods" data-reveal>
           {
@@ -92,9 +88,8 @@ const schema = [
           values.map((v, i) => (
             <li class="card" data-reveal>
               <span class="v-num">{String(i + 1).padStart(2, '0')}</span>
-              <p class="v-kicker">{v.kicker}</p>
               <h3 class="h3 mt-2">{v.title}</h3>
-              <p class="body mt-3">{v.text}</p>
+              <p class="v-kicker mt-2">{v.kicker}</p>
             </li>
           ))
         }
@@ -110,13 +105,8 @@ const schema = [
       <div>
         <p class="eyebrow">Founder spotlight</p>
         <h2 id="founder-title" class="h2 mt-4" data-reveal>Charles, <span class="text-lit">Founder & Principal Architect</span></h2>
-        <p class="lead mt-5" data-reveal>
-          Charles is a certified ServiceNow Technical Architect with more than a decade of experience delivering transformation projects across healthcare, retail, enterprise and government. He is known for fixing broken CMDBs, realigning architectures and bringing clarity to complex implementations.
-        </p>
-        <p class="body mt-4" data-reveal>
-          His expertise spans ITOM, ITSM, ITAM, the CMDB, SPM, scoped applications, integrations, workflows and enterprise architecture. He helps clients design scalable systems, automate processes and deliver meaningful business outcomes.
-        </p>
-        <p class="body mt-4" data-reveal>Outside client work, Charles mentors ServiceNow professionals and helps build tech communities across Africa and North America.</p>
+        <p class="lead mt-5" data-reveal>A certified ServiceNow Technical Architect with more than a decade of transformation work in healthcare, retail, enterprise and government. Known for fixing broken CMDBs.</p>
+        <p class="body mt-4" data-reveal>He also mentors ServiceNow professionals across Africa and North America.</p>
       </div>
     </div>
   </section>
@@ -127,9 +117,9 @@ const schema = [
       <h2 id="careers-title" class="h2 mt-4" data-reveal>We’re hiring ServiceNow <span class="text-lit">architects and developers</span></h2>
       <div class="careers-grid">
         <ul class="ticks careers-why" data-reveal>
-          <li>Architect-led projects, where the design is agreed before anything is built</li>
-          <li>Mentoring from a certified ServiceNow Technical Architect</li>
-          <li>Current ServiceNow work: ServiceNow Otto, AI agents, MCP and clean CMDBs</li>
+          <li>Architect-led projects</li>
+          <li>Mentoring from a certified Technical Architect</li>
+          <li>Current work: Otto, AI agents, MCP, clean CMDBs</li>
         </ul>
         <div>
           {
@@ -148,8 +138,8 @@ const schema = [
               </ul>
             ) : (
               <div class="card role" data-reveal>
-                <h3 class="h3">No open roles are listed right now</h3>
-                <p class="body mt-3">If you are a ServiceNow architect or developer who cares about doing it properly, we would still like to hear from you.</p>
+                <h3 class="h3">No open roles right now</h3>
+                <p class="body mt-3">Good ServiceNow people can still write to us.</p>
               </div>
             )
           }
