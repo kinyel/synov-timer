@@ -25,10 +25,11 @@ npm run deploy       # build, then `wrangler pages deploy dist`
 
 | What | Where |
 |---|---|
-| Colours (DOM) | `src/styles/global.css` → `@theme` |
-| Colours (3D palette) | `src/lib/palette.ts` |
-| Colours (model materials: clay, glass, gold, copper, trees, roads) | `src/webgl/scenes/campus/materials.ts` |
-| Hero copy | `src/components/sections/Hero.astro` |
+| Colours (every one, for CSS, Tailwind and the 3D) | `src/styles/tokens.css` (read by `src/lib/tokens.ts`); check with `npm run contrast` |
+| Colours (3D model materials, until the step 3 restyle) | `src/lib/palette.ts`, `src/webgl/scenes/campus/materials.ts` |
+| Font | Alegreya Sans, self-hosted: `fonts` in `astro.config.mjs` |
+| Hero headline and CTAs | `src/components/sections/Hero.astro` |
+| Hero journey steps (text, captions, facts) | `src/lib/journey.ts` |
 | Craft value props | `src/components/sections/Craft.astro` |
 | Expertise names and one-liners | `src/components/sections/Expertise.astro` |
 | Services | `src/components/sections/Services.astro` |
@@ -69,7 +70,11 @@ npm run deploy       # build, then `wrangler pages deploy dist`
 These need a server running (`npm run dev`, or `npm run build && npx astro preview --port 4322` with `URL=http://localhost:4322/`). Add `?debug` to the page URL to expose the engine in production builds.
 
 ```bash
-node scripts/shots.mjs                  # hero intro and scroll frames, desktop and phone, plus video
+node scripts/hero.mjs                   # hero journey frames at every waypoint, desktop and phone
+node scripts/herovideo.mjs              # screen recordings of the journey (shots/hero/*.webm)
+node scripts/herofps.mjs mobile         # frame pacing through the journey (phone, CPU 4x slower)
+node scripts/pixelcontrast.mjs          # AA contrast on the rendered page, glows included
+npm run contrast                        # AA contrast for every token pair (no server needed)
 node scripts/visual-complete.mjs        # cold load: first text and hero fully built (fast 4G)
 node scripts/budget.mjs desktop         # per-frame CPU and GPU ms across Services → Industries
 node scripts/twitch.mjs mobile 0.12     # stop with 12% of Industries visible; prints stability

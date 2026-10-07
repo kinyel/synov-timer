@@ -1,23 +1,33 @@
 ---
 import Base from '../layouts/Base.astro';
 import Hero from '../components/sections/Hero.astro';
-import Craft from '../components/sections/Craft.astro';
-import Expertise from '../components/sections/Expertise.astro';
+import Foundation from '../components/sections/Foundation.astro';
+import Capabilities from '../components/sections/Capabilities.astro';
+import AiSection from '../components/sections/AiSection.astro';
 import Services from '../components/sections/Services.astro';
+import CaseHighlights from '../components/sections/CaseHighlights.astro';
 import Industries from '../components/sections/Industries.astro';
-import Impact from '../components/sections/Impact.astro';
-import Contact from '../components/sections/Contact.astro';
+import Why from '../components/sections/Why.astro';
+import TcpwaveBand from '../components/sections/TcpwaveBand.astro';
+import FaqSection from '../components/sections/FaqSection.astro';
+import { HOME_FAQS } from '../data/faqs';
+import { faqSchema } from '../lib/schema';
 ---
 
 <Base
-  title="Raleston Consulting | ServiceNow Architects in Ottawa"
-  description="Architecting digital empires with ServiceNow. Certified architects across ITSM, ITOM, ITAM, App Engine, integration and enterprise architecture. Value in weeks, not months."
+  title="ServiceNow consultancy in Ottawa | Raleston Consulting"
+  description="Ottawa ServiceNow consultancy. Certified architects for ITSM, ITOM, ITAM and the CMDB, with ServiceNow Otto, AI agents and MCP built into how we deliver."
+  schema={[faqSchema(HOME_FAQS)]}
+  webgl
 >
   <Hero />
-  <Craft />
-  <Expertise />
+  <Foundation />
+  <Capabilities />
+  <AiSection />
   <Services />
+  <CaseHighlights />
   <Industries />
-  <Impact />
-  <Contact />
+  <Why />
+  <TcpwaveBand />
+  <FaqSection />
 </Base>

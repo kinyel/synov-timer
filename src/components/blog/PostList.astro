@@ -1,0 +1,97 @@
+---
+import { formatDate, readingTime, slugify, type Post } from '../../lib/blog';
+import Icon from '../ui/Icon.astro';
+
+interface Props {
+  items: Post[];
+}
+const { items } = Astro.props;
+---
+
+<ul class="posts">
+  {
+    items.map((p) => (
+      <li data-reveal>
+        <article class="card card-hover post">
+          {p.data.draft && <span class="post-draft">Draft for client review</span>}
+          <p class="post-meta">
+            <a href={`/blog/category/${slugify(p.data.category)}/`} class="post-cat">
+              {p.data.category}
+            </a>
+            <span>{formatDate(p.data.date)}</span>
+            <span>{readingTime(p)} min read</span>
+          </p>
+          <h2 class="h3 mt-3">
+            <a href={`/blog/${p.id}/`} class="post-link">
+              {p.data.title}
+            </a>
+          </h2>
+          <p class="body mt-3">{p.data.description}</p>
+          <span class="link-arrow mt-auto pt-4" aria-hidden="true">
+            Read the article <Icon name="arrow" />
+          </span>
+        </article>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .posts {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 900px) {
+    .posts {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .posts > li {
+    display: flex;
+  }
+  .post {
+    position: relative;
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: 1.6rem;
+  }
+  /* The title link covers the whole card. */
+  .post-link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.9rem;
+    font-size: 0.88rem;
+    color: var(--color-grey-400);
+  }
+  .post-cat {
+    position: relative;
+    z-index: 1;
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .post-draft {
+    align-self: flex-start;
+    margin-bottom: 0.6rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+    background: var(--color-gold);
+  }
+</style>

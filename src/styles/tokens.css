@@ -1,0 +1,49 @@
+/*
+ * Design tokens: the one place every colour on the site is defined.
+ *
+ * Tailwind reads this @theme block (bg-navy, text-gold, border-grey-200 ...),
+ * plain CSS uses the custom properties (var(--color-gold)), and the 3D scenes
+ * read the same values through src/lib/tokens.ts. Change a colour here and it
+ * changes everywhere. `npm run contrast` checks the text pairs for WCAG AA.
+ *
+ * Tailwind's default palette is switched off, so only these colours exist.
+ */
+@theme {
+  --color-*: initial;
+
+  /* Primary */
+  --color-gold: #ecbc04;
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-navy: #0a1d3b;
+
+  /* Secondary. Violet means AI, Azure means data and integration. */
+  --color-indigo: #191c47;
+  --color-iris: #4247af;
+  --color-azure: #2490f4;
+  --color-violet: #a755f9;
+
+  /* Greys, tinted slightly toward navy */
+  --color-grey-50: #f5f6f9;
+  --color-grey-100: #e9ebf1;
+  --color-grey-200: #d3d7e2;
+  --color-grey-400: #9aa1b5;
+  --color-grey-600: #5e667d;
+  --color-grey-800: #2e3448;
+
+  /*
+   * Text shades, derived from the palette for the pairs where the base colour
+   * fails AA for small text. Same hue and saturation, only lighter or darker.
+   */
+  --color-gold-ink: #806602; /* gold text on white, grey-50, grey-100 */
+  --color-violet-ink: #8f27f7; /* AI accent text on light backgrounds */
+  --color-azure-ink: #0a69c2; /* data accent text on light backgrounds */
+  --color-violet-soft: #b169fa; /* AI accent text on navy and indigo */
+  --color-iris-soft: #8e93f6; /* Iris lifted for text on dark: emphasis, eyebrows, labels */
+
+  /* Highlight for glows and gradients, never for text */
+  --color-gold-glow: #ffe27a;
+
+  /* Night: Midnight Navy taken most of the way to Black. The hero's stage. */
+  --color-night: #040a16;
+}

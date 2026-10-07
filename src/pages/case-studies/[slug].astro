@@ -1,0 +1,105 @@
+---
+import type { GetStaticPaths } from 'astro';
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import { visible } from '../../lib/drafts';
+
+export const getStaticPaths = (async () => {
+  const cases = (await getCollection('caseStudies')).filter(visible);
+  return cases.map((c) => ({ params: { slug: c.id }, props: { c } }));
+}) satisfies GetStaticPaths;
+
+const { c } = Astro.props as { c: CollectionEntry<'caseStudies'> };
+const { Content } = await render(c);
+const d = c.data;
+const crumbs = [
+  { name: 'Case studies', href: '/case-studies/' },
+  { name: d.title, href: `/case-studies/${c.id}/` },
+];
+---
+
+<Base title={`${d.title} | Raleston Consulting`} description={d.summary} crumbs={crumbs} noindex={d.draft} type="article">
+  <PageHero crumbs={crumbs} eyebrow={`${d.industry} · ${d.clientType}`} title={d.title} lead={d.summary}>
+    {d.draft && <p class="cs-flag">Draft sample: not published in production.</p>}
+  </PageHero>
+  <article class="section pt-6" data-theme="dark">
+    <div class="gutter cs-body">
+      <section class="card cs-block">
+        <h2 class="cs-h">The challenge</h2>
+        <p class="body mt-3">{d.challenge}</p>
+      </section>
+      <section class="card cs-block">
+        <h2 class="cs-h">Our approach</h2>
+        <ol class="ticks body mt-3 grid gap-3">{d.approach.map((a) => <li>{a}</li>)}</ol>
+      </section>
+      <section class="card cs-block">
+        <h2 class="cs-h">ServiceNow modules</h2>
+        <ul class="cs-mods">{d.modules.map((m) => <li>{m}</li>)}</ul>
+      </section>
+      <section class="card cs-block">
+        <h2 class="cs-h">Results</h2>
+        <ul class="dots body mt-3">{d.results.map((r) => <li>{r}</li>)}</ul>
+      </section>
+      {
+        d.quote && (
+          <figure class="card cs-block cs-quote">
+            <blockquote>“{d.quote.text}”</blockquote>
+            <figcaption>{d.quote.by}</figcaption>
+          </figure>
+        )
+      }
+      <div class="body prose-links">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>
+
+<style>
+  .cs-flag {
+    display: inline-block;
+    margin-top: 1.25rem;
+    border-radius: 0.6rem;
+    padding: 0.5rem 0.8rem;
+    font-weight: 700;
+    color: var(--color-navy);
+    background: var(--color-gold);
+  }
+  .cs-body {
+    display: grid;
+    gap: 1rem;
+    max-width: 56rem;
+  }
+  .cs-block {
+    padding: 1.5rem;
+  }
+  .cs-h {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .cs-mods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.9rem;
+  }
+  .cs-mods li {
+    border-radius: 999px;
+    padding: 0.3rem 0.75rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 8%, transparent);
+  }
+  .cs-quote blockquote {
+    font-size: 1.3rem;
+    line-height: 1.5;
+    color: var(--color-white);
+  }
+  .cs-quote figcaption {
+    margin-top: 0.8rem;
+    color: var(--color-grey-200);
+  }
+</style>

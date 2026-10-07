@@ -7,13 +7,15 @@ import { atom } from 'nanostores';
  */
 
 export const SCENES = [
-  { id: 'hero', label: 'Platform', theme: 'dark' },
-  { id: 'craft', label: 'Craft', theme: 'dark' },
-  { id: 'expertise', label: 'Expertise', theme: 'dark' },
-  { id: 'services', label: 'Services', theme: 'light' },
-  { id: 'industries', label: 'Industries', theme: 'dark' },
-  { id: 'impact', label: 'Impact', theme: 'dark' },
-  { id: 'contact', label: 'Contact', theme: 'dark' },
+  { id: 'hero', label: 'Journey' },
+  { id: 'foundation', label: 'Foundation' },
+  { id: 'capabilities', label: 'Capabilities' },
+  { id: 'ai', label: 'AI in the work' },
+  { id: 'services', label: 'Services' },
+  { id: 'cases', label: 'Case studies' },
+  { id: 'industries', label: 'Industries' },
+  { id: 'why', label: 'Why Raleston' },
+  { id: 'faq', label: 'FAQ' },
 ] as const;
 
 export type SceneId = (typeof SCENES)[number]['id'];

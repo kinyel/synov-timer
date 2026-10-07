@@ -1,0 +1,65 @@
+---
+title: What a healthy CMDB actually looks like
+description: A healthy CMDB is not a perfect one. It is one your teams trust. Six signs of health, how ServiceNow measures them, and the order to fix things in.
+date: 2026-10-07
+category: CMDB
+tags: [CMDB, CSDM, data quality, Discovery]
+draft: true
+---
+
+Most conversations about a CMDB start the same way: "ours is a mess". That is rarely the whole story. Some records are wrong, some are missing, and nobody is sure which, so people stop trusting all of it and go back to their spreadsheets.
+
+A healthy CMDB is not a perfect one. It is one your teams trust enough to use for real decisions: approving a change, routing an incident, answering an auditor. Here is what that looks like in practice.
+
+## 1. Every record means one real thing
+
+The first sign of trouble is duplicates: the same server recorded three times by three different imports. ServiceNow prevents this with the Identification and Reconciliation Engine (IRE). Each class of configuration item has identification rules, such as a serial number or a name plus a model, and every import is checked against them before a record is created.
+
+When duplicates appear, it usually means something is writing to the CMDB without going through those rules, such as an old custom import set. Fixing that source matters more than deleting the duplicates it already made.
+
+## 2. Records update themselves
+
+A CMDB that depends on people typing updates is out of date the day after it is finished. Healthy ones are fed automatically:
+
+- **Discovery** finds servers, network devices and cloud resources through a MID Server inside your network.
+- **Service Graph Connectors** bring in data from other tools you already trust, such as endpoint management or cloud platforms, through the same reconciliation rules.
+- **Reconciliation** decides which source wins for each field, so two sources do not overwrite each other all day.
+
+Manual entry should be the exception, for the things no tool can see.
+
+## 3. Every class has an owner
+
+Data without an owner decays. Someone needs to be accountable for servers, someone for applications, someone for network gear. ServiceNow supports this with data certification, which periodically asks owners to confirm their records are still right, and with CMDB Data Manager policies that retire or archive records nobody has seen for a while.
+
+## 4. The model follows the standard
+
+ServiceNow publishes a standard data model, the Common Service Data Model (CSDM). It describes how business services, application services and infrastructure relate. Version 5 organises it into seven domains, from ideation and strategy through to service delivery and consumption.
+
+Following CSDM is not about tidiness. Features across ITSM, ITOM and IT Asset Management expect the data to be shaped this way. Custom tables that ignore the model tend to break those features and slow down every upgrade.
+
+## 5. Relationships carry meaning
+
+A list of servers is an inventory. A CMDB is a map: this application runs on these servers, supports this business service, and depends on that database. Those relationships are what let ITSM show the impact of a change before it is approved, and let ITOM tie an alert to the service it affects.
+
+Service Mapping builds many of these relationships automatically for the services that matter most.
+
+## 6. Health is measured, not assumed
+
+ServiceNow's CMDB Health dashboard scores three things:
+
+- **Completeness:** are the required and recommended fields filled?
+- **Correctness:** are there duplicate, orphan or stale records?
+- **Compliance:** do records match the desired state you defined?
+
+A healthy CMDB is one where those scores are watched and acted on, not checked once a year.
+
+## The order to fix things in
+
+When a CMDB has lost trust, the instinct is to start cleaning records. It works for a week. The order that lasts is:
+
+1. **Measure.** Get a baseline from CMDB Health, by class.
+2. **Fix the causes.** Identification rules, import sources, reconciliation precedence.
+3. **Clean.** Remove duplicates and stale records once nothing is creating new ones.
+4. **Govern.** Owners, certification, retirement policies and dashboards.
+
+That is the approach we take on every CMDB engagement. If yours has lost the trust of the people who should rely on it, [we can help you get it back](/services/cmdb/).

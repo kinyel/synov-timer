@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Building } from './buildings';
 import type { CampusUniforms } from './materials';
+import { TOKENS } from '../../../lib/tokens';
 
 /**
  * X-ray layer: crisp edge lines of every shell, plus the interiors you only
@@ -49,6 +50,11 @@ function interiorFor(b: Building): THREE.BufferGeometry[] {
   const d = b.half.y * 2 * 0.86;
   const floors = Math.max(1, Math.round(b.height / 0.34));
   switch (b.id) {
+    case 'itsm':
+      // Service desk rows and a knowledge wall.
+      for (let r = 0; r < 3; r++) for (let c = 0; c < 4; c++) parts.push(box(0.36, 0.2, 0.2, -0.95 + c * 0.42, 0.02, -0.65 + r * 0.32));
+      parts.push(box(0.12, 0.5, 1.2, -1.05, 0.02, 0.55));
+      break;
     case 'hq':
       for (let i = 1; i < 11; i++) parts.push(box(2.0, 0.015, 1.55, -0.55, 0.62 + i * 0.37, -0.35));
       parts.push(box(0.45, 3.6, 0.45, -0.55, 0.62, -0.35));
@@ -74,6 +80,8 @@ function interiorFor(b: Building): THREE.BufferGeometry[] {
 export interface XrayLayer {
   shells: THREE.LineSegments;
   interiors: THREE.LineSegments;
+  /** Lines from the building's contents down into the slab: each thing inside is a record in the CMDB. */
+  filaments: THREE.LineSegments;
 }
 
 /** Build the x-ray lines for one placed building group. */
@@ -82,18 +90,29 @@ export function buildXray(building: Building, group: THREE.Group, campus: Campus
   group.traverse((o) => {
     if (o instanceof THREE.Mesh) shellGeos.push(new THREE.EdgesGeometry(o.geometry, 28));
   });
-  const shells = new THREE.LineSegments(mergeGeometries(shellGeos) ?? new THREE.BufferGeometry(), lineMaterial(campus, '#8FE6FF', 0.9));
+  const shells = new THREE.LineSegments(mergeGeometries(shellGeos) ?? new THREE.BufferGeometry(), lineMaterial(campus, TOKENS.azure, 1.6));
   for (const g of shellGeos) g.dispose();
   const inner = interiorFor(building).map((g) => {
     const e = new THREE.EdgesGeometry(g, 20);
     g.dispose();
     return e;
   });
-  const interiors = new THREE.LineSegments(mergeGeometries(inner) ?? new THREE.BufferGeometry(), lineMaterial(campus, '#FFC21A', 1.3));
+  const interiors = new THREE.LineSegments(mergeGeometries(inner) ?? new THREE.BufferGeometry(), lineMaterial(campus, TOKENS.gold, 1.6));
   for (const g of inner) g.dispose();
-  for (const l of [shells, interiors]) {
+  // One filament per interior item, from its base down through the slab surface.
+  const fil: number[] = [];
+  for (const g of interiorFor(building)) {
+    g.computeBoundingBox();
+    const c = g.boundingBox!.getCenter(new THREE.Vector3());
+    fil.push(c.x, g.boundingBox!.min.y, c.z, c.x, -0.22, c.z);
+    g.dispose();
+  }
+  const filGeo = new THREE.BufferGeometry();
+  filGeo.setAttribute('position', new THREE.Float32BufferAttribute(fil, 3));
+  const filaments = new THREE.LineSegments(filGeo, lineMaterial(campus, TOKENS['iris-soft'], 2.2));
+  for (const l of [shells, interiors, filaments]) {
     l.frustumCulled = false;
     l.renderOrder = 5;
   }
-  return { shells, interiors };
+  return { shells, interiors, filaments };
 }

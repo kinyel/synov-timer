@@ -1,0 +1,62 @@
+---
+title: ITOM vs ITAM vs CMDB, explained
+description: Three acronyms that overlap and confuse budget conversations. What each one does, how they depend on each other, and where to start.
+date: 2026-10-07
+category: Architecture
+tags: [ITOM, ITAM, CMDB, HAM, SAM]
+draft: true
+---
+
+Three terms come up in almost every ServiceNow conversation, and they are often used as if they were the same thing. They are not, but they are closely linked, and buying one without understanding the others is a common way to be disappointed.
+
+Here is the short version, then a worked example.
+
+## The CMDB is the map
+
+The Configuration Management Database (CMDB) records what you run and how it connects. Each item is a configuration item, or CI: a server, an application, a network switch, a business service. The relationships between them, such as "this application runs on these servers", are what make it useful.
+
+The CMDB is not a product you use on its own. It is the foundation other products read from and write to.
+
+## ITOM keeps the map current and watches it
+
+IT Operations Management (ITOM) is about visibility and control of your infrastructure:
+
+- **Discovery** finds what is on your network and in your cloud accounts and writes it into the CMDB.
+- **Service Mapping** works out which infrastructure supports each business service.
+- **Event Management** collects alerts from your monitoring tools, removes duplicates, correlates them and opens incidents.
+
+ITOM is how the CMDB stays accurate without people typing, and how an alert at 2 a.m. becomes "the remote access service is affected" rather than "something on server 47 is unhappy".
+
+## ITAM is the money and contracts view
+
+IT Asset Management (ITAM) tracks what you own: what it cost, who it belongs to, where it is in its life, and what the contract says.
+
+- **Hardware Asset Management (HAM)** follows devices from purchase to disposal.
+- **Software Asset Management (SAM)** compares the licences you are entitled to with what is installed and used, so you can reclaim waste and answer audits.
+
+ITAM cares about cost and compliance. ITOM cares about whether things are running.
+
+## Where they meet: a CI and an asset
+
+Take one laptop.
+
+- As a **CI** in the CMDB, it has an operating system, installed software, a network address and relationships: it belongs to a user, runs a VPN client, connects to the remote access service.
+- As an **asset** in ITAM, it has a purchase order, a cost, a warranty, a stockroom history and a planned refresh date.
+
+Same laptop, two records, two purposes. Hardware Asset Management keeps them in step, so when Discovery sees the laptop on the network, the asset record knows it is in use, and when the asset is retired, the CI is too.
+
+## Why buying one without the others disappoints
+
+- ITOM without a sensible CMDB model produces a lot of data and not much meaning.
+- ITAM without Discovery relies on manual records, which go stale quickly.
+- A CMDB without ITOM is a spreadsheet with a nicer interface.
+
+## Where to start
+
+Start with the pain you can name:
+
+- **Outages that users find before you do:** start with ITOM, Discovery and Event Management, for one or two important services.
+- **Licence spend or audit worries:** start with SAM, fed by Discovery.
+- **A CMDB nobody trusts:** fix the foundation first, because everything else depends on it.
+
+Whichever you start with, design the CMDB with the next one in mind. That is what makes the second and third practices faster to add than the first. If you want help deciding where to start, [talk to an architect](/contact/).

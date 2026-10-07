@@ -1,0 +1,304 @@
+---
+/**
+ * TCPWave and ServiceNow. The facts come from TCPWave's own integration
+ * material (content/RESEARCH.md › 6). Raleston's own TCPWave work and the
+ * CMDB alignment line are placeholders until the client confirms them: they
+ * show in development and preview builds only.
+ */
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import Icon from '../../components/ui/Icon.astro';
+import Diagram from '../../components/diagrams/Diagram.astro';
+import { SHOW_DRAFTS } from '../../lib/drafts';
+import { serviceBySlug } from '../../data/services';
+import { SITE } from '../../data/site';
+
+const crumbs = [
+  { name: 'Integrations', href: '/services/integrations/' },
+  { name: 'TCPWave', href: '/solutions/tcpwave/' },
+];
+const tasks = [
+  { title: 'Networks', text: 'Create and delete networks as part of an approved change.' },
+  { title: 'IP addresses', text: 'Allocate the next free IP address, with no spreadsheet and no double booking.' },
+  { title: 'DNS records', text: 'Create and delete DNS A and CNAME records, so names follow the change.' },
+  { title: 'DHCP scopes', text: 'Create and delete DHCP scopes for new or retired networks.' },
+  { title: 'Static objects', text: 'Manage static objects, such as fixed addresses for servers and printers.' },
+];
+const benefits = [
+  { title: 'Automated workflows', text: 'Network work happens when the change is approved, not when someone gets to the ticket.' },
+  { title: 'Network visibility in ServiceNow', text: 'Teams see the network detail behind a change without switching tools.' },
+  { title: 'Workflows you can shape', text: 'The workflow steps can be adapted to your own change process and approvals.' },
+];
+const related = ['integrations', 'itom', 'cmdb', 'integration-delivery'].map((s) => serviceBySlug(s)!);
+const schema = [
+  {
+    '@type': 'WebPage',
+    '@id': `${SITE.url}/solutions/tcpwave/#page`,
+    name: 'TCPWave and ServiceNow integration',
+    url: `${SITE.url}/solutions/tcpwave/`,
+    about: [
+      { '@type': 'SoftwareApplication', name: 'TCPWave IPAM', applicationCategory: 'DDI (DNS, DHCP and IP address management)' },
+      { '@type': 'SoftwareApplication', name: 'ServiceNow' },
+    ],
+    publisher: { '@id': `${SITE.url}/#organization` },
+  },
+];
+---
+
+<Base
+  title="TCPWave and ServiceNow: automated DNS, DHCP and IPAM | Raleston"
+  description="How the TCPWave integration lets approved ServiceNow change requests allocate IP addresses, create DNS records and manage DHCP scopes automatically."
+  crumbs={crumbs}
+  schema={schema}
+>
+  <PageHero
+    crumbs={crumbs}
+    eyebrow="Integration spotlight"
+    title="TCPWave and ServiceNow: network changes, automated"
+    lit="network changes, automated"
+    lead="An approved change request in ServiceNow can allocate IP addresses, create DNS records and manage DHCP scopes in TCPWave directly, so nobody re-keys the work after approval."
+  >
+    <div class="mt-9 flex flex-wrap gap-3">
+      <a href="/contact/?topic=tcpwave" class="btn btn-primary" data-magnetic>Talk to an architect <Icon name="arrowUpRight" /></a>
+      <a href="#how" class="btn btn-outline">See how it works</a>
+    </div>
+  </PageHero>
+
+  <article class="tcp" data-theme="dark">
+    <section class="row gutter" aria-labelledby="plain">
+      <h2 id="plain" class="row-label">In plain English</h2>
+      <div>
+        <p class="plain" data-reveal>
+          TCPWave sells <abbr title="DNS, DHCP and IP address management">DDI</abbr> software: <abbr title="Domain Name System">DNS</abbr> gives devices names, <abbr title="Dynamic Host Configuration Protocol">DHCP</abbr> hands out addresses, and <abbr title="IP address management">IPAM</abbr> keeps track of which addresses are in use. Its ServiceNow integration lets a ServiceNow workflow do that network work automatically, instead of someone doing it by hand after a ticket is approved.
+        </p>
+        {SHOW_DRAFTS && <p class="placeholder">Placeholder: Raleston’s own TCPWave work (from the LinkedIn post) goes here. Needed from the client.</p>}
+      </div>
+    </section>
+
+    <section class="row gutter" aria-labelledby="tasks">
+      <h2 id="tasks" class="row-label">What it automates</h2>
+      <ul class="tasks">
+        {
+          tasks.map((t) => (
+            <li class="card" data-reveal>
+              <span class="icon-tile is-data is-sm">
+                <Icon name="network" />
+              </span>
+              <h3 class="task-h">{t.title}</h3>
+              <p>{t.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section id="how" class="row gutter" aria-labelledby="how-title">
+      <h2 id="how-title" class="row-label">How a change flows</h2>
+      <div data-reveal>
+        <Diagram
+          diagram={{
+            kind: 'flow',
+            steps: ['Change approved in ServiceNow', 'Workflow calls the TCPWave API', 'Next free IP address allocated', 'DNS record and DHCP scope created'],
+            caption: 'An approved change request triggers the network work in TCPWave.',
+          }}
+          title="Diagram: an approved change request triggers the network work in TCPWave."
+        />
+      </div>
+    </section>
+
+    <section class="row gutter" aria-labelledby="benefits">
+      <h2 id="benefits" class="row-label">Why it matters</h2>
+      <ul class="benefits">
+        {
+          benefits.map((b) => (
+            <li data-reveal>
+              <Icon name="check" />
+              <div>
+                <h3 class="task-h">{b.title}</h3>
+                <p>{b.text}</p>
+              </div>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+
+    <section class="row gutter" aria-labelledby="tech">
+      <h2 id="tech" class="row-label">For technical teams</h2>
+      <div class="card tech" data-reveal>
+        <ul class="ticks">
+          <li>Workflow activities on ServiceNow change requests, built with Workflows and Script Includes, call the TCPWave IPAM REST API.</li>
+          <li>Calls travel over HTTPS with mutual certificate authentication: each side proves who it is before any change is made.</li>
+          <li>The steps sit inside your change process, so approvals, risk checks and the audit trail stay in ServiceNow.</li>
+        </ul>
+        {SHOW_DRAFTS && <p class="placeholder">To confirm with the client: whether Raleston’s implementation also keeps network data aligned with the CMDB. TCPWave’s material does not cover CMDB sync, and its integration guide (February 2021) may have a newer version.</p>}
+        <p class="source">
+          Source: TCPWave’s <a href="https://tcpwave.com/servicenow_integration/" rel="noopener" target="_blank">ServiceNow integration overview<span class="sr-only"> (opens in a new tab)</span></a>. TCPWave is a trademark of its owner.
+        </p>
+      </div>
+    </section>
+
+    <section class="row gutter" aria-labelledby="related">
+      <h2 id="related" class="row-label">Related services</h2>
+      <ul class="related">
+        {
+          related.map((r) => (
+            <li data-reveal>
+              <a href={`/services/${r.slug}/`} class="card card-hover rel">
+                <span class={`icon-tile ${r.accent === 'data' ? 'is-data' : ''}`}>
+                  <Icon name={r.icon} />
+                </span>
+                <span>
+                  <b>{r.short === r.name ? r.name : `${r.short}: ${r.name}`}</b>
+                  <span>{r.blurb}</span>
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </section>
+  </article>
+</Base>
+
+<style>
+  .tcp {
+    padding-bottom: clamp(3rem, 6vw, 5rem);
+    color: var(--color-white);
+    background: var(--color-night);
+  }
+  .row {
+    display: grid;
+    gap: 1.25rem;
+    padding-block: clamp(2.5rem, 5vw, 3.75rem);
+    border-top: 1px solid color-mix(in srgb, var(--color-white) 7%, transparent);
+  }
+  .row:first-child {
+    border-top: none;
+  }
+  @media (min-width: 1024px) {
+    .row {
+      grid-template-columns: 16rem minmax(0, 1fr);
+      gap: 3rem;
+    }
+    .row-label {
+      position: sticky;
+      top: 7rem;
+      align-self: start;
+    }
+  }
+  .row-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .plain {
+    max-width: 48rem;
+    font-size: clamp(1.25rem, 2vw, 1.6rem);
+    line-height: 1.5;
+  }
+  .tasks {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (min-width: 720px) {
+    .tasks {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1200px) {
+    .tasks {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .tasks li {
+    padding: 1.3rem 1.35rem;
+  }
+  .task-h {
+    margin-top: 0.9rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+  .tasks p,
+  .benefits p {
+    margin-top: 0.35rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .benefits {
+    display: grid;
+    gap: 1.25rem;
+    max-width: 48rem;
+  }
+  .benefits li {
+    display: flex;
+    gap: 0.9rem;
+  }
+  .benefits li > :global(svg) {
+    flex: none;
+    width: 1.4rem;
+    height: 1.4rem;
+    margin-top: 0.95rem;
+    color: var(--color-azure);
+  }
+  .tech {
+    max-width: 52rem;
+    padding: clamp(1.3rem, 3vw, 1.9rem);
+  }
+  .tech .ticks {
+    display: grid;
+    gap: 0.8rem;
+    font-size: 1.04rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .source {
+    margin-top: 1.4rem;
+    font-size: 0.92rem;
+    color: var(--color-grey-400);
+  }
+  .source a {
+    color: var(--color-iris-soft);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+  .placeholder {
+    margin-top: 1.25rem;
+    max-width: 48rem;
+    border-radius: 0.8rem;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.92rem;
+    color: var(--color-navy);
+    background: var(--color-gold);
+  }
+  .related {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (min-width: 720px) {
+    .related {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .related li {
+    display: flex;
+  }
+  .rel {
+    display: flex;
+    width: 100%;
+    gap: 1rem;
+    padding: 1.2rem 1.3rem;
+  }
+  .rel b {
+    display: block;
+    font-size: 1.08rem;
+  }
+  .rel b + span {
+    display: block;
+    margin-top: 0.3rem;
+    line-height: 1.5;
+    color: var(--color-grey-200);
+  }
+</style>

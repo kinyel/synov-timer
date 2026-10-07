@@ -1,98 +1,1434 @@
 ---
 /**
- * 01 · Hero. The campus model lives in the canvas (z 10). This section
- * supplies the light studio background under it (z 0) and the copy card above
- * it (z 20), bottom-left: present enough to read at a glance, with the model
- * still the largest thing on screen.
+ * 01 · Hero: the platform, in cross-section.
+ *
+ * An architect's exploded drawing of a ServiceNow platform: five smoked-glass
+ * plates, one per stage of a request, floating on a dark stage under a single
+ * gold light. As the visitor scrolls, the request falls through the plates as
+ * a thread of gold light. Each plate it pierces lights up and its surface shows
+ * what happens there, while an annotation, tied to the plate by a leader line,
+ * explains it. At the end the plates close up into one lit platform.
+ *
+ * Everything readable is HTML. Without JavaScript, or with reduced motion, the
+ * plates sit still, fully lit, and the five steps are a plain list.
+ * Behaviour lives in src/scripts/hero.ts.
  */
+import { BADGE_LABEL, JOURNEY } from '../../lib/journey';
+
+const pad = (i: number) => String(i + 1).padStart(2, '0');
+const total = pad(JOURNEY.length - 1);
+// Alert markers on the Diagnosed plate (x, y in % of its surface), pulled in to the centre when it lights.
+const alerts = [
+  [14, 18],
+  [30, 8],
+  [72, 12],
+  [88, 30],
+  [90, 60],
+  [72, 88],
+  [36, 90],
+  [10, 72],
+  [8, 44],
+];
 ---
 
-<section id="hero" data-scene="hero" data-theme="light" data-webgl="campus" class="relative min-h-svh">
-  <div
-    class="layer-bg absolute inset-0 overflow-hidden"
-    style="background: radial-gradient(42% 34% at 18% 92%, rgb(242 178 0 / 0.09), transparent 70%), linear-gradient(180deg, #f8fafc 0%, #eef1f5 55%, #e9ecf1 100%);"
-    aria-hidden="true"
-  >
-    <img src="/brand/mark.svg" alt="" class="no-webgl-art absolute top-[18%] right-[10%] w-[30vw] max-w-[26rem] opacity-90" />
-  </div>
+<section id="hero" class="hero" data-scene="hero" data-theme="dark" aria-labelledby="hero-title" data-hero>
+  <span id="hero-journey" class="journey-mark" aria-hidden="true"></span>
+  <div class="stage" data-stage>
+    <div class="stage-bg" aria-hidden="true">
+      <span class="bg-light"></span>
+      <span class="bg-grid"></span>
+      <span class="bg-floor"></span>
+      <canvas class="bg-dust" data-dust></canvas>
+    </div>
 
-  <div class="layer-copy gutter flex min-h-svh flex-col justify-end pt-28 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-[max(3.25rem,env(safe-area-inset-bottom))]">
-    <div class="hero-card w-full max-w-[29rem] p-5 text-ink md:max-w-[33rem] md:p-9" data-hero-card>
-      <p class="hero-kicker" data-hero-kicker>ServiceNow architects<span class="max-[360px]:hidden"> · Ottawa</span></p>
-      <h1 class="hero-title mt-3 md:mt-5" data-hero-title>
+    <!-- Screen one -->
+    <div class="intro gutter" data-intro>
+      <p class="pill" data-hero-kicker><span class="pill-dot" aria-hidden="true"></span>ServiceNow consultancy · Ottawa, Canada</p>
+      <h1 id="hero-title" class="hero-title" data-hero-title>
         <span class="line-mask" data-line><span class="block">Architecting</span></span>
-        <span class="line-mask" data-line><span class="block"><span class="marker">digital empires</span></span></span>
-        <span class="line-mask" data-line><span class="block">with ServiceNow.</span></span>
+        <span class="line-mask" data-line><span class="block"><span class="text-lit">digital empires</span></span></span>
+        <span class="line-mask" data-line><span class="block">with ServiceNow</span></span>
       </h1>
-      <p class="mt-4 max-w-[28rem] text-[0.92rem] leading-[1.55] text-ink/80 md:mt-6 md:text-[1.04rem]" data-hero-intro>
-        Certified architects for ITSM, ITOM, IT Asset Management, scoped applications and enterprise architecture.{' '}
-        <span class="max-md:hidden">Each building on this campus is one of those practices.</span>
+      <p class="hero-lead" data-hero-intro>
+        Certified ServiceNow architects for <abbr title="IT Service Management">ITSM</abbr>, <abbr title="IT Operations Management">ITOM</abbr>, <abbr title="IT Asset Management">ITAM</abbr> and the <abbr title="Configuration Management Database">CMDB</abbr> that connects them, with ServiceNow Otto (formerly Now Assist), custom AI skills and <abbr title="Model Context Protocol">MCP</abbr> built into how the work gets done.
       </p>
-      <div class="mt-5 flex flex-wrap items-center gap-2 md:mt-7 md:gap-3" data-hero-ctas>
-        <a href="#contact" class="btn btn-gold !px-4 !py-3 text-[0.82rem] md:!px-6 md:!py-3.5 md:text-[0.9rem]" data-magnetic>Start your transformation</a>
-        <a href="#services" class="btn btn-outline-gold !px-4 !py-3 text-[0.82rem] md:!px-6 md:!py-3.5 md:text-[0.9rem]" data-magnetic>Services</a>
+      <div class="hero-ctas" data-hero-ctas>
+        <a href="/contact/" class="btn btn-primary" data-magnetic>
+          Talk to an architect
+          <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M3 9L9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </a>
+        <a href="/services/" class="btn btn-outline" data-magnetic>Explore services</a>
+      </div>
+      <dl class="intro-stats" data-hero-stats>
+        <div>
+          <dt>faster deployment</dt>
+          <dd><span>Up to</span> 40%</dd>
+        </div>
+        <div>
+          <dt>higher user adoption</dt>
+          <dd><span>Up to</span> 60%</dd>
+        </div>
+      </dl>
+      <a href="#hero-journey" class="cue" data-journey-cue>
+        <span class="cue-line" aria-hidden="true"><span></span></span>
+        Follow one request through the platform
+      </a>
+    </div>
+
+    <!-- The platform: five glass plates and the thread of light through them -->
+    <div class="platform" aria-hidden="true" data-platform>
+      <div class="stack" data-stack>
+        {
+          JOURNEY.map((s, i) => (
+            <div class={`plate plate-${i + 1}`} style={`--i:${i}`} data-plate={i}>
+              <span class="plate-edge" style="--e:4" />
+              <span class="plate-edge" style="--e:3" />
+              <span class="plate-edge" style="--e:2" />
+              <span class="plate-edge" style="--e:1" />
+              <div class="plate-top">
+                <span class="plate-sheen" />
+                <span class="plate-sweep" />
+                <span class="plate-num">{pad(i)}</span>
+                <span class="plate-name">{s.name}</span>
+                <span class="plate-port">
+                  <span />
+                </span>
+
+                {i === 0 && (
+                  <div class="ui ui-chat">
+                    <p class="bubble bubble-you">My VPN keeps dropping</p>
+                    <p class="bubble bubble-otto">
+                      <span class="otto-mark" />
+                      On it. Checking your laptop and the VPN service.
+                    </p>
+                  </div>
+                )}
+                {i === 1 && (
+                  <div class="ui ui-lanes">
+                    <span class="lane" style="--l:0">
+                      Service desk
+                    </span>
+                    <span class="lane lane-target" style="--l:1">
+                      Network
+                    </span>
+                    <span class="lane" style="--l:2">
+                      Identity
+                    </span>
+                    <span class="ticket">
+                      <span class="ticket-tag">AI</span>VPN drops
+                    </span>
+                  </div>
+                )}
+                {i === 2 && (
+                  <div class="ui ui-graph">
+                    <svg viewBox="0 0 100 100" class="graph-lines">
+                      <path d="M50 50 L18 18" />
+                      <path d="M50 50 L84 30" />
+                      <path d="M50 50 L30 84" />
+                    </svg>
+                    <span class="node" style="--x:18;--y:18">
+                      Laptop
+                    </span>
+                    <span class="node" style="--x:84;--y:30">
+                      VPN licence
+                    </span>
+                    <span class="node" style="--x:30;--y:84">
+                      Remote access
+                    </span>
+                  </div>
+                )}
+                {i === 3 && (
+                  <div class="ui ui-alerts">
+                    {alerts.map(([x, y]) => (
+                      <span class="alert" style={`--x:${x};--y:${y}`} />
+                    ))}
+                    <span class="alert-card">VPN gateway · packet loss</span>
+                  </div>
+                )}
+                {i === 4 && (
+                  <div class="ui ui-kb">
+                    <span class="kb">
+                      <span class="kb-title">Knowledge article</span>
+                      <span class="kb-line" style="--w:92%" />
+                      <span class="kb-line" style="--w:78%" />
+                      <span class="kb-line" style="--w:64%" />
+                    </span>
+                    <span class="seal">
+                      <svg viewBox="0 0 16 16">
+                        <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    </span>
+                  </div>
+                )}
+
+                <i class="anchor" style="left:50%;top:50%" data-anchor="c" />
+                <i class="anchor" style="left:0;top:0" data-anchor="l" />
+                <i class="anchor" style="left:100%;top:100%" data-anchor="r" />
+                <i class="anchor" style="left:0;top:100%" data-anchor="f" />
+              </div>
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Screen-space overlay, centred on the platform -->
+      <svg class="beam" data-beam>
+        <defs>
+          <linearGradient id="beam-lit" gradientUnits="userSpaceOnUse" x1="0" y1="-400" x2="0" y2="400" data-beam-grad>
+            <stop offset="0" stop-color="var(--color-gold)" stop-opacity="0.3"></stop>
+            <stop offset="0.85" stop-color="var(--color-gold)" stop-opacity="1"></stop>
+            <stop offset="1" stop-color="var(--color-gold-glow)" stop-opacity="1"></stop>
+          </linearGradient>
+          <radialGradient id="spark-halo">
+            <stop offset="0" stop-color="var(--color-gold-glow)" stop-opacity="0.9"></stop>
+            <stop offset="0.3" stop-color="var(--color-gold)" stop-opacity="0.38"></stop>
+            <stop offset="1" stop-color="var(--color-gold)" stop-opacity="0"></stop>
+          </radialGradient>
+          <filter id="beam-blur" x="-400%" y="-10%" width="900%" height="120%">
+            <feGaussianBlur stdDeviation="4"></feGaussianBlur>
+          </filter>
+        </defs>
+        <path class="beam-base" data-beam-base></path>
+        <path class="beam-glow" filter="url(#beam-blur)" stroke="url(#beam-lit)" data-beam-lit></path>
+        <path class="beam-lit" stroke="url(#beam-lit)" data-beam-lit></path>
+        {
+          JOURNEY.map((_, i) => (
+            <g class="flare" data-flare={i}>
+              <circle r="26" />
+            </g>
+          ))
+        }
+        <path class="leader" data-leader></path>
+        <circle class="leader-end" r="3.5" data-leader-end></circle>
+        <g class="spark" data-spark>
+          <g data-spark-inner>
+            <circle r="46" fill="url(#spark-halo)"></circle>
+            <circle class="spark-ring" r="9"></circle>
+            <circle class="spark-core" r="4.2"></circle>
+          </g>
+        </g>
+      </svg>
+
+      <!-- Level marks beside the plates, like datum lines on a section drawing -->
+      {
+        JOURNEY.map((s, i) => (
+          <div class="datum" data-datum={i}>
+            <span class="datum-line" />
+            <svg viewBox="0 0 14 12" class="datum-mark">
+              <path d="M1 1h12L7 10z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+            </svg>
+            <span class="datum-level">L{i + 1}</span>
+            <span class="datum-name">{s.name}</span>
+            <span class="datum-cap">{s.caption}</span>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- The annotations: what happens at each level -->
+    <div class="notes" data-notes>
+      <header class="notes-head">
+        <p class="eyebrow">A request’s journey</p>
+        <h2 class="notes-title">What happens to a request on a platform <span class="text-lit">we architect</span></h2>
+        <div class="notes-progress" aria-hidden="true" data-progress-steps>
+          {JOURNEY.map(() => <span><i /></span>)}
+        </div>
+      </header>
+      <div class="notes-body">
+      <ol class="notes-list">
+        {
+          JOURNEY.map((s, i) => (
+            <li class="note" data-note={i}>
+              <p class="note-level" data-note-level>
+                <svg viewBox="0 0 14 12" class="note-mark" aria-hidden="true">
+                  <path d="M1 1h12L7 10z" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round" />
+                </svg>
+                <span class="note-num">
+                  Level {pad(i)}
+                  <span class="note-of">/ {total}</span>
+                </span>
+                <span class="note-name">{s.name}</span>
+                {s.badges.map((b) => (
+                  <span class={`badge badge-${b}`}>{BADGE_LABEL[b]}</span>
+                ))}
+              </p>
+              <h3 class="note-title">{s.title}</h3>
+              <p class="note-body" set:html={s.body} />
+              <p class="note-how">
+                <span>Runs on</span> {s.how}
+              </p>
+              <p class="note-fact">
+                <svg viewBox="0 0 16 16" aria-hidden="true">
+                  <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                {s.fact}
+              </p>
+            </li>
+          ))
+        }
+      </ol>
+      <div class="note note-end" data-note-end>
+        <p class="eyebrow">Five levels, one platform</p>
+        <h3 class="note-end-title">That is a platform <span class="text-lit">we architect.</span></h3>
+        <p class="note-body">
+          Each level is designed before anything is configured, so every request moves through it the same way. Underneath all of it sits the <abbr title="Configuration Management Database">CMDB</abbr>.
+        </p>
+        <p class="note-stats">
+          <span><b>Up to 40%</b> faster deployment</span>
+          <span><b>Up to 60%</b> higher user adoption</span>
+        </p>
+      </div>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-  .hero-card {
+  /* ── The stage ──────────────────────────────────────────────────────── */
+  .hero {
+    --len: 620svh;
+    --plate: 272px;
+    --gap: 88px;
+    --tilt: 57deg;
+    --spin: -42deg;
     position: relative;
-    border-radius: 1.6rem;
-    background: rgb(255 255 255 / 0.88);
-    box-shadow:
-      inset 0 0 0 1px rgb(255 255 255 / 0.9),
-      0 34px 80px -34px rgb(10 16 48 / 0.45);
-    backdrop-filter: blur(24px) saturate(1.2);
-    -webkit-backdrop-filter: blur(24px) saturate(1.2);
+    background: var(--color-night);
+    color: var(--color-white);
   }
-  /* A gold hairline across the top edge, matching the story cards. */
-  .hero-card::before {
+  .journey-mark {
+    position: absolute;
+    top: calc(var(--len) * 0.08);
+    left: 0;
+  }
+  .stage {
+    position: relative;
+  }
+  .stage-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  /*
+   * Dark night base, a blue-violet light from the top right, violet from the
+   * bottom left, and one small warm halo where the request waits.
+   */
+  .bg-light {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(16% 24% at 64% 9%, color-mix(in srgb, var(--color-gold) 9%, transparent), transparent 75%),
+      radial-gradient(46% 54% at 84% 14%, color-mix(in srgb, var(--color-iris) 36%, transparent), transparent 72%),
+      radial-gradient(50% 60% at 6% 92%, color-mix(in srgb, var(--color-violet) 26%, transparent), transparent 74%),
+      radial-gradient(38% 44% at 64% 60%, color-mix(in srgb, var(--color-azure) 9%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--color-night) 0%, color-mix(in srgb, var(--color-indigo) 60%, var(--color-night)) 100%);
+  }
+  /* A faint drafting grid, strongest around the platform. */
+  .bg-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-white) 4%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-white) 4%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    background-position: center;
+    mask-image: radial-gradient(60% 70% at 60% 48%, #000 25%, transparent 80%);
+  }
+  .bg-floor {
+    position: absolute;
+    left: 64%;
+    top: 88%;
+    width: 46vw;
+    height: 22vh;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-iris) 22%, transparent), transparent);
+  }
+  .bg-dust {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Screen one ─────────────────────────────────────────────────────── */
+  .intro {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    min-height: 100svh;
+    max-width: 50rem;
+    flex-direction: column;
+    justify-content: center;
+    padding-block: 7rem 5rem;
+  }
+  /* Eyebrow pill with a live dot. */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: fit-content;
+    border-radius: 999px;
+    padding: 0.42rem 0.95rem 0.45rem 0.75rem;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+    background: color-mix(in srgb, var(--color-iris) 14%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 35%, transparent),
+      0 0 28px -8px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+  .pill-dot {
+    position: relative;
+    width: 0.45rem;
+    height: 0.45rem;
+    border-radius: 50%;
+    background: var(--color-iris-soft);
+    box-shadow: 0 0 10px var(--color-iris-soft);
+  }
+  .pill-dot::after {
     content: '';
     position: absolute;
-    left: 1.6rem;
-    right: 1.6rem;
-    top: 0;
-    height: 2px;
-    border-radius: 0 0 2px 2px;
-    background: linear-gradient(90deg, #f2b200, rgb(242 178 0 / 0.2) 70%, transparent);
+    inset: -0.3rem;
+    border-radius: 50%;
+    border: 1px solid var(--color-iris-soft);
+    animation: pill-ping 2.4s var(--ease-expo) infinite;
   }
-  .hero-kicker {
-    display: flex;
-    align-items: center;
-    gap: 0.65rem;
-    font-family: var(--font-mono);
-    font-size: 0.68rem;
-    letter-spacing: 0.17em;
-    text-transform: uppercase;
-    color: #8c6200;
-  }
-  .hero-kicker::before {
-    content: '';
-    width: 1.4rem;
-    height: 1px;
-    background: currentColor;
+  @keyframes pill-ping {
+    from {
+      transform: scale(0.5);
+      opacity: 1;
+    }
+    to {
+      transform: scale(1.8);
+      opacity: 0;
+    }
   }
   .hero-title {
-    font-family: var(--font-display);
-    font-size: 2.2rem;
-    line-height: 1;
-    font-weight: 650;
-    letter-spacing: -0.035em;
-    color: var(--color-ink);
+    margin-top: 1.5rem;
+    font-size: clamp(2.65rem, 5.4vw, 6rem);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.012em;
   }
-  @media (min-width: 768px) {
-    .hero-kicker {
-      font-size: 0.72rem;
+  .hero-lead {
+    margin-top: 1.75rem;
+    max-width: 36rem;
+    font-size: clamp(1.08rem, 1.3vw, 1.25rem);
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .hero-ctas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 2.25rem;
+  }
+  /* The client's two outcome numbers, in glass boxes. */
+  .intro-stats {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 2rem;
+  }
+  .intro-stats > div {
+    display: flex;
+    min-width: 9.5rem;
+    flex-direction: column-reverse;
+    border-radius: 0.9rem;
+    padding: 0.8rem 1.05rem 0.85rem;
+    background: color-mix(in srgb, var(--color-iris) 9%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 28%, transparent),
+      0 14px 30px -18px color-mix(in srgb, var(--color-black) 80%, transparent);
+  }
+  .intro-stats dt {
+    margin-top: 0.2rem;
+    font-size: 0.84rem;
+    color: var(--color-grey-200);
+  }
+  .intro-stats dd {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+    color: var(--color-white);
+  }
+  .intro-stats dd > span {
+    margin-right: 0.2rem;
+    font-size: 0.42em;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    vertical-align: 0.4em;
+    color: var(--color-iris-soft);
+  }
+  .cue {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.9rem;
+    width: fit-content;
+    margin-top: 2.5rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-grey-200);
+    transition: color 0.4s var(--ease-expo);
+  }
+  .cue:hover {
+    color: var(--color-white);
+  }
+  .cue-line {
+    position: relative;
+    width: 3.25rem;
+    height: 1px;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--color-white) 18%, transparent);
+  }
+  .cue-line > span {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--color-iris-soft), transparent);
+    animation: cue 2.4s var(--ease-expo) infinite;
+  }
+  @keyframes cue {
+    from {
+      transform: translateX(-100%);
     }
-    .hero-title {
-      font-size: clamp(2.7rem, 3.4vw, 3.45rem);
+    to {
+      transform: translateX(100%);
+    }
+  }
+
+  /* ── The platform (exploded axonometric) ───────────────────────────── */
+  .platform {
+    position: relative;
+    height: calc(var(--plate) * 0.8 + var(--gap) * 4 * 0.84 + 4rem);
+    perspective: 1800px;
+  }
+  .stack {
+    --spread: 1;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-style: preserve-3d;
+    transform: rotateX(var(--tilt)) rotateZ(var(--spin));
+  }
+  /* No opacity, filter or overflow on plates: any of those would flatten the 3D. */
+  .plate {
+    --fade: 1;
+    --drop: 0px;
+    position: absolute;
+    left: calc(var(--plate) / -2);
+    top: calc(var(--plate) / -2);
+    width: var(--plate);
+    height: var(--plate);
+    font-size: calc(var(--plate) / 23);
+    transform-style: preserve-3d;
+    transform: translateZ(calc((2 - var(--i)) * var(--gap) * var(--spread) + var(--drop)));
+  }
+  .plate-edge,
+  .plate-top {
+    position: absolute;
+    inset: 0;
+    border-radius: 1.15em;
+    opacity: var(--fade);
+  }
+  /* Thickness: four faint layers under the top face read as a slab of glass. */
+  .plate-edge {
+    transform: translateZ(calc(var(--e) * -3px));
+    background: color-mix(in srgb, var(--color-white) 2%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 7%, transparent);
+    transition: box-shadow 0.8s var(--ease-expo);
+  }
+  .plate-top {
+    overflow: hidden;
+    background:
+      linear-gradient(140deg, color-mix(in srgb, var(--color-white) 11%, transparent), color-mix(in srgb, var(--color-white) 3%, transparent) 48%, color-mix(in srgb, var(--color-iris) 10%, transparent)),
+      color-mix(in srgb, var(--color-night) 55%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
+    transition: box-shadow 0.9s var(--ease-expo);
+  }
+  .plate-sheen {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(70% 70% at 50% 50%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.9s var(--ease-expo);
+  }
+  /* A band of light that sweeps across the glass as the plate lights up. */
+  .plate-sweep {
+    position: absolute;
+    inset: -20%;
+    background: linear-gradient(105deg, transparent 38%, color-mix(in srgb, var(--color-white) 16%, transparent) 50%, transparent 62%);
+    transform: translateX(-70%);
+    opacity: 0;
+  }
+  .plate-num {
+    position: absolute;
+    left: 7%;
+    bottom: 5%;
+    font-size: 3.4em;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+    color: color-mix(in srgb, var(--color-white) 9%, transparent);
+    transition: color 0.9s var(--ease-expo);
+  }
+  .plate-name {
+    position: absolute;
+    left: 7.5%;
+    bottom: 26%;
+    font-size: 0.85em;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-white) 30%, transparent);
+    transition: color 0.9s var(--ease-expo);
+  }
+  .plate-port {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 2.6em;
+    height: 2.6em;
+    margin: -1.3em 0 0 -1.3em;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 22%, transparent);
+    transition: box-shadow 0.8s var(--ease-expo);
+  }
+  .plate-port > span {
+    position: absolute;
+    inset: -0.2em;
+    border-radius: 50%;
+    border: 1.5px solid var(--color-gold);
+    opacity: 0;
+  }
+  .anchor {
+    position: absolute;
+    width: 0;
+    height: 0;
+  }
+
+  /* Passed: the light has been through this level. */
+  .plate.is-passed .plate-num {
+    color: color-mix(in srgb, var(--color-iris-soft) 32%, transparent);
+  }
+  .plate.is-passed .plate-name {
+    color: color-mix(in srgb, var(--color-white) 55%, transparent);
+  }
+  .plate.is-passed .plate-port {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 55%, transparent);
+  }
+  /* Active: the request is here. Gold rim, light inside the glass. */
+  .plate.is-active .plate-edge {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 40%, transparent);
+  }
+  .plate.is-active .plate-sheen {
+    opacity: 1;
+  }
+  .plate.is-active .plate-num {
+    color: color-mix(in srgb, var(--color-white) 80%, transparent);
+  }
+  .plate.is-active .plate-sweep {
+    animation: sweep 1.6s var(--ease-expo) 0.15s;
+  }
+  @keyframes sweep {
+    0% {
+      transform: translateX(-70%);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(70%);
+      opacity: 0.6;
+    }
+  }
+  .plate.is-active .plate-name {
+    color: var(--color-white);
+  }
+  .plate.is-active .plate-port {
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-gold),
+      0 0 1.2em color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .plate.is-active .plate-port > span {
+    animation: port-ripple 2.2s var(--ease-expo) infinite;
+  }
+  @keyframes port-ripple {
+    0% {
+      transform: scale(0.6);
+      opacity: 0.9;
+    }
+    100% {
+      transform: scale(3.4);
+      opacity: 0;
+    }
+  }
+
+  /* ── What each plate shows (decorative; the notes carry the words) ─── */
+  .ui {
+    position: absolute;
+    inset: 9%;
+    transition: opacity 0.8s var(--ease-expo);
+  }
+  /* 01 Asked: the employee's message and Otto's reply. */
+  .bubble {
+    position: absolute;
+    max-width: 62%;
+    border-radius: 0.9em;
+    padding: 0.55em 0.8em;
+    font-size: 0.92em;
+    line-height: 1.3;
+    transition:
+      transform 0.9s var(--ease-expo),
+      opacity 0.9s var(--ease-expo);
+  }
+  .bubble-you {
+    right: 0;
+    top: 2%;
+    border-bottom-right-radius: 0.25em;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .bubble-otto {
+    left: 0;
+    bottom: 30%;
+    display: flex;
+    gap: 0.5em;
+    align-items: flex-start;
+    border-bottom-left-radius: 0.25em;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-violet) 26%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 55%, transparent);
+  }
+  .otto-mark {
+    flex: none;
+    width: 0.8em;
+    height: 0.8em;
+    margin-top: 0.22em;
+    border-radius: 50%;
+    background: var(--color-violet-soft);
+    box-shadow: 0 0 0.8em var(--color-violet);
+  }
+  /* 02 Routed: three team lanes; the ticket drops into Network. */
+  .lane {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(var(--l) * 17%);
+    height: 13%;
+    display: flex;
+    align-items: center;
+    border-radius: 0.5em;
+    padding-left: 0.7em;
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: color-mix(in srgb, var(--color-white) 55%, transparent);
+    background: color-mix(in srgb, var(--color-white) 5%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 8%, transparent);
+    transition:
+      color 0.6s var(--ease-expo),
+      box-shadow 0.6s var(--ease-expo);
+  }
+  .ticket {
+    position: absolute;
+    right: 4%;
+    top: 74%;
+    display: inline-flex;
+    gap: 0.45em;
+    align-items: center;
+    border-radius: 0.5em;
+    padding: 0.4em 0.7em;
+    font-size: 0.85em;
+    font-weight: 700;
+    color: var(--color-night);
+    background: var(--color-white);
+    transition: transform 1.1s var(--ease-expo) 0.2s;
+  }
+  .ticket-tag {
+    border-radius: 0.3em;
+    padding: 0.1em 0.35em;
+    font-size: 0.8em;
+    color: var(--color-white);
+    background: var(--color-violet);
+  }
+  /* 03 Matched: the request is linked to its records in the CMDB. */
+  .graph-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+  .graph-lines path {
+    fill: none;
+    stroke: var(--color-azure);
+    stroke-width: 0.8;
+    stroke-dasharray: 60;
+    transition: stroke-dashoffset 1s var(--ease-expo);
+  }
+  .node {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top: calc(var(--y) * 1%);
+    transform: translate(-50%, -50%);
+    border-radius: 0.5em;
+    padding: 0.45em 0.7em;
+    font-size: 0.82em;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-azure) 18%, var(--color-night));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 60%, transparent);
+    transition: box-shadow 0.6s var(--ease-expo);
+  }
+  /* 04 Diagnosed: scattered alerts are pulled into one. */
+  .alert {
+    position: absolute;
+    left: calc(var(--x) * 1%);
+    top: calc(var(--y) * 1%);
+    width: 0.7em;
+    height: 0.7em;
+    margin: -0.35em 0 0 -0.35em;
+    border-radius: 50%;
+    background: var(--color-white);
+    box-shadow: 0 0 0.8em var(--color-azure);
+    transition:
+      transform 1.1s var(--ease-expo),
+      opacity 0.9s var(--ease-expo) 0.5s;
+  }
+  .alert-card {
+    position: absolute;
+    left: 50%;
+    bottom: 4%;
+    transform: translate(-50%, 0);
+    border-radius: 0.55em;
+    padding: 0.5em 0.8em;
+    font-size: 0.85em;
+    font-weight: 700;
+    white-space: nowrap;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-violet) 20%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 55%, transparent),
+      0 0 1.4em color-mix(in srgb, var(--color-violet) 35%, transparent);
+    transition:
+      transform 0.9s var(--ease-expo) 0.7s,
+      opacity 0.9s var(--ease-expo) 0.7s;
+  }
+  /* 05 Resolved: a knowledge article writes itself; the seal appears. */
+  .kb {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 58%;
+    display: grid;
+    gap: 0.55em;
+    border-radius: 0.7em;
+    padding: 0.8em 0.9em 1em;
+    background: color-mix(in srgb, var(--color-white) 8%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 14%, transparent);
+  }
+  .kb-title {
+    font-size: 0.82em;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-white);
+  }
+  .kb-line {
+    display: block;
+    width: var(--w);
+    height: 0.42em;
+    border-radius: 1em;
+    background: color-mix(in srgb, var(--color-white) 30%, transparent);
+    transform-origin: left;
+    transition: transform 0.9s var(--ease-expo);
+  }
+  .seal {
+    position: absolute;
+    right: 2%;
+    bottom: 22%;
+    display: grid;
+    width: 3.4em;
+    height: 3.4em;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-night);
+    background: radial-gradient(circle at 35% 30%, var(--color-gold-glow), var(--color-gold) 60%);
+    box-shadow: 0 0 2em color-mix(in srgb, var(--color-gold) 60%, transparent);
+    transition:
+      transform 0.9s var(--ease-expo) 0.6s,
+      opacity 0.6s var(--ease-expo) 0.6s;
+  }
+  .seal svg {
+    width: 55%;
+  }
+
+  /* ── Overlay: thread, spark, flares, leader ─────────────────────────── */
+  .beam {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    display: none;
+    width: 1px;
+    height: 1px;
+    overflow: visible;
+    pointer-events: none;
+  }
+  .beam-base {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-white) 16%, transparent);
+    stroke-width: 1.2;
+    stroke-dasharray: 2 5;
+  }
+  .beam-lit {
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+  .beam-glow {
+    fill: none;
+    stroke-width: 9;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
+  .flare circle {
+    fill: none;
+    stroke: var(--color-gold-glow);
+    stroke-width: 1.4;
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .flare.is-firing circle {
+    animation: flare 1.3s var(--ease-expo);
+  }
+  @keyframes flare {
+    0% {
+      transform: scale(0.2);
+      opacity: 1;
+      stroke-width: 3;
+    }
+    100% {
+      transform: scale(2.6);
+      opacity: 0;
+      stroke-width: 0.5;
+    }
+  }
+  .spark-core {
+    fill: var(--color-white);
+  }
+  .spark-ring {
+    fill: none;
+    stroke: var(--color-gold-glow);
+    stroke-width: 1.2;
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: spark-ping 1.9s var(--ease-expo) infinite;
+  }
+  @keyframes spark-ping {
+    0% {
+      transform: scale(0.7);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(2.8);
+      opacity: 0;
+    }
+  }
+  .leader {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-iris-soft) 85%, transparent);
+    stroke-width: 1;
+  }
+  .leader-end {
+    fill: var(--color-night);
+    stroke: var(--color-iris-soft);
+    stroke-width: 1.5;
+  }
+
+  /* Datum marks (desktop), placed by script at each plate's right corner. */
+  .datum {
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: none;
+    grid-template-columns: auto auto auto;
+    align-items: center;
+    column-gap: 0.45rem;
+    width: max-content;
+    padding-left: 3.1rem;
+    color: var(--color-grey-400);
+    transition: color 0.6s var(--ease-expo);
+  }
+  .datum-line {
+    position: absolute;
+    left: 0.35rem;
+    top: 0.62rem;
+    width: 2.4rem;
+    border-top: 1px dashed color-mix(in srgb, currentColor 70%, transparent);
+  }
+  .datum-mark {
+    width: 0.8rem;
+    color: currentColor;
+  }
+  .datum-level {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    font-variant-numeric: lining-nums;
+  }
+  .datum-name {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-grey-200);
+    transition: color 0.6s var(--ease-expo);
+  }
+  .datum-cap {
+    grid-column: 2 / -1;
+    font-size: 0.78rem;
+    color: var(--color-grey-400);
+  }
+  .datum.is-passed {
+    color: var(--color-iris-soft);
+  }
+  .datum.is-active {
+    color: var(--color-iris-soft);
+  }
+  .datum.is-active .datum-name {
+    color: var(--color-white);
+  }
+
+  /* ── Notes ──────────────────────────────────────────────────────────── */
+  .notes {
+    position: relative;
+    z-index: 3;
+    padding: 2rem max(1rem, min(5vw, 4.5rem)) 6rem;
+  }
+  .notes-title {
+    margin-top: 1rem;
+    max-width: 30rem;
+    font-size: clamp(1.7rem, 2.3vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.04;
+  }
+  .notes-body {
+    margin-top: 2.25rem;
+  }
+  .notes-list {
+    display: grid;
+    gap: 2.25rem;
+  }
+  .note-level {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.55rem;
+  }
+  .note-mark {
+    width: 0.85rem;
+    color: var(--color-iris-soft);
+  }
+  .note-num {
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-variant-numeric: lining-nums tabular-nums;
+    color: var(--color-iris-soft);
+  }
+  .note-of {
+    display: none;
+    margin-left: 0.35em;
+    color: var(--color-grey-400);
+  }
+  .note-name {
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-white);
+  }
+  .note-title,
+  .note-end-title {
+    margin-top: 0.6rem;
+    max-width: 31rem;
+    font-size: clamp(1.32rem, 1.7vw, 1.8rem);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .note-end-title {
+    font-size: clamp(1.6rem, 2.3vw, 2.4rem);
+    font-weight: 800;
+  }
+  .note-body {
+    margin-top: 0.65rem;
+    max-width: 33rem;
+    font-size: 1.04rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .note-how {
+    margin-top: 0.7rem;
+    max-width: 33rem;
+    font-size: 0.92rem;
+    line-height: 1.45;
+    color: var(--color-grey-400);
+  }
+  .note-how > span {
+    margin-right: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-grey-200);
+  }
+  .note-fact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    border-radius: 0.6rem;
+    padding: 0.42rem 0.75rem 0.45rem 0.6rem;
+    font-size: 0.9rem;
+    line-height: 1.3;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 6%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .note-fact svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-iris-soft);
+  }
+  .note-end {
+    margin-top: 2.5rem;
+  }
+  .note-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.75rem;
+    margin-top: 1rem;
+    font-size: 0.95rem;
+    color: var(--color-grey-200);
+  }
+  .note-stats b {
+    font-weight: 800;
+    color: var(--color-white);
+  }
+  /* Five segments under the heading: how far the request has come. */
+  .notes-progress {
+    display: none;
+    gap: 0.35rem;
+    max-width: 22rem;
+    margin-top: 1.1rem;
+  }
+  .notes-progress > span {
+    position: relative;
+    flex: 1;
+    height: 3px;
+    overflow: hidden;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .notes-progress i {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    transform-origin: left;
+    transform: scaleX(var(--f, 0));
+    background: linear-gradient(90deg, var(--color-iris-soft), var(--color-azure));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+
+  /*
+   * ── Live: one pinned stage, driven by scroll ─────────────────────────
+   * Everything above is the static version (no JavaScript, reduced motion):
+   * every plate lit, the steps listed. From here on, the scripted version.
+   */
+  :global(html.js:not(.reduced-motion)) .hero {
+    height: calc(100svh + var(--len));
+  }
+  :global(html.js:not(.reduced-motion)) .stage {
+    position: sticky;
+    top: 0;
+    height: 100svh;
+    overflow: hidden;
+  }
+  :global(html.js:not(.reduced-motion)) .intro {
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: min(50rem, 54vw);
+  }
+  :global(html.js:not(.reduced-motion)) .platform {
+    position: absolute;
+    left: 64%;
+    top: 53%;
+    width: 0;
+    height: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .beam {
+    display: block;
+  }
+  :global(html.js:not(.reduced-motion)) .datum {
+    display: grid;
+  }
+  :global(html.js:not(.reduced-motion)) .plate-top {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-white) 17%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 22%, transparent);
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-passed .plate-top {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 30%, transparent);
+  }
+  :global(html.js:not(.reduced-motion)) .plate.is-active .plate-top {
+    box-shadow:
+      inset 0 0 0 1.5px color-mix(in srgb, var(--color-gold) 85%, transparent),
+      inset 0 0 2.5em color-mix(in srgb, var(--color-gold) 14%, transparent),
+      0 0 4em color-mix(in srgb, var(--color-gold) 26%, transparent);
+  }
+  :global(html.js:not(.reduced-motion)) .ui {
+    opacity: 0.36;
+  }
+  :global(html.js:not(.reduced-motion)) .is-passed .ui {
+    opacity: 0.6;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .ui {
+    opacity: 1;
+  }
+  /* Each plate's surface plays its moment when the request arrives. */
+  :global(html.js:not(.reduced-motion)) .bubble-otto {
+    transform: translateY(0.8em);
+    opacity: 0.4;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .bubble-otto,
+  :global(html.js:not(.reduced-motion)) .is-passed .bubble-otto {
+    transform: none;
+    opacity: 1;
+    transition-delay: 0.45s;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .ticket,
+  :global(html.js:not(.reduced-motion)) .is-passed .ticket {
+    transform: translateY(-310%);
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .lane-target {
+    color: var(--color-white);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 70%, transparent),
+      0 0 1.4em color-mix(in srgb, var(--color-violet) 40%, transparent);
+    transition-delay: 0.9s;
+  }
+  :global(html.js:not(.reduced-motion)) .graph-lines path {
+    stroke-dashoffset: 60;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .graph-lines path,
+  :global(html.js:not(.reduced-motion)) .is-passed .graph-lines path {
+    stroke-dashoffset: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .graph-lines path:nth-child(2) {
+    transition-delay: 0.15s;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .graph-lines path:nth-child(3) {
+    transition-delay: 0.3s;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .node {
+    box-shadow:
+      inset 0 0 0 1px var(--color-azure),
+      0 0 1.4em color-mix(in srgb, var(--color-azure) 45%, transparent);
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .alert,
+  :global(html.js:not(.reduced-motion)) .is-passed .alert {
+    transform: translate(calc((50 - var(--x)) / 100 * var(--plate) * 0.82), calc((50 - var(--y)) / 100 * var(--plate) * 0.82));
+    opacity: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .alert-card {
+    transform: translate(-50%, 0.6em);
+    opacity: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .alert-card,
+  :global(html.js:not(.reduced-motion)) .is-passed .alert-card {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+  :global(html.js:not(.reduced-motion)) .kb-line {
+    transform: scaleX(0.15);
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .kb-line,
+  :global(html.js:not(.reduced-motion)) .is-passed .kb-line {
+    transform: none;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .kb-line:nth-of-type(3) {
+    transition-delay: 0.2s;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .kb-line:nth-of-type(4) {
+    transition-delay: 0.4s;
+  }
+  :global(html.js:not(.reduced-motion)) .seal {
+    transform: scale(0.4);
+    opacity: 0.3;
+  }
+  :global(html.js:not(.reduced-motion)) .is-active .seal {
+    transform: none;
+    opacity: 1;
+  }
+
+  :global(html.js:not(.reduced-motion)) .notes {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: min(38rem, 44vw);
+    padding: 7.25rem 0 3rem max(1rem, min(5vw, 4.5rem));
+    opacity: 0;
+    pointer-events: none;
+  }
+  :global(html.js:not(.reduced-motion)) .notes-body {
+    position: relative;
+  }
+  :global(html.js:not(.reduced-motion)) .notes-list {
+    display: block;
+  }
+  :global(html.js:not(.reduced-motion)) .note {
+    position: absolute;
+    inset: 0 0 auto 0;
+    margin: 0;
+  }
+  :global(html.js:not(.reduced-motion)) .note-of {
+    display: inline;
+  }
+  :global(html.js:not(.reduced-motion)) .notes-progress {
+    display: flex;
+  }
+  :global(html.js:not(.reduced-motion)) .note > * {
+    opacity: 0;
+    transform: translateY(0.9rem);
+    transition:
+      opacity 0.4s var(--ease-expo),
+      transform 0.5s var(--ease-expo);
+  }
+  :global(html.js:not(.reduced-motion)) .note.is-active > * {
+    opacity: 1;
+    transform: none;
+    transition:
+      opacity 0.8s var(--ease-expo),
+      transform 1s var(--ease-expo);
+  }
+  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(2) {
+    transition-delay: 0.06s;
+  }
+  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(3) {
+    transition-delay: 0.12s;
+  }
+  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(4) {
+    transition-delay: 0.18s;
+  }
+  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(5) {
+    transition-delay: 0.24s;
+  }
+
+  /* Phones and tablets in portrait: platform on top, the note below it. */
+  @media (max-width: 1023px) {
+    .bg-floor {
+      left: 50%;
+      top: 58%;
+      width: 90vw;
+    }
+    .hero {
+      --len: 560svh;
+      --plate: min(50vw, 230px);
+      --gap: calc(var(--plate) * 0.3);
+    }
+    .intro {
+      padding-block: 6rem 3rem;
+    }
+    .intro > .eyebrow {
+      font-size: 0.74rem;
+      letter-spacing: 0.09em;
+    }
+    .hero-ctas .btn {
+      flex: 1 1 auto;
+    }
+    .cue {
+      margin-top: 2.25rem;
+    }
+    .note-body {
+      font-size: 0.98rem;
+    }
+    .note-how {
+      font-size: 0.86rem;
+    }
+    :global(html.js:not(.reduced-motion)) .intro {
+      width: 100%;
+    }
+    :global(html.js:not(.reduced-motion)) .platform {
+      left: 50%;
+      top: 39%;
+    }
+    :global(html.js:not(.reduced-motion)) .datum {
+      display: none;
+    }
+    :global(html.js:not(.reduced-motion)) .notes {
+      inset: 0;
+      width: auto;
+      padding: 0;
+    }
+    :global(html.js:not(.reduced-motion)) .notes-head {
+      position: absolute;
+      left: max(1rem, env(safe-area-inset-left));
+      right: max(1rem, env(safe-area-inset-right));
+      top: 4.75rem;
+    }
+    :global(html.js:not(.reduced-motion)) .notes-head .eyebrow {
+      display: none;
+    }
+    :global(html.js:not(.reduced-motion)) .notes-title {
+      margin-top: 0;
+      font-size: 1.22rem;
+      line-height: 1.12;
+    }
+    :global(html.js:not(.reduced-motion)) .notes-body {
+      position: absolute;
+      left: max(1rem, env(safe-area-inset-left));
+      right: max(1rem, env(safe-area-inset-right));
+      bottom: max(1.4rem, env(safe-area-inset-bottom));
+      margin: 0;
+    }
+    :global(html.js:not(.reduced-motion)) .note {
+      inset: auto 0 0 0;
+    }
+  }
+  @media (max-width: 1023px) and (max-height: 760px) {
+    :global(html.js:not(.reduced-motion)) .note-how {
+      display: none;
+    }
+  }
+  @media (min-width: 1600px) and (min-height: 900px) {
+    .hero {
+      --plate: 330px;
+      --gap: 106px;
+    }
+  }
+  @media (min-width: 1024px) and (max-height: 820px) {
+    .hero {
+      --plate: 236px;
+      --gap: 76px;
     }
   }
   @media (max-width: 380px) {
     .hero-title {
-      font-size: 1.95rem;
+      font-size: 2.45rem;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pill-dot::after,
+    .cue-line > span,
+    .spark-ring,
+    .plate-port > span {
+      animation: none !important;
     }
   }
 </style>

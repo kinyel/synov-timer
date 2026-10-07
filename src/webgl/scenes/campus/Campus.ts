@@ -1,103 +1,184 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
-import { gsap } from 'gsap';
-import { architecture, appEngine, hq, integration, itam, itom, itsm, type Building } from './buildings';
+import { itam, itom, itsm, type Building } from './buildings';
 import { buildXray } from './xray';
-import {
-  CLAY,
-  GOLD,
-  ROAD,
-  TREE,
-  buildingMaterials,
-  createCampusUniforms,
-  type BuildUniforms,
-  type CampusUniforms,
-} from './materials';
+import { hash } from '../../shaders/chunks';
+import { TOKENS } from '../../../lib/tokens';
+import { AZURE, GOLD, TREE, buildingMaterials, createCampusUniforms, type BuildUniforms, type CampusUniforms } from './materials';
 
-/** Street grid: two avenues along x, two streets along z. Road centre lines in world units. */
-const AVENUES_Z = [2.5, -3.7];
-const STREETS_X = [-3.5, 3.5];
-const ROAD_W = 0.95;
-const EXTENT = 15;
+/**
+ * The foundation: three practice buildings (ITSM, ITOM, ITAM) standing on one
+ * glowing CMDB slab. The slab is navy glass printed with an azure grid of
+ * configuration records; relationship lines run between the buildings and
+ * gold data packets travel along them. Lines from the slab's edges are the
+ * data coming in (Discovery, connectors). It is how the page explains, in one
+ * picture, why the CMDB matters: everything stands on it.
+ */
+export const SLAB = { w: 15, d: 9.6, h: 0.34 };
+const SCALE = 1.35;
 
 export interface Placed {
   building: Building;
   group: THREE.Group;
   build: BuildUniforms;
   position: THREE.Vector3;
-  /** Gold ring on the ground that lights up when this building is the subject. */
+  /** Footprint half-extents in world units (after scaling). */
+  half: THREE.Vector2;
+  /** Ring on the slab that lights up when this building is the subject. */
   ring: THREE.Mesh;
   /** World point above the roof where its label's leader line starts. */
   anchor: THREE.Vector3;
 }
 
-/** Layout: HQ in the central block, one expertise building in each surrounding block. */
-const LAYOUT: [() => Building, number, number, number?][] = [
-  [hq, 0, -0.55],
-  // The warehouse faces the back avenue, where its docks are filmed from.
-  [itam, 0.2, -6.2, Math.PI],
-  [appEngine, -6.5, -0.7],
-  [itom, 6.4, -0.8],
-  [itsm, -6.2, 4.9],
-  [architecture, 0.3, 4.9],
-  [integration, 6.3, 4.9],
+/** Order on the page: ITSM, ITOM, ITAM. */
+const LAYOUT: [() => Building, number, number][] = [
+  [itsm, -4.9, 1.5],
+  [itom, 0.2, -2.3],
+  [itam, 5.0, 1.4],
 ];
 
-function groundMaterial(xray: THREE.IUniform<number>): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ color: ROAD, roughness: 0.95, transparent: true, depthWrite: true });
+/** Relationship lines (between buildings) and feeds (from the slab edge in). Manhattan paths on the slab. */
+const LINKS: [number, number][][] = [
+  [[-4.9, 1.5], [-4.9, -2.3], [0.2, -2.3]],
+  [[0.2, -2.3], [5.0, -2.3], [5.0, 1.4]],
+  [[-4.9, 1.5], [-4.9, 3.75], [5.0, 3.75], [5.0, 1.4]],
+];
+const FEEDS: [number, number][][] = [
+  [[-7.5, 1.5], [-4.9, 1.5]],
+  [[0.2, -4.8], [0.2, -2.3]],
+  [[7.5, 1.4], [5.0, 1.4]],
+  [[-2.4, 4.8], [-2.4, 3.75]],
+  [[2.6, -4.8], [2.6, -2.3]],
+];
+
+/** The slab: navy glass, a grid of records that twinkle, brighter under each building, a glowing azure rim. */
+function slabMaterial(uniforms: CampusUniforms, pads: THREE.Vector4[]): THREE.MeshStandardMaterial {
+  const m = new THREE.MeshStandardMaterial({ color: TOKENS.navy, roughness: 0.32, metalness: 0.35 });
   m.onBeforeCompile = (shader) => {
-    shader.uniforms.uMarks = { value: 0 };
-    shader.uniforms.uXray = xray;
-    m.userData.shader = shader;
+    Object.assign(shader.uniforms, uniforms, {
+      uPads: { value: pads },
+      uAzure: { value: new THREE.Color(AZURE) },
+      uIris: { value: new THREE.Color(TOKENS.iris) },
+    });
     shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vW;')
-      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvW = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      .replace('#include <common>', '#include <common>\nvarying vec3 vW;\nvarying vec3 vWN;')
+      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvW = (modelMatrix * vec4(transformed, 1.0)).xyz;\nvWN = normalize(mat3(modelMatrix) * objectNormal);');
     shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vW;\nuniform float uMarks, uXray;')
       .replace(
-        '#include <color_fragment>',
-        /* glsl */ `#include <color_fragment>
-        // Dashed white centre lines on every road, drawn on from the centre outward.
-        float r = length(vW.xz);
-        float reveal = smoothstep(r - 2.0, r, uMarks * 18.0);
-        float m = 0.0;
-        ${AVENUES_Z.map((z) => `m = max(m, (1.0 - smoothstep(0.012, 0.03, abs(vW.z - (${z.toFixed(2)})))) * step(0.5, fract(vW.x * 1.6)));`).join('\n')}
-        ${STREETS_X.map((x) => `m = max(m, (1.0 - smoothstep(0.012, 0.03, abs(vW.x - (${x.toFixed(2)})))) * step(0.5, fract(vW.z * 1.6)));`).join('\n')}
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(1.0), m * reveal * 0.9);
-        diffuseColor.a *= 1.0 - smoothstep(${(EXTENT * 0.45).toFixed(1)}, ${(EXTENT * 0.95).toFixed(1)}, r);
-        // X-ray: the board turns into a faint blueprint grid over the dark section behind.
-        vec2 g = abs(fract(vW.xz - 0.5) - 0.5) / fwidth(vW.xz);
-        float grid = 1.0 - smoothstep(0.0, 1.0, min(g.x, g.y));
-        float fadeR = 1.0 - smoothstep(4.0, 12.0, r);
-        diffuseColor.rgb = mix(diffuseColor.rgb, vec3(0.56, 0.9, 1.0), uXray);
-        diffuseColor.a = mix(diffuseColor.a, grid * 0.22 * fadeR, uXray);`,
+        '#include <common>',
+        `#include <common>\nvarying vec3 vW;\nvarying vec3 vWN;\nuniform float uTime, uXray;\nuniform vec3 uAzure, uIris;\nuniform vec4 uPads[3];\n${hash}`,
+      )
+      .replace(
+        '#include <emissivemap_fragment>',
+        /* glsl */ `#include <emissivemap_fragment>
+        vec2 p = vW.xz;
+        float top = step(0.5, vWN.y);
+        // How close this point is to a building footprint (records there are busier).
+        float near = 0.0;
+        for (int i = 0; i < 3; i++) {
+          vec2 d = abs(p - uPads[i].xy) - uPads[i].zw;
+          near = max(near, 1.0 - smoothstep(0.0, 1.6, length(max(d, 0.0))));
+        }
+        // Grid of record cells, two per world unit.
+        vec2 q = p * 2.0;
+        vec2 gl = abs(fract(q - 0.5) - 0.5) / fwidth(q);
+        float grid = 1.0 - min(min(gl.x, gl.y), 1.0);
+        vec2 cell = floor(q);
+        float rnd = hash21(cell);
+        vec2 f = fract(q) - 0.5;
+        float rec = 1.0 - smoothstep(0.1, 0.14, max(abs(f.x), abs(f.y)));
+        float on = step(0.55 - near * 0.3, rnd);
+        float tw = 0.45 + 0.55 * sin(uTime * (0.6 + rnd * 1.6) + rnd * 40.0);
+        float edge = 1.0 - smoothstep(0.0, 0.6, min(${(SLAB.w / 2).toFixed(2)} - abs(p.x), ${(SLAB.d / 2).toFixed(2)} - abs(p.y)));
+        vec3 glow = uAzure * (grid * (0.05 + near * 0.08) + rec * on * tw * (0.35 + near * 1.6) * (1.0 + uXray * 1.5));
+        glow += uIris * edge * 0.12;
+        // Sides: a bright azure line along the top edge, fading down the side.
+        float side = 1.0 - top;
+        float rim = side * (1.0 - smoothstep(0.0, 0.07, -vW.y));
+        glow = glow * top + uAzure * (rim * 3.2 + side * 0.08);
+        totalEmissiveRadiance += glow;`,
       );
   };
+  m.customProgramCacheKey = () => 'foundation-slab';
   return m;
 }
 
-/** Raised white block pads (the model's "land"), fading out at the edge of the world. */
-function padMaterial(xray: THREE.IUniform<number>): THREE.MeshStandardMaterial {
-  const m = new THREE.MeshStandardMaterial({ color: CLAY, roughness: 0.94, transparent: true });
-  m.onBeforeCompile = (shader) => {
-    shader.uniforms.uXray = xray;
-    shader.vertexShader = shader.vertexShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vW;')
-      .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvW = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;');
-    shader.fragmentShader = shader.fragmentShader
-      .replace('#include <common>', '#include <common>\nvarying vec3 vW;\nuniform float uXray;')
-      .replace(
-        '#include <color_fragment>',
-        `#include <color_fragment>\ndiffuseColor.a *= (1.0 - smoothstep(${(EXTENT * 0.42).toFixed(1)}, ${(EXTENT * 0.85).toFixed(1)}, length(vW.xz))) * (1.0 - uXray);`,
-      );
-  };
-  return m;
+/** Relationship lines on the slab: azure, with pulses running along them. Additive, so they glow. */
+function lineMaterial(uniforms: CampusUniforms) {
+  return new THREE.ShaderMaterial({
+    uniforms: { uTime: uniforms.uTime, uXray: uniforms.uXray, uColor: { value: new THREE.Color(AZURE) } },
+    transparent: true,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexShader: /* glsl */ `
+      attribute float aT;
+      attribute float aFeed;
+      varying float vT;
+      varying float vFeed;
+      varying vec2 vUv;
+      void main() {
+        vT = aT;
+        vFeed = aFeed;
+        vUv = uv;
+        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+      }
+    `,
+    fragmentShader: /* glsl */ `
+      uniform float uTime, uXray;
+      uniform vec3 uColor;
+      varying float vT;
+      varying float vFeed;
+      varying vec2 vUv;
+      void main() {
+        float across = 1.0 - abs(vUv.y * 2.0 - 1.0);
+        float core = smoothstep(0.35, 1.0, across);
+        float pulse = smoothstep(0.85, 1.0, fract(vT * 0.35 - uTime * (vFeed > 0.5 ? 0.55 : 0.32)));
+        float base = 0.55 + uXray * 0.9;
+        vec3 c = uColor * (core * base + pulse * core * 2.6 + across * 0.25);
+        gl_FragColor = vec4(c, across * (0.55 + pulse * 0.45));
+      }
+    `,
+  });
 }
 
-/** Instanced material whose instances grow in with a per-instance delay (trees, people, vans). */
-function growMaterial(xray: THREE.IUniform<number>, color: string, roughness = 0.8, metalness = 0, emissive?: string) {
-  const uniforms = { uGrow: { value: 0 }, uXray: xray };
-  const m = new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive: emissive ?? '#000000', emissiveIntensity: emissive ? 0.08 : 0 });
+/** Flat ribbon along a polyline, lying on the slab. aT = distance along it. */
+function ribbon(points: [number, number][], width: number, y: number, feed: number) {
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const t: number[] = [];
+  const f: number[] = [];
+  const idx: number[] = [];
+  let run = 0;
+  for (let i = 0; i < points.length - 1; i++) {
+    const [ax, az] = points[i]!;
+    const [bx, bz] = points[i + 1]!;
+    const len = Math.hypot(bx - ax, bz - az);
+    const nx = -(bz - az) / len;
+    const nz = (bx - ax) / len;
+    const base = pos.length / 3;
+    // Extend each segment by half a width so corners overlap cleanly.
+    const ex = ((bx - ax) / len) * (width / 2);
+    const ez = ((bz - az) / len) * (width / 2);
+    const a = [ax - ex, az - ez];
+    const b = [bx + ex, bz + ez];
+    pos.push(a[0]! + nx * width, y, a[1]! + nz * width, a[0]! - nx * width, y, a[1]! - nz * width, b[0]! + nx * width, y, b[1]! + nz * width, b[0]! - nx * width, y, b[1]! - nz * width);
+    uv.push(0, 0, 0, 1, 1, 0, 1, 1);
+    t.push(run, run, run + len, run + len);
+    f.push(feed, feed, feed, feed);
+    idx.push(base, base + 1, base + 2, base + 1, base + 3, base + 2);
+    run += len;
+  }
+  return { pos, uv, t, f, idx };
+}
+
+function delays(count: number, fn: (i: number) => number) {
+  return new THREE.InstancedBufferAttribute(Float32Array.from({ length: count }, (_, i) => fn(i)), 1);
+}
+
+/** Instanced material whose instances grow in, and shrink away in x-ray (trees, people). */
+function growMaterial(xray: THREE.IUniform<number>, color: string, roughness = 0.8, metalness = 0, emissive?: string, emissiveIntensity = 0) {
+  const uniforms = { uGrow: { value: 2 }, uXray: xray };
+  const m = new THREE.MeshStandardMaterial({ color, roughness, metalness, emissive: emissive ?? '#000000', emissiveIntensity });
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
@@ -107,7 +188,6 @@ function growMaterial(xray: THREE.IUniform<number>, color: string, roughness = 0
         /* glsl */ `#include <begin_vertex>
         float gt = clamp((uGrow - aDelay) * 2.5, 0.0, 1.0);
         float s = 1.0 + 2.70158 * pow(gt - 1.0, 3.0) + 1.70158 * pow(gt - 1.0, 2.0);
-        // In x-ray the soft furniture (trees, vans, people) shrinks away, staggered.
         float gone = smoothstep(0.05 + aDelay * 0.3, 0.45 + aDelay * 0.3, uXray);
         transformed *= max(s, 0.0) * (1.0 - gone);`,
       );
@@ -115,159 +195,158 @@ function growMaterial(xray: THREE.IUniform<number>, color: string, roughness = 0
   return { material: m, uniforms };
 }
 
-function delays(count: number, fn: (i: number) => number) {
-  return new THREE.InstancedBufferAttribute(Float32Array.from({ length: count }, (_, i) => fn(i)), 1);
-}
-
-interface Van {
-  axis: 'x' | 'z';
-  line: number;
-  dir: 1 | -1;
+interface Packet {
+  path: number;
   pos: number;
   speed: number;
 }
 
-/**
- * The Raleston campus: an architectural model of a planned "digital empire".
- * HQ at the centre, six expertise buildings around it, a street grid with
- * gold data vans, trees and people. White clay, gold accent, nothing else.
- */
 export class Campus {
   readonly root = new THREE.Group();
   readonly uniforms: CampusUniforms = createCampusUniforms();
   readonly placed: Placed[] = [];
-  private ground: THREE.Mesh;
-  private vans: THREE.InstancedMesh;
-  private vanData: Van[] = [];
+  /** World points for the x-ray labels: records, relationships, discovery. */
+  readonly xrayAnchors = [new THREE.Vector3(-1.9, 0.05, 1.6), new THREE.Vector3(2.6, 0.05, 3.75), new THREE.Vector3(0.2, 0.05, -4.4)];
+  private paths: { pts: THREE.Vector2[]; len: number; cum: number[] }[] = [];
+  private packets: THREE.InstancedMesh;
+  private packetData: Packet[] = [];
   private people: THREE.InstancedMesh;
   private peopleData: { base: THREE.Vector3; phase: number; radius: number; speed: number }[] = [];
-  private grow: { uGrow: THREE.IUniform<number> }[] = [];
   private tmp = { m: new THREE.Matrix4(), q: new THREE.Quaternion(), s: new THREE.Vector3(1, 1, 1), p: new THREE.Vector3() };
 
   constructor(opts: { shadows: boolean; detail: number }) {
-    // Ground (streets) and raised block pads.
-    this.ground = new THREE.Mesh(new THREE.CircleGeometry(EXTENT + 2, 96), groundMaterial(this.uniforms.uXray));
-    this.ground.rotation.x = -Math.PI / 2;
-    this.ground.receiveShadow = true;
-    this.root.add(this.ground);
+    const rand = mulberry32(7);
 
-    const xs = [-EXTENT, STREETS_X[0]!, STREETS_X[1]!, EXTENT];
-    const zs = [-EXTENT, AVENUES_Z[1]!, AVENUES_Z[0]!, EXTENT];
-    const pads: THREE.Matrix4[] = [];
-    for (let i = 0; i < 3; i++)
-      for (let j = 0; j < 3; j++) {
-        const x0 = xs[i]! + (i > 0 ? ROAD_W / 2 : 0);
-        const x1 = xs[i + 1]! - (i < 2 ? ROAD_W / 2 : 0);
-        const z0 = zs[j]! + (j > 0 ? ROAD_W / 2 : 0);
-        const z1 = zs[j + 1]! - (j < 2 ? ROAD_W / 2 : 0);
-        pads.push(new THREE.Matrix4().compose(new THREE.Vector3((x0 + x1) / 2, 0.025, (z0 + z1) / 2), new THREE.Quaternion(), new THREE.Vector3(x1 - x0, 1, z1 - z0)));
-      }
-    const padMesh = new THREE.InstancedMesh(new RoundedBoxGeometry(1, 0.05, 1, 2, 0.02), padMaterial(this.uniforms.uXray), pads.length);
-    pads.forEach((m, i) => padMesh.setMatrixAt(i, m));
-    padMesh.receiveShadow = true;
-    this.root.add(padMesh);
-
-    // Buildings.
-    for (const [make, x, z, rot = 0] of LAYOUT) {
+    // Buildings first: the slab needs their footprints.
+    for (const [make, x, z] of LAYOUT) {
       const building = make();
-      const build: BuildUniforms = { uBuild: { value: -0.01 }, uDim: { value: 0 } };
+      const build: BuildUniforms = { uBuild: { value: 100 }, uDim: { value: 0 } };
       const group = building.kit.build(buildingMaterials(build, this.uniforms), opts.shadows);
-      group.position.set(x, 0.05, z);
-      group.rotation.y = rot;
-      const ring = new THREE.Mesh(ringGeometry(building.half.x + 0.28, building.half.y + 0.28), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, depthWrite: false }));
-      ring.position.set(x, 0.062, z);
+      group.position.set(x, 0, z);
+      group.scale.setScalar(SCALE);
+      const half = building.half.clone().multiplyScalar(SCALE);
+      const ring = new THREE.Mesh(ringGeometry(half.x + 0.45, half.y + 0.45), new THREE.MeshBasicMaterial({ color: GOLD, transparent: true, opacity: 0, depthWrite: false }));
+      ring.position.set(x, 0.012, z);
       ring.rotation.x = -Math.PI / 2;
       this.root.add(group, ring);
-      this.placed.push({ building, group, build, position: group.position.clone(), ring, anchor: new THREE.Vector3(x, building.height + 0.45, z) });
+      this.placed.push({ building, group, build, position: group.position.clone(), half, ring, anchor: new THREE.Vector3(x, building.height * SCALE + 0.6, z) });
     }
 
-    // Trees: teardrop crowns on thin trunks, along avenues and in the open blocks.
-    const treePos: THREE.Vector3[] = [];
-    const rand = mulberry32(11);
-    for (const z of AVENUES_Z)
-      for (let x = -EXTENT * 0.7; x < EXTENT * 0.7; x += 1.5) {
-        if (STREETS_X.some((sx) => Math.abs(x - sx) < 1)) continue;
-        for (const side of [-1, 1]) treePos.push(new THREE.Vector3(x + rand() * 0.2, 0.05, z + side * (ROAD_W / 2 + 0.22)));
-      }
-    for (const x of STREETS_X)
-      for (let z = -EXTENT * 0.65; z < EXTENT * 0.65; z += 1.6) {
-        if (AVENUES_Z.some((az) => Math.abs(z - az) < 1)) continue;
-        for (const side of [-1, 1]) treePos.push(new THREE.Vector3(x + side * (ROAD_W / 2 + 0.22), 0.05, z + rand() * 0.2));
-      }
-    // A few tight clusters in the open corners, avoiding building footprints.
-    const clusters = Array.from({ length: Math.round(9 * opts.detail) }, () => new THREE.Vector3((rand() - 0.5) * 2 * EXTENT * 0.6, 0.05, (rand() - 0.5) * 2 * EXTENT * 0.6));
-    for (let n = 0; n < 70 * opts.detail; n++) {
-      const c = clusters[n % clusters.length]!;
-      const p = c.clone().add(new THREE.Vector3((rand() - 0.5) * 1.6, 0, (rand() - 0.5) * 1.6));
-      const nearRoad = AVENUES_Z.some((z) => Math.abs(p.z - z) < ROAD_W) || STREETS_X.some((x) => Math.abs(p.x - x) < ROAD_W);
-      const nearBuilding = this.placed.some((pl) => Math.abs(p.x - pl.position.x) < pl.building.half.x + 0.45 && Math.abs(p.z - pl.position.z) < pl.building.half.y + 0.45);
-      if (!nearRoad && !nearBuilding) treePos.push(p);
+    // The CMDB slab.
+    const pads = this.placed.map((p) => new THREE.Vector4(p.position.x, p.position.z, p.half.x, p.half.y));
+    const slab = new THREE.Mesh(new RoundedBoxGeometry(SLAB.w, SLAB.h, SLAB.d, 3, 0.12), slabMaterial(this.uniforms, pads));
+    slab.position.y = -SLAB.h / 2;
+    slab.receiveShadow = true;
+    this.root.add(slab);
+
+    // A dark ground far below, fading out, so the slab floats over something.
+    const ground = new THREE.Mesh(
+      new THREE.CircleGeometry(30, 64),
+      new THREE.MeshBasicMaterial({ color: TOKENS.night, transparent: true, opacity: 0.0, depthWrite: false }),
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1.5;
+    this.root.add(ground);
+
+    // Relationship lines and feeds.
+    const parts = [...LINKS.map((l) => ribbon(l, 0.07, 0.006, 0)), ...FEEDS.map((l) => ribbon(l, 0.05, 0.005, 1))];
+    const geo = new THREE.BufferGeometry();
+    const pos: number[] = [];
+    const uv: number[] = [];
+    const t: number[] = [];
+    const f: number[] = [];
+    const idx: number[] = [];
+    for (const r of parts) {
+      const off = pos.length / 3;
+      pos.push(...r.pos);
+      uv.push(...r.uv);
+      t.push(...r.t);
+      f.push(...r.f);
+      idx.push(...r.idx.map((i) => i + off));
     }
-    const trees = treePos.filter((p) => p.length() < EXTENT * 0.72);
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+    geo.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    geo.setAttribute('aT', new THREE.Float32BufferAttribute(t, 1));
+    geo.setAttribute('aFeed', new THREE.Float32BufferAttribute(f, 1));
+    geo.setIndex(idx);
+    const lines = new THREE.Mesh(geo, lineMaterial(this.uniforms));
+    lines.renderOrder = 2;
+    this.root.add(lines);
+
+    // Gold data packets travelling the relationship lines.
+    for (const l of [...LINKS, ...FEEDS]) {
+      const pts = l.map(([x, z]) => new THREE.Vector2(x, z));
+      const cum = [0];
+      for (let i = 1; i < pts.length; i++) cum.push(cum[i - 1]! + pts[i]!.distanceTo(pts[i - 1]!));
+      this.paths.push({ pts, len: cum[cum.length - 1]!, cum });
+    }
+    const packetCount = Math.round(26 * opts.detail);
+    for (let i = 0; i < packetCount; i++) {
+      const path = i % this.paths.length;
+      this.packetData.push({ path, pos: rand() * this.paths[path]!.len, speed: (0.8 + rand() * 0.9) * (rand() < 0.5 ? 1 : -1) });
+    }
+    const packetGeo = new RoundedBoxGeometry(0.2, 0.08, 0.11, 2, 0.03);
+    packetGeo.translate(0, 0.06, 0);
+    this.packets = new THREE.InstancedMesh(packetGeo, new THREE.MeshStandardMaterial({ color: GOLD, emissive: GOLD, emissiveIntensity: 2.4, roughness: 0.4 }), packetCount);
+    this.packets.frustumCulled = false;
+    this.root.add(this.packets);
+
+    // Model trees around the slab's open corners: white, like an architect's model.
+    const treePos: THREE.Vector3[] = [];
+    const clear = (p: THREE.Vector3) =>
+      this.placed.every((pl) => Math.abs(p.x - pl.position.x) > pl.half.x + 0.5 || Math.abs(p.z - pl.position.z) > pl.half.y + 0.5) &&
+      [...LINKS, ...FEEDS].every((l) =>
+        l.slice(1).every(([bx, bz], i) => {
+          const [ax, az] = l[i]!;
+          const onX = Math.abs(az - bz) < 0.01 && Math.abs(p.z - az) < 0.35 && p.x > Math.min(ax, bx) - 0.35 && p.x < Math.max(ax, bx) + 0.35;
+          const onZ = Math.abs(ax - bx) < 0.01 && Math.abs(p.x - ax) < 0.35 && p.z > Math.min(az, bz) - 0.35 && p.z < Math.max(az, bz) + 0.35;
+          return !onX && !onZ;
+        }),
+      );
+    // Only a band along the slab's edge, so the grid of records stays readable.
+    for (let n = 0; n < 220 * opts.detail; n++) {
+      const p = new THREE.Vector3((rand() - 0.5) * (SLAB.w - 0.7), 0, (rand() - 0.5) * (SLAB.d - 0.7));
+      const toEdge = Math.min(SLAB.w / 2 - Math.abs(p.x), SLAB.d / 2 - Math.abs(p.z));
+      if (toEdge < 1.0 && clear(p) && treePos.every((q) => q.distanceTo(p) > 0.55)) treePos.push(p);
+    }
     const crownGeo = new THREE.SphereGeometry(1, 12, 10);
-    crownGeo.scale(0.13, 0.24, 0.13);
-    crownGeo.translate(0, 0.34, 0);
-    const trunkGeo = new THREE.CylinderGeometry(0.014, 0.02, 0.16, 6);
-    trunkGeo.translate(0, 0.08, 0);
-    const crownMat = growMaterial(this.uniforms.uXray, TREE, 0.75);
-    const trunkMat = growMaterial(this.uniforms.uXray, '#C9CFD8', 0.9);
-    this.grow.push(crownMat.uniforms, trunkMat.uniforms);
-    const crowns = new THREE.InstancedMesh(crownGeo, crownMat.material, trees.length);
-    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat.material, trees.length);
-    const color = new THREE.Color();
-    trees.forEach((p, i) => {
-      const s = 0.75 + rand() * 0.55;
+    crownGeo.scale(0.15, 0.27, 0.15);
+    crownGeo.translate(0, 0.38, 0);
+    const trunkGeo = new THREE.CylinderGeometry(0.016, 0.022, 0.18, 6);
+    trunkGeo.translate(0, 0.09, 0);
+    const crownMat = growMaterial(this.uniforms.uXray, TREE, 0.85);
+    const trunkMat = growMaterial(this.uniforms.uXray, TOKENS['grey-400'], 0.9);
+    const crowns = new THREE.InstancedMesh(crownGeo, crownMat.material, treePos.length);
+    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat.material, treePos.length);
+    treePos.forEach((p, i) => {
+      const s = 0.55 + rand() * 0.4;
       this.tmp.m.compose(p, this.tmp.q.identity(), new THREE.Vector3(s, s * (0.9 + rand() * 0.3), s));
       crowns.setMatrixAt(i, this.tmp.m);
       trunks.setMatrixAt(i, this.tmp.m);
-      crowns.setColorAt(i, color.set(TREE).offsetHSL((rand() - 0.5) * 0.03, 0, (rand() - 0.5) * 0.08));
     });
-    const treeDelay = delays(trees.length, (i) => 0.15 + (trees[i]!.length() / EXTENT) * 0.6 + rand() * 0.1);
+    const treeDelay = delays(treePos.length, () => rand() * 0.3);
     crownGeo.setAttribute('aDelay', treeDelay);
     trunkGeo.setAttribute('aDelay', treeDelay);
-    for (const t of [crowns, trunks]) {
-      t.castShadow = opts.shadows;
-      t.receiveShadow = true;
-      this.root.add(t);
+    for (const tr of [crowns, trunks]) {
+      tr.castShadow = opts.shadows;
+      tr.receiveShadow = true;
+      this.root.add(tr);
     }
 
-    // Gold data vans: a cab and a box, driving the grid in both directions.
-    const vanGeo = new RoundedBoxGeometry(0.42, 0.16, 0.17, 2, 0.03);
-    vanGeo.translate(-0.04, 0.11, 0);
-    const cab = new RoundedBoxGeometry(0.13, 0.13, 0.16, 2, 0.03);
-    cab.translate(0.24, 0.095, 0);
-    const merged = mergeTwo(vanGeo, cab);
-    vanGeo.dispose();
-    cab.dispose();
-    const vanMat = growMaterial(this.uniforms.uXray, GOLD, 0.4, 0.2, GOLD);
-    this.grow.push(vanMat.uniforms);
-    const vanCount = Math.round(22 * opts.detail);
-    for (let i = 0; i < vanCount; i++) {
-      const axis = i % 2 ? 'x' : 'z';
-      const lines = axis === 'x' ? AVENUES_Z : STREETS_X;
-      this.vanData.push({ axis, line: lines[i % lines.length]!, dir: rand() < 0.5 ? 1 : -1, pos: (rand() - 0.5) * 2 * EXTENT * 0.55, speed: 0.55 + rand() * 0.45 });
-    }
-    merged.setAttribute('aDelay', delays(vanCount, () => 0.75 + rand() * 0.2));
-    this.vans = new THREE.InstancedMesh(merged, vanMat.material, vanCount);
-    // Moving things don't cast into the (static) shadow map; AO grounds them instead.
-    this.vans.castShadow = false;
-    this.vans.frustumCulled = false;
-    this.root.add(this.vans);
-
-    // People: tiny figures milling about on the pads, as in an architect's model.
-    const personGeo = new THREE.CapsuleGeometry(0.022, 0.07, 3, 6);
-    personGeo.translate(0, 0.08, 0);
-    const peopleCount = Math.round(70 * opts.detail);
-    const personMat = growMaterial(this.uniforms.uXray, '#2B3557', 0.8);
-    this.grow.push(personMat.uniforms);
-    personGeo.setAttribute('aDelay', delays(peopleCount, () => 0.7 + rand() * 0.25));
+    // People: tiny figures milling about outside each building.
+    const personGeo = new THREE.CapsuleGeometry(0.026, 0.08, 3, 6);
+    personGeo.translate(0, 0.09, 0);
+    const peopleCount = Math.round(54 * opts.detail);
+    const personMat = growMaterial(this.uniforms.uXray, TOKENS.white, 0.7);
+    personGeo.setAttribute('aDelay', delays(peopleCount, () => rand() * 0.25));
     this.people = new THREE.InstancedMesh(personGeo, personMat.material, peopleCount);
+    const color = new THREE.Color();
     for (let i = 0; i < peopleCount; i++) {
-      const pl = this.placed[Math.floor(rand() * this.placed.length)]!;
+      const pl = this.placed[i % this.placed.length]!;
       const ang = rand() * Math.PI * 2;
-      const base = pl.position.clone().add(new THREE.Vector3(Math.cos(ang) * (pl.building.half.x + 0.35), 0.05, Math.sin(ang) * (pl.building.half.y + 0.35)));
+      const base = pl.position.clone().add(new THREE.Vector3(Math.cos(ang) * (pl.half.x + 0.55), 0, Math.sin(ang) * (pl.half.y + 0.55)));
       this.peopleData.push({ base, phase: rand() * 6.28, radius: 0.1 + rand() * 0.35, speed: (rand() < 0.4 ? 0 : 0.2 + rand() * 0.3) * (rand() < 0.5 ? 1 : -1) });
-      this.people.setColorAt(i, color.set(rand() < 0.15 ? GOLD : rand() < 0.5 ? '#2B3557' : '#8C95AD'));
+      this.people.setColorAt(i, color.set(rand() < 0.2 ? TOKENS['iris-soft'] : TOKENS.white));
     }
     this.people.castShadow = false;
     this.people.frustumCulled = false;
@@ -276,96 +355,44 @@ export class Campus {
   }
 
   private xrayBuilt = false;
-  /**
-   * X-ray edge lines are only seen at the end of Expertise, and extracting
-   * edges is the single most expensive part of building the campus, so it is
-   * done later, in idle time (or on demand if someone scrolls there first).
-   */
+  /** X-ray lines are only seen at the end of the section, so they are built later, in idle time. */
   ensureXray() {
     if (this.xrayBuilt) return;
     this.xrayBuilt = true;
     for (const p of this.placed) {
       const xr = buildXray(p.building, p.group, this.uniforms);
       p.group.add(xr.shells, xr.interiors);
+      this.root.add(xr.filaments);
+      xr.filaments.position.copy(p.position);
+      xr.filaments.scale.setScalar(SCALE);
     }
   }
 
-  /**
-   * The model builds itself: street marks draw on, trees pop, buildings rise
-   * with a gold build line, HQ alongside them. Tuned so the first viewport is
-   * complete about 1.5 s after the curtain lifts.
-   */
-  playBuild(tl: gsap.core.Timeline, at = 0) {
-    const ground = this.ground.material as THREE.MeshStandardMaterial;
-    const marks = { v: 0 };
-    tl.to(marks, { v: 1, duration: 1.2, ease: 'power2.out', onUpdate: () => {
-      const s = ground.userData.shader as { uniforms: { uMarks: THREE.IUniform<number> } } | undefined;
-      if (s) s.uniforms.uMarks.value = marks.v;
-    } }, at);
-    for (const g of this.grow) tl.to(g.uGrow, { value: 1.6, duration: 1.4, ease: 'none' }, at + 0.05);
-    const order = [...this.placed].sort((a, b) => (a.building.id === 'hq' ? -1 : b.building.id === 'hq' ? 1 : a.position.length() - b.position.length()));
-    let end = at;
-    order.forEach((p, i) => {
-      const isHq = p.building.id === 'hq';
-      const start = at + (isHq ? 0.05 : 0.12 + i * 0.07);
-      const duration = isHq ? 1.3 : 0.85;
-      end = Math.max(end, start + duration);
-      tl.fromTo(
-        p.build.uBuild,
-        { value: -0.01 },
-        { value: p.building.height + 0.3, duration, ease: isHq ? 'power2.out' : 'power3.out' },
-        start,
-      );
-    });
-    // The moment the last building tops out, switch the build clip off entirely.
-    tl.call(
-      () => {
-        for (const p of this.placed) p.build.uBuild.value = 100;
-      },
-      [],
-      end,
-    );
-  }
-
-  /** Instant finished state (reduced motion, or when warming shaders). */
+  /** Instant finished state. */
   finish() {
     for (const p of this.placed) p.build.uBuild.value = 100;
-    for (const g of this.grow) g.uGrow.value = 2;
-    const s = (this.ground.material as THREE.MeshStandardMaterial).userData.shader as { uniforms: { uMarks: THREE.IUniform<number> } } | undefined;
-    if (s) s.uniforms.uMarks.value = 1;
-  }
-
-  reset() {
-    for (const p of this.placed) p.build.uBuild.value = -0.01;
-    for (const g of this.grow) g.uGrow.value = 0;
-  }
-
-  private flow = 1;
-  /** Traffic speed multiplier (the "Lightning results" beat speeds the vans up). */
-  setFlow(f: number) {
-    this.flow += (f - this.flow) * 0.08;
   }
 
   update(dt: number, t: number) {
     this.uniforms.uTime.value = t;
     const { m, q, s, p } = this.tmp;
-    this.vanData.forEach((v, i) => {
-      v.pos += v.speed * v.dir * dt * this.flow;
-      const lim = EXTENT * 0.55;
-      if (v.pos > lim) v.pos = -lim;
-      if (v.pos < -lim) v.pos = lim;
-      const lane = 0.2 * v.dir;
-      if (v.axis === 'x') {
-        p.set(v.pos, 0, v.line + lane);
-        q.setFromAxisAngle(UP, v.dir > 0 ? 0 : Math.PI);
-      } else {
-        p.set(v.line - lane, 0, v.pos);
-        q.setFromAxisAngle(UP, v.dir > 0 ? -Math.PI / 2 : Math.PI / 2);
-      }
-      const edge = Math.min(1, (lim - Math.abs(v.pos)) / 1.5);
-      this.vans.setMatrixAt(i, m.compose(p, q, this.tmp.s.setScalar(Math.max(0.001, edge))));
+    this.packetData.forEach((d, i) => {
+      const path = this.paths[d.path]!;
+      d.pos += d.speed * dt;
+      if (d.pos > path.len) d.pos -= path.len;
+      if (d.pos < 0) d.pos += path.len;
+      let k = 0;
+      while (k < path.cum.length - 2 && path.cum[k + 1]! < d.pos) k++;
+      const a = path.pts[k]!;
+      const b = path.pts[k + 1]!;
+      const u = (d.pos - path.cum[k]!) / (path.cum[k + 1]! - path.cum[k]!);
+      p.set(a.x + (b.x - a.x) * u, 0, a.y + (b.y - a.y) * u);
+      q.setFromAxisAngle(UP, Math.atan2(-(b.y - a.y), b.x - a.x));
+      // Packets fade in and out at the ends of each path.
+      const edge = Math.min(1, d.pos / 0.6, (path.len - d.pos) / 0.6);
+      this.packets.setMatrixAt(i, m.compose(p, q, s.setScalar(Math.max(0.001, edge) * (1 - this.uniforms.uXray.value * 0.6))));
     });
-    this.vans.instanceMatrix.needsUpdate = true;
+    this.packets.instanceMatrix.needsUpdate = true;
     this.peopleData.forEach((d, i) => {
       const a = d.phase + t * d.speed;
       p.set(d.base.x + Math.cos(a) * d.radius, d.base.y, d.base.z + Math.sin(a) * d.radius);
@@ -378,39 +405,24 @@ export class Campus {
 const UP = new THREE.Vector3(0, 1, 0);
 
 /** Rounded-rectangle outline (as a thin flat band) around a footprint. */
-function ringGeometry(hx: number, hz: number, width = 0.045, r = 0.35): THREE.BufferGeometry {
+function ringGeometry(hx: number, hz: number, width = 0.05, r = 0.4): THREE.BufferGeometry {
   const outer = new THREE.Shape();
-  const rr = (s: THREE.Shape | THREE.Path, x: number, z: number, rad: number) => {
-    s.moveTo(-x + rad, -z);
-    s.lineTo(x - rad, -z);
-    s.quadraticCurveTo(x, -z, x, -z + rad);
-    s.lineTo(x, z - rad);
-    s.quadraticCurveTo(x, z, x - rad, z);
-    s.lineTo(-x + rad, z);
-    s.quadraticCurveTo(-x, z, -x, z - rad);
-    s.lineTo(-x, -z + rad);
-    s.quadraticCurveTo(-x, -z, -x + rad, -z);
+  const rr = (sh: THREE.Shape | THREE.Path, x: number, z: number, rad: number) => {
+    sh.moveTo(-x + rad, -z);
+    sh.lineTo(x - rad, -z);
+    sh.quadraticCurveTo(x, -z, x, -z + rad);
+    sh.lineTo(x, z - rad);
+    sh.quadraticCurveTo(x, z, x - rad, z);
+    sh.lineTo(-x + rad, z);
+    sh.quadraticCurveTo(-x, z, -x, z - rad);
+    sh.lineTo(-x, -z + rad);
+    sh.quadraticCurveTo(-x, -z, -x + rad, -z);
   };
   rr(outer, hx, hz, r);
   const hole = new THREE.Path();
   rr(hole, hx - width, hz - width, r - width);
   outer.holes.push(hole);
   return new THREE.ShapeGeometry(outer, 8);
-}
-
-function mergeTwo(a: THREE.BufferGeometry, b: THREE.BufferGeometry): THREE.BufferGeometry {
-  const ga = a.index ? a.toNonIndexed() : a;
-  const gb = b.index ? b.toNonIndexed() : b;
-  const out = new THREE.BufferGeometry();
-  for (const name of ['position', 'normal', 'uv'] as const) {
-    const x = ga.getAttribute(name) as THREE.BufferAttribute;
-    const y = gb.getAttribute(name) as THREE.BufferAttribute;
-    const arr = new Float32Array(x.array.length + y.array.length);
-    arr.set(x.array as Float32Array, 0);
-    arr.set(y.array as Float32Array, x.array.length);
-    out.setAttribute(name, new THREE.BufferAttribute(arr, x.itemSize));
-  }
-  return out;
 }
 
 function mulberry32(seed: number) {
@@ -422,4 +434,3 @@ function mulberry32(seed: number) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-

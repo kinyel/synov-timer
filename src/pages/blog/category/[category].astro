@@ -1,0 +1,28 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Archive from '../../../components/blog/Archive.astro';
+import { posts, slugify, type Post } from '../../../lib/blog';
+
+const BLURB: Record<string, string> = {
+  CMDB: 'Configuration data you can trust: CMDB health, the Common Service Data Model (CSDM), Discovery and data governance on ServiceNow.',
+  ITSM: 'IT Service Management on ServiceNow: incidents, requests, changes and problems, and the service portal people actually use.',
+  ITOM: 'IT Operations Management on ServiceNow: Discovery, Service Mapping, event management and AIOps.',
+  ITAM: 'IT Asset Management on ServiceNow: hardware and software assets, licence compliance and audit readiness.',
+  AI: 'ServiceNow Otto (formerly Now Assist), AI agents, custom skills and MCP: where AI helps, and how to get ready for it.',
+  Architecture: 'Platform architecture on ServiceNow: how the modules fit together, and how to design for upgrades and scale.',
+  Integrations: 'Connecting ServiceNow to the rest of your estate: IntegrationHub, APIs, identity and monitoring tools.',
+};
+
+export const getStaticPaths = (async () => {
+  const all = await posts();
+  const names = [...new Set(all.map((p) => p.data.category))];
+  return names.map((name) => ({
+    params: { category: slugify(name) },
+    props: { name, items: all.filter((p) => p.data.category === name) },
+  }));
+}) satisfies GetStaticPaths;
+
+const { name, items } = Astro.props as { name: string; items: Post[] };
+---
+
+<Archive kind="Category" name={name} href={`/blog/category/${slugify(name)}/`} description={BLURB[name] ?? `Articles about ${name} on ServiceNow.`} items={items} />

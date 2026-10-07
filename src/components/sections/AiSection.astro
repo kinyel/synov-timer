@@ -1,0 +1,382 @@
+---
+/**
+ * 04 · AI in the work. ServiceNow Otto (formerly Now Assist), skills, AI
+ * agents and MCP, explained plainly, with how the pieces connect and how
+ * Raleston gets an organisation ready. Violet is the AI colour throughout.
+ */
+import { Image } from 'astro:assets';
+import aiChat from '../../assets/images/ai-chat.png';
+import Icon from '../ui/Icon.astro';
+
+const blocks = [
+  {
+    title: 'ServiceNow Otto',
+    tag: 'Formerly Now Assist',
+    text: 'Generative AI built into the platform. It summarises incidents, chats and changes, drafts resolution notes and knowledge articles, and answers employees in the portal, Teams or Slack.',
+    help: 'We check readiness, switch on the skills that fit, and measure the value.',
+  },
+  {
+    title: 'Skills',
+    tag: 'AI Skill Kit',
+    text: 'Otto works through individual skills, such as summarising an incident. The AI Skill Kit lets you build your own, with your prompts and an approved model, for tasks only your company has.',
+    help: 'We design, build and test custom skills, and deploy them where people work.',
+  },
+  {
+    title: 'AI agents',
+    tag: 'AI Agent Studio',
+    text: 'Agents go further than summaries: they plan and carry out multi-step tasks, such as triaging an incident or processing an asset request, within limits you set.',
+    help: 'We pick the use cases, design the agents and set their guardrails.',
+  },
+  {
+    title: 'MCP',
+    tag: 'Model Context Protocol',
+    text: 'An open standard that lets AI agents use tools in other systems. ServiceNow’s MCP Server lets agents like Claude or Copilot run governed ServiceNow actions; its MCP Client lets ServiceNow agents reach your other tools.',
+    help: 'We connect agents safely, scope what each may do, and set up AI Control Tower.',
+  },
+];
+---
+
+<section id="ai" class="section ai" data-scene="ai" data-theme="dark" aria-labelledby="ai-title">
+  <div class="ai-glow" aria-hidden="true"></div>
+  <div class="gutter relative">
+    <div class="ai-head">
+      <p class="ai-eyebrow"><span class="badge badge-ai">AI</span> AI in the work</p>
+      <h2 id="ai-title" class="h2 mt-4 max-w-[17ch]" data-reveal>AI that does <span class="ai-lit">real work</span>, inside the platform</h2>
+      <p class="lead mt-5 max-w-[40rem]" data-reveal>
+        We put ServiceNow’s AI where it helps a real process, on data that is ready for it, with the governance to show exactly what it did. It is part of how we deliver, not an extra.
+      </p>
+    </div>
+
+    <div class="ai-grid">
+      <ul class="ai-blocks">
+        {
+          blocks.map((b) => (
+            <li class="card ai-block" data-reveal>
+              <div class="flex items-center gap-3">
+                <span class="icon-tile is-ai">
+                  <Icon name="ai" />
+                </span>
+                <div>
+                  <h3 class="h3">{b.title}</h3>
+                  <p class="ai-tag">{b.tag}</p>
+                </div>
+              </div>
+              <p class="body mt-4">{b.text}</p>
+              <p class="ai-help">
+                <Icon name="check" />
+                {b.help}
+              </p>
+            </li>
+          ))
+        }
+      </ul>
+
+      <figure class="ai-photo" data-reveal>
+        <div class="ai-photo-mask">
+          <Image
+            src={aiChat}
+            alt="A smiling employee at her laptop. In the chat beside her she asks for access to a team workspace, and an AI agent replies that it will take care of it."
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 1100px) 42vw, 92vw"
+            loading="lazy"
+            class="ai-img"
+          />
+        </div>
+        <div class="ai-govern" aria-label="Example of an AI action recorded by AI Control Tower">
+          <p class="ai-govern-head"><span class="badge badge-ai">AI Control Tower</span></p>
+          <p class="ai-govern-title">Grant workspace access</p>
+          <ul class="ai-govern-list">
+            <li><Icon name="check" /> Identity verified</li>
+            <li><Icon name="check" /> Permission in scope</li>
+            <li><Icon name="check" /> Action recorded</li>
+          </ul>
+        </div>
+      </figure>
+    </div>
+
+    <!-- How the pieces connect -->
+    <figure class="card ai-diagram" data-reveal>
+      <svg viewBox="0 0 1000 300" role="img" aria-labelledby="ai-diagram-title ai-diagram-desc">
+        <title id="ai-diagram-title">How ServiceNow’s AI pieces connect</title>
+        <desc id="ai-diagram-desc">
+          Employees ask through the portal, Teams, Slack or voice. ServiceNow Otto, its skills and AI agents carry out governed actions such as flows, approvals and catalog requests. Outside agents reach those actions through the MCP Server; ServiceNow agents reach your other tools through the MCP Client. AI Control Tower checks identity, permissions and audit for all of it.
+        </desc>
+        <defs>
+          <linearGradient id="ai-flow" x1="0" x2="1">
+            <stop offset="0" stop-color="var(--color-violet)" stop-opacity="0.2"></stop>
+            <stop offset="1" stop-color="var(--color-violet)"></stop>
+          </linearGradient>
+        </defs>
+        <g class="dg-box">
+          <rect x="20" y="40" width="200" height="120" rx="18"></rect>
+          <text x="120" y="88" class="dg-t">Your people</text>
+          <text x="120" y="114" class="dg-s">Portal, Teams, Slack, voice</text>
+        </g>
+        <g class="dg-box dg-ai">
+          <rect x="300" y="40" width="240" height="120" rx="18"></rect>
+          <text x="420" y="82" class="dg-t">ServiceNow Otto</text>
+          <text x="420" y="108" class="dg-s">Skills and AI agents</text>
+          <text x="420" y="130" class="dg-s">reason and act</text>
+        </g>
+        <g class="dg-box">
+          <rect x="620" y="40" width="170" height="120" rx="18"></rect>
+          <text x="705" y="88" class="dg-t">Actions</text>
+          <text x="705" y="114" class="dg-s">Flows, approvals,</text>
+          <text x="705" y="134" class="dg-s">catalog requests</text>
+        </g>
+        <g class="dg-box dg-mcp">
+          <rect x="840" y="20" width="140" height="70" rx="16"></rect>
+          <text x="910" y="50" class="dg-t dg-t-sm">Outside agents</text>
+          <text x="910" y="72" class="dg-s">Claude, Copilot</text>
+          <rect x="840" y="110" width="140" height="70" rx="16"></rect>
+          <text x="910" y="140" class="dg-t dg-t-sm">Your other tools</text>
+          <text x="910" y="162" class="dg-s">via MCP</text>
+        </g>
+        <path class="dg-flow" d="M220 100 H300 M540 100 H620"></path>
+        <path class="dg-flow dg-mcp-line" d="M790 70 C 815 60, 815 55, 840 55 M790 130 C 815 140, 815 145, 840 145"></path>
+        <text x="815" y="40" class="dg-m">MCP Server</text>
+        <text x="815" y="192" class="dg-m">MCP Client</text>
+        <g class="dg-tower">
+          <rect x="20" y="220" width="960" height="60" rx="18"></rect>
+          <text x="500" y="257" class="dg-t dg-t-sm">AI Control Tower: identity, permissions and audit for every action</text>
+        </g>
+        <path class="dg-guard" d="M120 160 V220 M420 160 V220 M705 160 V220 M910 180 V220"></path>
+      </svg>
+    </figure>
+
+    <p class="ai-ready" data-reveal>
+      <Icon name="book" />
+      <span>
+        <b>AI is only as good as what it is given.</b> That is why every AI engagement starts with a readiness check: your knowledge base, your configuration data, your processes and your governance.
+        <a href="/contact/" class="link-arrow">Ask for a readiness check <Icon name="arrow" /></a>
+      </span>
+    </p>
+  </div>
+</section>
+
+<style>
+  .ai {
+    overflow: hidden;
+    background: var(--color-night);
+  }
+  .ai-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(45% 45% at 80% 30%, color-mix(in srgb, var(--color-violet) 22%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 10% 70%, color-mix(in srgb, var(--color-iris) 18%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .ai-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-violet-soft);
+  }
+  .ai-lit {
+    color: var(--color-violet-soft);
+    text-shadow: 0 0 30px color-mix(in srgb, var(--color-violet) 70%, transparent);
+  }
+  .ai-grid {
+    display: grid;
+    gap: 1.25rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 1100px) {
+    .ai-grid {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+      gap: 2rem;
+      align-items: start;
+    }
+  }
+  .ai-blocks {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 720px) {
+    .ai-blocks {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+  .ai-block {
+    padding: 1.5rem;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 22%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 10%, transparent),
+      0 30px 60px -40px rgb(0 0 0 / 0.8);
+  }
+  .ai-tag {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-violet-soft);
+  }
+  .ai-help {
+    display: flex;
+    gap: 0.55rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-white) 9%, transparent);
+    font-size: 0.95rem;
+    line-height: 1.45;
+    color: var(--color-white);
+  }
+  .ai-help :global(svg) {
+    flex: none;
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-top: 0.1rem;
+    color: var(--color-violet-soft);
+  }
+  .ai-photo {
+    position: relative;
+    margin: 0;
+  }
+  .ai-photo-mask {
+    overflow: hidden;
+    border-radius: 1.75rem;
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-violet) 30%, transparent),
+      0 40px 80px -40px color-mix(in srgb, var(--color-violet) 60%, transparent);
+  }
+  .ai-photo-mask::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(180deg, transparent 55%, color-mix(in srgb, var(--color-night) 70%, transparent));
+    pointer-events: none;
+  }
+  :global(.ai-img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .ai-govern {
+    position: absolute;
+    right: clamp(-0.5rem, -1vw, 0rem);
+    bottom: -1.5rem;
+    width: min(16rem, 70%);
+    border-radius: 1.1rem;
+    padding: 1rem 1.1rem;
+    background: color-mix(in srgb, var(--color-night) 90%, transparent);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 40%, transparent),
+      0 30px 60px -20px rgb(0 0 0 / 0.8);
+    backdrop-filter: blur(14px);
+  }
+  .ai-govern-title {
+    margin-top: 0.6rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  .ai-govern-list {
+    display: grid;
+    gap: 0.35rem;
+    margin-top: 0.55rem;
+    font-size: 0.9rem;
+    color: var(--color-grey-200);
+  }
+  .ai-govern-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+  }
+  .ai-govern-list :global(svg) {
+    width: 0.95rem;
+    height: 0.95rem;
+    color: var(--color-violet-soft);
+  }
+  .ai-diagram {
+    margin: clamp(3rem, 6vw, 4.5rem) 0 0;
+    padding: clamp(1rem, 2.5vw, 2rem);
+    overflow-x: auto;
+  }
+  .ai-diagram svg {
+    display: block;
+    width: 100%;
+    min-width: 720px;
+    height: auto;
+  }
+  .dg-box rect {
+    fill: color-mix(in srgb, var(--color-white) 4%, var(--color-night));
+    stroke: color-mix(in srgb, var(--color-white) 18%, transparent);
+    stroke-width: 1.2;
+  }
+  .dg-ai rect {
+    fill: color-mix(in srgb, var(--color-violet) 16%, var(--color-night));
+    stroke: var(--color-violet);
+    filter: drop-shadow(0 0 14px color-mix(in srgb, var(--color-violet) 50%, transparent));
+  }
+  .dg-mcp rect {
+    stroke: color-mix(in srgb, var(--color-azure) 60%, transparent);
+  }
+  .dg-tower rect {
+    fill: color-mix(in srgb, var(--color-violet) 9%, var(--color-night));
+    stroke: color-mix(in srgb, var(--color-violet) 55%, transparent);
+    stroke-dasharray: 6 6;
+  }
+  .dg-t {
+    fill: var(--color-white);
+    font-size: 21px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  .dg-t-sm {
+    font-size: 17px;
+  }
+  .dg-s {
+    fill: var(--color-grey-200);
+    font-size: 15px;
+    text-anchor: middle;
+  }
+  .dg-m {
+    fill: var(--color-azure);
+    font-size: 14px;
+    font-weight: 700;
+    text-anchor: middle;
+  }
+  .dg-flow {
+    fill: none;
+    stroke: url(#ai-flow);
+    stroke-width: 3;
+    stroke-linecap: round;
+  }
+  .dg-mcp-line {
+    stroke: var(--color-azure);
+    stroke-width: 2;
+  }
+  .dg-guard {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-violet) 55%, transparent);
+    stroke-width: 1.5;
+    stroke-dasharray: 3 5;
+  }
+  .ai-ready {
+    display: flex;
+    gap: 0.9rem;
+    max-width: 52rem;
+    margin-top: 2.5rem;
+    font-size: 1.04rem;
+    line-height: 1.6;
+    color: var(--color-grey-200);
+  }
+  .ai-ready b {
+    color: var(--color-white);
+  }
+  .ai-ready > :global(svg) {
+    flex: none;
+    width: 1.5rem;
+    height: 1.5rem;
+    margin-top: 0.15rem;
+    color: var(--color-violet-soft);
+  }
+  .ai-ready .link-arrow {
+    margin-left: 0.25rem;
+  }
+</style>

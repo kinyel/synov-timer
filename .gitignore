@@ -7,3 +7,5 @@ references/frames/
 shots/
 test-results/
 .DS_Store
+dist-drafts/
+dist-test/

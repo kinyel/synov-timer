@@ -1,0 +1,93 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/ui/Icon.astro';
+import { PLATFORM } from '../data/services';
+
+const popular = PLATFORM.slice(0, 4);
+---
+
+<Base
+  title="Page not found | Raleston Consulting"
+  description="This page has moved or no longer exists. Find ServiceNow services, case studies and contact details from here."
+  image="/og/home.png"
+  noindex
+>
+  <section class="nf" data-theme="dark" aria-labelledby="nf-title">
+    <div class="nf-glow" aria-hidden="true"></div>
+    <div class="gutter relative">
+      <p class="eyebrow">Error 404</p>
+      <h1 id="nf-title" class="h1 mt-6 max-w-[16ch]">This page is <span class="text-lit">not on the map.</span></h1>
+      <p class="lead mt-6 max-w-[38rem]">It may have moved when we rebuilt the site, or the address may have a typo. Here are good places to pick up from.</p>
+      <div class="mt-9 flex flex-wrap gap-3">
+        <a href="/" class="btn btn-primary">Back to the home page <Icon name="arrow" /></a>
+        <a href="/contact/" class="btn btn-outline">Talk to an architect</a>
+      </div>
+      <ul class="nf-links">
+        {
+          popular.map((s) => (
+            <li>
+              <a href={`/services/${s.slug}/`} class="card card-hover">
+                <span class={`icon-tile is-sm ${s.accent === 'data' ? 'is-data' : ''}`}>
+                  <Icon name={s.icon} />
+                </span>
+                <span>{s.short === s.name ? s.name : `${s.short}: ${s.name}`}</span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <a href="/services/" class="card card-hover">
+            <span class="icon-tile is-sm"><Icon name="plus" /></span>
+            <span>All services</span>
+          </a>
+        </li>
+        <li>
+          <a href="/glossary/" class="card card-hover">
+            <span class="icon-tile is-sm"><Icon name="book" /></span>
+            <span>Glossary of terms</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .nf {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(8rem, 16vw, 11rem) clamp(4rem, 8vw, 6rem);
+    color: var(--color-white);
+    background: var(--color-night);
+  }
+  .nf-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(40% 60% at 85% 10%, color-mix(in srgb, var(--color-iris) 32%, transparent), transparent 70%),
+      radial-gradient(40% 50% at 0% 60%, color-mix(in srgb, var(--color-violet) 16%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .nf-links {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: clamp(3rem, 6vw, 4.5rem);
+  }
+  @media (min-width: 640px) {
+    .nf-links {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1024px) {
+    .nf-links {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .nf-links a {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 1rem 1.15rem;
+    font-weight: 700;
+  }
+</style>

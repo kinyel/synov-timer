@@ -1,0 +1,33 @@
+---
+/** A filtered list of posts: one category or one tag. */
+import Base from '../../layouts/Base.astro';
+import PageHero from '../ui/PageHero.astro';
+import PostList from './PostList.astro';
+import type { Post } from '../../lib/blog';
+
+interface Props {
+  /** "Category" or "Tag". */
+  kind: string;
+  name: string;
+  href: string;
+  description: string;
+  items: Post[];
+}
+const { kind, name, href, description, items } = Astro.props;
+const crumbs = [
+  { name: 'Blog', href: '/blog/' },
+  { name, href },
+];
+---
+
+<Base title={`${name} articles | Raleston Consulting blog`} description={description} crumbs={crumbs}>
+  <PageHero crumbs={crumbs} eyebrow={kind} title={`${name} articles`} lit={name} lead={description} />
+  <section class="section pt-6" data-theme="dark" aria-label="Articles">
+    <div class="gutter">
+      <PostList items={items} />
+      <p class="mt-10">
+        <a href="/blog/" class="link-arrow">All articles</a>
+      </p>
+    </div>
+  </section>
+</Base>

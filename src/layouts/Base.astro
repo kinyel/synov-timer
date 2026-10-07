@@ -1,69 +1,144 @@
 ---
+/**
+ * Every page: head (title, description, canonical, Open Graph, structured
+ * data), the header, the page, the closing call to action and the footer.
+ * Pages pass their own title, description, breadcrumbs and JSON-LD.
+ */
+import { Font } from 'astro:assets';
 import '../styles/global.css';
 import Nav from '../components/chrome/Nav.astro';
-import Preloader from '../components/chrome/Preloader.astro';
-import SceneProgress from '../components/chrome/SceneProgress.astro';
+import Footer from '../components/chrome/Footer.astro';
 import Cursor from '../components/chrome/Cursor.astro';
+import { SITE } from '../data/site';
+import { SHOW_DRAFTS } from '../lib/drafts';
 
+export interface Crumb {
+  name: string;
+  href: string;
+}
 interface Props {
   title: string;
   description: string;
+  /** Breadcrumbs after Home, for the BreadcrumbList. */
+  crumbs?: Crumb[];
+  /** Extra JSON-LD nodes for this page. */
+  schema?: Record<string, unknown>[];
+  /** Site path of this page's share image. Defaults to its generated card. */
+  image?: string;
+  type?: 'website' | 'article';
+  /** The home page's 3D layer. */
+  webgl?: boolean;
+  /** The closing "Talk to an architect" band. */
+  cta?: boolean;
+  noindex?: boolean;
 }
-const { title, description } = Astro.props;
-const canonical = new URL(Astro.url.pathname, Astro.site);
-const ogImage = new URL('/og.png', Astro.site);
+const { title, description, crumbs = [], schema = [], image, type = 'website', webgl = false, cta = true, noindex = false } = Astro.props;
+const path = Astro.url.pathname;
+// A drafts preview build is never indexed.
+const hidden = noindex || (SHOW_DRAFTS && import.meta.env.PROD);
+const canonical = new URL(path, Astro.site);
+const card = image ?? `/og${path === '/' ? '/home' : path.replace(/\/$/, '')}.png`;
+const ogImage = new URL(card, Astro.site);
+const org = `${SITE.url}/#organization`;
+
+const graph: Record<string, unknown>[] = [
+  {
+    '@type': 'ProfessionalService',
+    '@id': org,
+    name: SITE.name,
+    url: SITE.url,
+    logo: `${SITE.url}/brand/mark.png`,
+    image: `${SITE.url}/og/home.png`,
+    description: SITE.description,
+    email: SITE.email,
+    telephone: '+1-613-981-1843',
+    address: { '@type': 'PostalAddress', addressLocality: SITE.city, addressRegion: SITE.region, addressCountry: SITE.country },
+    areaServed: { '@type': 'Country', name: SITE.countryName },
+    founder: { '@id': `${SITE.url}/about/#founder` },
+    knowsAbout: [
+      'ServiceNow',
+      'IT Service Management',
+      'IT Operations Management',
+      'IT Asset Management',
+      'Configuration Management Database',
+      'Strategic Portfolio Management',
+      'Enterprise Architecture',
+      'ServiceNow integrations',
+      'ServiceNow App Engine',
+    ],
+  },
+  { '@type': 'WebSite', '@id': `${SITE.url}/#website`, url: SITE.url, name: SITE.name, inLanguage: 'en-CA', publisher: { '@id': org } },
+];
+if (path !== '/') {
+  graph.push({
+    '@type': 'BreadcrumbList',
+    itemListElement: [{ name: 'Home', href: '/' }, ...crumbs].map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: new URL(c.href, Astro.site).toString(),
+    })),
+  });
+}
+const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schema] };
 ---
 
 <!doctype html>
-<html lang="en-CA" data-theme="light">
+<html lang="en-CA" data-theme="dark" data-page={webgl ? 'home' : 'inner'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>{title}</title>
+    <Font cssVariable="--font-alegreya" preload={[{ weight: 800, style: 'normal' }, { weight: 400, style: 'normal' }]} />
     <meta name="description" content={description} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/brand/mark.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/brand/mark.png" />
-    <meta name="theme-color" content="#EEF1F5" />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Raleston Consulting" />
+    {hidden && <meta name="robots" content="noindex" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="alternate" type="application/rss+xml" title="Raleston Consulting blog" href="/rss.xml" />
+    <meta name="theme-color" content="#040A16" />
+    <meta property="og:type" content={type} />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="en_CA" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={`${SITE.name}: ${title.split(' | ')[0]}`} />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <script is:inline>
       (function () {
         var d = document.documentElement;
+        d.classList.add('js');
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('reduced-motion');
         if (matchMedia('(pointer: fine)').matches) d.classList.add('has-cursor');
       })();
     </script>
-    <script
-      type="application/ld+json"
-      set:html={JSON.stringify({
-        '@context': 'https://schema.org',
-        '@type': 'ProfessionalService',
-        name: 'Raleston Consulting',
-        url: 'https://ralestonconsulting.com',
-        logo: 'https://ralestonconsulting.com/brand/mark.png',
-        email: 'info@ralestonconsulting.com',
-        telephone: '+1-613-981-1843',
-        address: { '@type': 'PostalAddress', addressLocality: 'Ottawa', addressRegion: 'ON', addressCountry: 'CA' },
-        description,
-        knowsAbout: ['ServiceNow', 'ITSM', 'ITOM', 'IT Asset Management', 'App Engine', 'Integration', 'Enterprise Architecture'],
-      })}
-    />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body class="min-h-svh">
-    <div id="webgl" aria-hidden="true"><canvas></canvas></div>
-    <div id="fx-vignette" aria-hidden="true"></div>
-    <Preloader />
+    {
+      webgl && (
+        <>
+          <div id="webgl" aria-hidden="true">
+            <canvas />
+          </div>
+          <div id="fx-vignette" aria-hidden="true" />
+        </>
+      )
+    }
     <Nav />
-    <main id="main">
+    <main id="main" class:list={[!webgl && 'is-page']}>
       <slot />
     </main>
-    <SceneProgress />
+    <Footer cta={cta} />
     <Cursor />
     <div id="fx-grain" aria-hidden="true"></div>
     <script>

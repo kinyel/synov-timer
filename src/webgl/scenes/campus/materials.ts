@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { hash } from '../../shaders/chunks';
+import { TOKENS } from '../../../lib/tokens';
 
 /**
  * Architectural-model materials: matte white clay, dark glass with lit
@@ -32,25 +33,25 @@ export interface CampusUniforms {
   uScanColor: THREE.IUniform<THREE.Color>;
 }
 
-export const GOLD = '#F2B200';
-export const CLAY = '#F4F5F7';
-export const CLAY_SHADE = '#E2E6EC';
-export const GLASS = '#1B2440';
-export const TREE = '#4FB5A2';
-export const ROAD = '#D6DAE0';
-/** Weathered copper green: government roofs only. */
-export const COPPER = '#3FB89A';
-export const GROUND = '#E9ECF1';
+/** Every model colour comes from the site's design tokens (src/styles/tokens.css). */
+export const GOLD = TOKENS.gold;
+export const CLAY = TOKENS['grey-50'];
+export const CLAY_SHADE = TOKENS['grey-100'];
+export const GLASS = TOKENS.navy;
+export const TREE = TOKENS['grey-200'];
+export const AZURE = TOKENS.azure;
+/** Window light: Azure lifted toward white, so lit rooms read as cool and clean. */
+export const WINDOW = new THREE.Color(AZURE).lerp(new THREE.Color(TOKENS.white), 0.55).getStyle();
 
 export function createCampusUniforms(): CampusUniforms {
   return {
     uTime: { value: 0 },
-    uLit: { value: 0.14 },
+    uLit: { value: 0.9 },
     uGold: { value: new THREE.Color(GOLD) },
-    uWarm: { value: new THREE.Color('#FFD9A0') },
+    uWarm: { value: new THREE.Color(WINDOW) },
     uXray: { value: 0 },
     uScan: { value: 20 },
-    uScanColor: { value: new THREE.Color('#8FE6FF') },
+    uScanColor: { value: new THREE.Color(AZURE) },
   };
 }
 
@@ -125,7 +126,8 @@ export function buildingMaterials(build: BuildUniforms, campus: CampusUniforms):
   const clay = withBuild(new THREE.MeshStandardMaterial({ color: CLAY, roughness: 0.92, metalness: 0, side: THREE.DoubleSide }), build, campus, 'clay');
   const shade = withBuild(new THREE.MeshStandardMaterial({ color: CLAY_SHADE, roughness: 0.9, metalness: 0, side: THREE.DoubleSide }), build, campus, 'clay');
   const gold = withBuild(
-    new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.38, metalness: 0.25, emissive: GOLD, emissiveIntensity: 0.06 }),
+    // Gold trims are the model's lights: emissive above 1, so bloom picks them out.
+    new THREE.MeshStandardMaterial({ color: GOLD, roughness: 0.35, metalness: 0.3, emissive: GOLD, emissiveIntensity: 1.9 }),
     build,
     campus,
     'gold',
@@ -154,7 +156,8 @@ export function buildingMaterials(build: BuildUniforms, campus: CampusUniforms):
           float room = hash21(floor(cell) + floor(vObjP.x * 1.7 + vObjP.z * 3.1) * 13.0);
           float lit = step(0.58, room) * (1.0 - frame) * side;
           // Inside faces (seen while a building is rising) read as white model board, not a void.
-          if (!gl_FrontFacing) { diffuseColor.rgb = vec3(0.9, 0.91, 0.93); lit = 0.0; frame = 1.0; }`,
+          if (!gl_FrontFacing) { diffuseColor.rgb = vec3(0.9, 0.91, 0.93); lit = 0.0; frame = 1.0; }
+          lit = max(lit, step(0.3, room) * (1.0 - frame) * side * 0.35);`,
         )
         .replace(
           '#include <emissivemap_fragment>',
@@ -165,6 +168,6 @@ export function buildingMaterials(build: BuildUniforms, campus: CampusUniforms):
         .replace('#include <metalnessmap_fragment>', '#include <metalnessmap_fragment>\nmetalnessFactor = mix(metalnessFactor, 0.0, frame);');
     },
   );
-  const mint = withBuild(new THREE.MeshStandardMaterial({ color: COPPER, roughness: 0.55, metalness: 0.2 }), build, campus, 'mint');
+  const mint = withBuild(new THREE.MeshStandardMaterial({ color: AZURE, roughness: 0.55, metalness: 0.2 }), build, campus, 'mint');
   return { clay, shade, glass, gold, mint };
 }

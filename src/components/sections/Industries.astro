@@ -1,67 +1,167 @@
 ---
 /**
- * 05 · Industries (pinned). A floating model city in the sky. The camera
- * descends through clouds and visits each district while the light runs from
- * day to golden hour to dusk; the sky behind (z 0, under the canvas) follows.
+ * 07 · Industries. A photo-led opening, then the six sectors from Raleston's
+ * site, each with ServiceNow use cases specific to it.
  */
-import { DISTRICTS } from '../../webgl/scenes/city/districts';
-const items = DISTRICTS.map(({ name, short, place, tag, body }) => ({ name, short, place, tag, body }));
+import { Image } from 'astro:assets';
+import teamPhoto from '../../assets/images/team-glass-icons.png';
+import { INDUSTRIES } from '../../data/industries';
+import Icon from '../ui/Icon.astro';
 ---
 
-<section id="industries" data-scene="industries" data-theme="dark" data-webgl="city" data-feather="top" class="relative h-[760svh]">
-  <div class="layer-bg pointer-events-none sticky top-0 h-svh" style="background: linear-gradient(180deg, #e7f0fb 0%, #f6f9fc 100%);" aria-hidden="true" data-sky>
-    <!-- Arrival veil: carries the staircase's black into the sky, then dissolves
-         as the camera comes down through the clouds into daylight. -->
-    <div class="absolute inset-0" style="background: linear-gradient(180deg, #070707 0%, #0b0a09 38%, rgb(11 10 9 / 0.55) 66%, transparent 100%);" data-sky-veil></div>
-  </div>
-
-  <div class="layer-copy pointer-events-none sticky top-0 -mt-[100svh] h-svh overflow-hidden">
-    {
-      items.map((d, i) => (
-        <div class="bldg-label" data-city-label={i} aria-hidden="true">
-          <span class="bldg-dot" />
-          <span class="bldg-line" />
-          <span class="bldg-tag">
-            <span class="bldg-name">
-              <span class="max-sm:hidden">{d.name}</span>
-              <span class="sm:hidden">{d.short}</span>
-            </span>
-            <span class="bldg-cap">{d.tag}</span>
-          </span>
-        </div>
-      ))
-    }
-    <div class="gutter absolute inset-x-0 bottom-0 pb-[max(1rem,env(safe-area-inset-bottom))] md:pb-10">
-      <div class="story-stack">
-        <article class="story-card" data-city-card="0" style="clip-path: inset(100% 0 0 0 round 1.4rem)">
-          <p class="story-eyebrow"><span>Industries</span></p>
-          <div>
-            <h3 class="story-title">Six districts. One platform.</h3>
-            <p class="story-body">Each district is a sector we work in. The gold lines are the integrations that tie every one of them back to the same core platform.</p>
-          </div>
-        </article>
-        {
-          items.map((d, i) => (
-            <article class="story-card" data-city-card={i + 1} style="clip-path: inset(100% 0 0 0 round 1.4rem)">
-              <p class="story-eyebrow">
-                <span>{d.place}</span>
-                <span class="num">0{i + 1} / 06</span>
-              </p>
-              <div>
-                <h3 class="story-title">{d.name}</h3>
-                <p class="story-body">{d.body}</p>
-              </div>
-            </article>
-          ))
-        }
-        <article class="story-card is-dark" data-city-card="7" style="clip-path: inset(100% 0 0 0 round 1.4rem)">
-          <p class="story-eyebrow"><span>Industries</span></p>
-          <div>
-            <h3 class="story-title">Every district, connected.</h3>
-            <p class="story-body">At dusk the whole city is lit by the same network: one platform, governed once, serving every sector on it.</p>
-          </div>
-        </article>
+<section id="industries" class="section industries" data-scene="industries" data-theme="dark" aria-labelledby="industries-title">
+  <div class="gutter">
+    <div class="ind-head">
+      <div>
+        <p class="eyebrow">Industries</p>
+        <h2 id="industries-title" class="h2 mt-4" data-reveal>Six sectors, <span class="text-lit">one platform</span></h2>
       </div>
+      <p class="lead max-w-[36rem]" data-reveal>
+        The platform is the same everywhere; what changes is what each sector needs from it. Here is how ServiceNow is used in the industries we serve, and what we can build for each. Our founder has delivered ServiceNow work in healthcare, retail, enterprise and government.
+      </p>
     </div>
+
+    <figure class="ind-photo" data-reveal>
+      <div class="ind-photo-mask">
+        <Image
+          src={teamPhoto}
+          alt="Two colleagues working at a table with laptops, with glass icons floating beside them to suggest connected systems."
+          widths={[640, 960, 1440, 1920, 2560]}
+          sizes="(min-width: 1440px) 1300px, 92vw"
+          loading="lazy"
+          class="ind-img"
+          data-parallax="0.12"
+        />
+      </div>
+      <figcaption class="ind-chip card">
+        <span class="icon-tile is-data"><Icon name="cmdb" /></span>
+        <span><b>One data model</b> across every sector: services, assets and requests on the same CMDB.</span>
+      </figcaption>
+    </figure>
+
+    <ul class="ind-grid">
+      {
+        INDUSTRIES.map((ind) => (
+          <li class="card ind-card" data-reveal>
+            <div class="flex items-center gap-3">
+              <span class="icon-tile">
+                <Icon name={ind.icon} />
+              </span>
+              <h3 class="h3">{ind.name}</h3>
+            </div>
+            <p class="body mt-4">{ind.summary}</p>
+            <ul class="ind-uses">
+              {ind.uses.map((u) => (
+                <li>
+                  <b>{u.title}</b>
+                  <span>{u.text}</span>
+                </li>
+              ))}
+            </ul>
+          </li>
+        ))
+      }
+    </ul>
   </div>
 </section>
+
+<style>
+  .industries {
+    background:
+      radial-gradient(45% 40% at 10% 20%, color-mix(in srgb, var(--color-violet) 14%, transparent), transparent 70%),
+      radial-gradient(40% 40% at 95% 60%, color-mix(in srgb, var(--color-azure) 10%, transparent), transparent 70%),
+      var(--color-night);
+  }
+  .ind-head {
+    display: grid;
+    gap: 1.5rem;
+    align-items: end;
+  }
+  @media (min-width: 1024px) {
+    .ind-head {
+      grid-template-columns: 1fr 1.1fr;
+      gap: 4rem;
+    }
+  }
+  .ind-photo {
+    position: relative;
+    margin: clamp(2.5rem, 5vw, 4rem) 0 0;
+  }
+  .ind-photo-mask {
+    position: relative;
+    height: clamp(16rem, 38vw, 30rem);
+    overflow: hidden;
+    border-radius: 2rem;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+  }
+  .ind-photo-mask::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(90deg, color-mix(in srgb, var(--color-night) 65%, transparent), transparent 55%),
+      linear-gradient(0deg, color-mix(in srgb, var(--color-indigo) 55%, transparent), transparent 50%);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+  }
+  :global(.ind-img) {
+    display: block;
+    width: 100%;
+    height: 125%;
+    margin-top: -6%;
+    object-fit: cover;
+  }
+  .ind-chip {
+    position: absolute;
+    left: clamp(1rem, 3vw, 2rem);
+    bottom: clamp(1rem, 3vw, 2rem);
+    display: flex;
+    gap: 0.9rem;
+    align-items: center;
+    max-width: 24rem;
+    padding: 1rem 1.15rem;
+    font-size: 0.98rem;
+    line-height: 1.45;
+    color: var(--color-grey-200);
+    background: color-mix(in srgb, var(--color-night) 90%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .ind-chip b {
+    color: var(--color-white);
+  }
+  .ind-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 720px) {
+    .ind-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .ind-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .ind-card {
+    padding: 1.6rem;
+  }
+  .ind-uses {
+    display: grid;
+    gap: 0.85rem;
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-white) 8%, transparent);
+  }
+  .ind-uses li {
+    display: grid;
+    gap: 0.15rem;
+    font-size: 0.94rem;
+    line-height: 1.45;
+    color: var(--color-grey-200);
+  }
+  .ind-uses b {
+    color: var(--color-white);
+  }
+</style>

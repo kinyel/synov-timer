@@ -1,13 +1,14 @@
 ---
 /**
- * 04 · Services: a spiral staircase. Wedge-shaped treads climb around a
- * glowing gold spine; each service card stands on its own landing. Scroll
- * turns and climbs the stair so each card swings round to the front, sharp
- * and lit, while the others dim and blur into the dark. Pure CSS 3D (crisp
- * text, no canvas: the WebGL layer is clipped away here). Black and gold.
+ * 05 · Services: a spiral staircase. Navy and indigo treads with gold edges
+ * climb around a glowing spine; a light path runs up them from Azure through
+ * Violet to Gold as the stair is climbed. Each delivery stage stands on its own
+ * landing with its full explanation. Scroll turns and climbs the stair so each
+ * card swings round to the front. Pure CSS 3D (crisp text, no canvas).
  */
 
-import { SERVICES } from '../../lib/content';
+import { DELIVERY } from '../../data/services';
+import { TOKENS } from '../../lib/tokens';
 
 /** Isometric line glyphs (x down-right, y down-left, z up). */
 const S = 9;
@@ -51,7 +52,42 @@ const glyphs: Record<string, { ink: string[]; gold: string[]; pins: [number, num
   },
 };
 
-const services = SERVICES;
+const services = DELIVERY;
+/** The card text for each stage: what happens, what you get, how long, who. */
+const CARD: Record<string, { glyph: string; what: string; get: string[]; typical: string; who: string }> = {
+  'advisory-and-strategy': {
+    glyph: 'advisory',
+    what: 'A health check of your instance, a review of what you own and use, and workshops to agree priorities.',
+    get: ['Health report', 'Staged roadmap', 'Business case'],
+    typical: '2 to 6 weeks',
+    who: 'Our architect, your platform owner and IT leaders',
+  },
+  implementation: {
+    glyph: 'implementation',
+    what: 'Discovery workshops, a solution design, short build sprints, testing with your people, go-live and hypercare.',
+    get: ['Solution design', 'Tested modules', 'Training and handover'],
+    typical: '8 to 16 weeks per release',
+    who: 'Our architect and consultants, your process owners and testers',
+  },
+  'integration-delivery': {
+    glyph: 'integration',
+    what: 'An inventory of systems and owners, the right pattern for each connection, then build, proof and handover.',
+    get: ['Working integrations', 'Failure monitoring', 'Runbooks'],
+    typical: '2 to 6 weeks per integration',
+    who: 'Our integration lead, the owners of each system',
+  },
+  'support-and-optimization': {
+    glyph: 'support',
+    what: 'Monitoring and support, each twice-yearly upgrade planned and tested, and a steady backlog of improvements.',
+    get: ['A current release', 'Prioritised backlog', 'Monthly reporting'],
+    typical: 'Ongoing',
+    who: 'A named support lead, your platform owner',
+  },
+};
+/** Colour of the light path at a height 0..1: Azure, then Violet, then Gold. */
+const rgb = (h: string) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lerp = (a: number[], b: number[], t: number) => `rgb(${a.map((v, i) => Math.round(v + (b[i]! - v) * t)).join(' ')})`;
+const pathAt = (u: number) => (u < 0.5 ? lerp(rgb(TOKENS.azure), rgb(TOKENS.violet), u * 2) : lerp(rgb(TOKENS.violet), rgb(TOKENS.gold), (u - 0.5) * 2));
 
 /** Stair geometry: 15° and one rise per tread; a card lands every 6 treads (90°). */
 const PER_CARD = 6;
@@ -61,78 +97,92 @@ const treads = Array.from({ length: TREADS }, (_, i) => i - FIRST);
 const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
 ---
 
-<section id="services" data-scene="services" data-theme="dark" class="relative h-[460svh]" data-stair-section>
-  <div class="stair-bg layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" style="background: radial-gradient(70% 60% at 62% 52%, #1a1407 0%, #0b0a08 45%, #050506 100%);" aria-hidden="true">
-    <div class="stair-glow absolute top-1/2 left-[62%] size-[60vmin] -translate-x-1/2 -translate-y-1/2 rounded-full max-md:left-1/2"></div>
+<section id="services" data-scene="services" data-theme="dark" class="relative h-[480svh]" data-stair-section aria-labelledby="services-title">
+  <div class="stair-bg layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" aria-hidden="true">
+    <div class="stair-glow"></div>
     {Array.from({ length: 26 }, (_, i) => <span class="stair-dust" style={`--x:${(i * 37) % 100}%;--y:${(i * 61) % 100}%;--d:${6 + (i % 7)}s;--o:${-(i % 9)}s`} />)}
   </div>
 
   <div class="stair-copy layer-copy sticky top-0 -mt-[100svh] h-svh overflow-hidden text-white">
-    <!-- Left: heading, counter, service list (desktop). Top on mobile. -->
+    <!-- Left: heading, counter, stage list (desktop). Top on mobile. -->
     <div class="stair-head gutter absolute inset-x-0 top-0 z-10 pt-24 md:top-1/2 md:right-auto md:w-[40%] md:-translate-y-1/2 md:pt-0">
-      <p class="label flex items-center gap-3 text-[0.66rem] text-[#f2b200]"><span class="h-px w-6 bg-current"></span>Services</p>
-      <h2 class="mt-3 font-display text-[1.9rem] leading-[1.02] font-semibold tracking-[-0.03em] md:text-[2.8rem]">From roadmap to run.</h2>
-      <p class="mt-4 hidden max-w-[24rem] text-[0.95rem] leading-relaxed text-white/60 md:block">
-        Four stages, one team. Each step builds on the one below it, so nothing is lost between strategy and delivery.
+      <p class="eyebrow">How we deliver</p>
+      <h2 id="services-title" class="mt-3 text-[1.9rem] leading-[1.02] font-extrabold md:text-[3rem]">From roadmap <span class="text-lit">to run</span></h2>
+      <p class="mt-4 hidden max-w-[25rem] text-[1.02rem] leading-relaxed text-grey-200 md:block">
+        Four stages, one team. Each builds on the one below it, so nothing is lost between strategy and delivery. Join at any stage.
       </p>
       <div class="mt-5 flex items-center gap-4">
-        <p class="font-mono text-[0.75rem] tracking-[0.12em] text-white/50 tabular-nums">
-          <span class="text-[#ffc21a]" data-stair-count>01</span> / 0{services.length}
+        <p class="text-[0.85rem] font-bold tracking-[0.12em] text-grey-400 tabular-nums">
+          <span class="text-iris-soft" data-stair-count>01</span> / 0{services.length}
         </p>
-        <span class="relative h-px flex-1 bg-white/12 md:max-w-[14rem]"><span class="absolute inset-y-0 left-0 w-full origin-left scale-x-0 bg-[#f2b200]" data-stair-rail></span></span>
+        <span class="relative h-px flex-1 bg-white/12 md:max-w-[14rem]"><span class="stair-progress absolute inset-y-0 left-0 w-full origin-left scale-x-0" data-stair-rail></span></span>
       </div>
-      <ol class="mt-8 hidden space-y-1 md:block">
+      <ol class="mt-7 hidden space-y-1 md:block">
         {
           services.map((s, i) => (
             <li>
-              <button type="button" class="stair-link group flex w-full items-baseline gap-4 py-2 text-left" data-stair-link={i}>
-                <span class="font-mono text-[0.7rem] text-white/35 tabular-nums transition-colors">0{i + 1}</span>
-                <span class="text-[1.05rem] text-white/45 transition-colors duration-500">{s.title}</span>
+              <button type="button" class="stair-link group flex min-h-11 w-full items-baseline gap-4 py-1.5 text-left" data-stair-link={i}>
+                <span class="text-[0.8rem] font-bold text-grey-400 tabular-nums transition-colors">0{i + 1}</span>
+                <span class="text-[1.08rem] text-grey-200 transition-colors duration-500">{s.name}</span>
               </button>
             </li>
           ))
         }
       </ol>
+      <a href="/services/" class="link-arrow mt-4 hidden md:inline-flex">All services <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></a>
     </div>
 
     <!-- The staircase. -->
-    <div class="stair-stage absolute inset-0 md:left-[24%]" aria-hidden="false">
+    <div class="stair-stage absolute inset-0 md:left-[24%]">
       <div class="stair-spine" aria-hidden="true"></div>
       <div class="stair-ring" data-stair-ring>
         {
           treads.map((t) => (
-            <div class="stair-tread" style={`--a:${t * 15}deg;--y:${-t}`} data-tread={t} aria-hidden="true">
+            <div class="stair-tread" style={`--a:${t * 15}deg;--y:${-t};--path:${pathAt((t + FIRST) / (TREADS - 1))}`} data-tread={t} aria-hidden="true">
               <span />
             </div>
           ))
         }
-        {rail.map((t) => <span class="stair-rail" style={`--a:${t * 15}deg;--y:${-t}`} aria-hidden="true" />)}
+        {rail.map((t) => <span class="stair-rail" style={`--a:${t * 15}deg;--y:${-t};--path:${pathAt((t + FIRST) / (TREADS - 1))}`} aria-hidden="true" />)}
         {
           services.map((s, i) => {
-            const g = glyphs[s.key]!;
+            const card = CARD[s.slug]!;
+            const g = glyphs[card.glyph]!;
             return (
-              <article class="stair-card" style={`--a:${i * 90}deg;--y:${-i * PER_CARD}`} data-stair-card={i}>
+              <article class="stair-card" style={`--a:${i * 90}deg;--y:${-i * PER_CARD}`} data-stair-card={i} aria-labelledby={`stage-${s.slug}`}>
                 <div class="stair-card-inner">
-                  <p class="label flex justify-between text-[0.6rem] text-white/45">
-                    <span>0{i + 1}</span>
-                    <span class="text-[#f2b200]">Service</span>
+                  <p class="flex justify-between text-[0.72rem] font-bold tracking-[0.14em] uppercase">
+                    <span class="text-grey-400">Stage 0{i + 1}</span>
+                    <span class="text-iris-soft">{card.typical}</span>
                   </p>
-                  <svg viewBox="0 0 120 100" class="mt-2 h-20 w-full md:h-24" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" data-glyph>
-                    {g.ink.map((d) => <path d={d} stroke="#f5f1e6" stroke-opacity="0.85" stroke-width="1.3" pathLength="1" />)}
-                    {g.gold.map((d) => <path d={d} stroke="#ffc21a" stroke-width="2.2" pathLength="1" />)}
+                  <svg viewBox="0 0 120 100" class="mt-1 h-16 w-full md:h-20" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    {g.ink.map((d) => <path d={d} stroke="var(--color-grey-200)" stroke-opacity="0.85" stroke-width="1.3" />)}
+                    {g.gold.map((d) => <path d={d} stroke="var(--color-gold)" stroke-width="2.2" />)}
                     {g.pins.map(([x, y]) => {
                       const a = iso(x, y, 0.4);
                       const b = iso(x, y, 2.2);
                       return (
                         <>
-                          <path d={`M${pt(a)}L${pt(b)}`} stroke="#f5f1e6" stroke-opacity="0.85" stroke-width="1.1" pathLength="1" />
-                          <circle cx={b[0]} cy={b[1]} r="2.6" fill="#ffc21a" stroke="none" data-pin />
+                          <path d={`M${pt(a)}L${pt(b)}`} stroke="var(--color-grey-200)" stroke-opacity="0.85" stroke-width="1.1" />
+                          <circle cx={b[0]} cy={b[1]} r="2.6" fill="var(--color-gold)" stroke="none" />
                         </>
                       );
                     })}
                   </svg>
-                  <h3 class="mt-3 font-display text-[1.2rem] leading-[1.08] font-semibold tracking-[-0.02em] md:text-[1.35rem]">{s.title}</h3>
-                  <p class="mt-1.5 text-[0.82rem] leading-relaxed text-white/60">{s.body}</p>
+                  <h3 id={`stage-${s.slug}`} class="mt-2 text-[1.3rem] leading-[1.08] font-bold md:text-[1.45rem]">{s.name}</h3>
+                  <p class="mt-2 text-[0.88rem] leading-[1.5] text-grey-200">{card.what}</p>
+                  <p class="stair-sub">You get</p>
+                  <ul class="stair-get">
+                    {card.get.map((x) => (
+                      <li>{x}</li>
+                    ))}
+                  </ul>
+                  <p class="stair-sub">Who is involved</p>
+                  <p class="text-[0.86rem] leading-[1.45] text-grey-200">{card.who}</p>
+                  <a href={`/services/${s.slug}/`} class="stair-more">
+                    More on {s.name}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+                  </a>
                 </div>
               </article>
             );
@@ -140,11 +190,9 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
         }
       </div>
     </div>
-    <!-- Entry blend: dissolves the stair's top edge into the section above while
-         the seam is on screen; fully transparent once the stair is pinned. -->
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-[34svh]" style="background: linear-gradient(to bottom, #070707 0%, rgb(7 7 7 / 0.85) 30%, transparent 100%);" aria-hidden="true" data-stair-entry></div>
-    <!-- Exit blend: the mirror of the entry blend, for the hand-over to Industries. -->
-    <div class="pointer-events-none absolute inset-x-0 bottom-0 h-[34svh] opacity-0" style="background: linear-gradient(to top, #070707 0%, rgb(7 7 7 / 0.85) 30%, transparent 100%);" aria-hidden="true" data-stair-exit></div>
+    <!-- Soft hand-overs into the sections above and below. -->
+    <div class="stair-fade stair-fade-top" aria-hidden="true"></div>
+    <div class="stair-fade stair-fade-bottom" aria-hidden="true"></div>
   </div>
 </section>
 
@@ -155,16 +203,39 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     --len: 230px;
     --tread-w: 70px;
     --rise: 26px;
-    --card-w: 250px;
+    --card-w: 300px;
     /* Cards stand just outside the handrail, so the rail never crosses them. */
     --card-r: calc(var(--r0) + var(--len) + 22px);
+    background: var(--color-night);
   }
   @media (max-width: 767px) {
     [data-stair-section] {
       --len: 150px;
       --tread-w: 48px;
       --rise: 20px;
-      --card-w: 210px;
+      --card-w: 258px;
+    }
+  }
+  /* Navy into indigo, with a violet glow at the top. */
+  .stair-bg {
+    background:
+      radial-gradient(60% 40% at 60% 0%, color-mix(in srgb, var(--color-violet) 30%, transparent), transparent 75%),
+      radial-gradient(50% 50% at 62% 55%, color-mix(in srgb, var(--color-iris) 16%, transparent), transparent 70%),
+      linear-gradient(180deg, var(--color-navy) 0%, var(--color-indigo) 100%);
+  }
+  .stair-glow {
+    position: absolute;
+    top: 50%;
+    left: 62%;
+    width: 60vmin;
+    height: 60vmin;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle, color-mix(in srgb, var(--color-gold) 14%, transparent), transparent 62%);
+  }
+  @media (max-width: 767px) {
+    .stair-glow {
+      left: 50%;
     }
   }
   .stair-stage {
@@ -177,6 +248,7 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
       perspective: 760px;
     }
   }
+  /* The spine carries the same light path: Azure at the bottom, Violet, Gold at the top. */
   .stair-spine {
     position: absolute;
     left: 50%;
@@ -184,19 +256,19 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     bottom: -10%;
     width: 2px;
     transform: translateX(-50%);
-    background: linear-gradient(transparent, #f2b200 30%, #ffe07a 50%, #f2b200 70%, transparent);
+    background: linear-gradient(to top, transparent, var(--color-azure) 25%, var(--color-violet) 50%, var(--color-gold) 75%, transparent);
     box-shadow:
-      0 0 18px 2px rgb(242 178 0 / 0.45),
-      0 0 60px 8px rgb(242 178 0 / 0.15);
+      0 0 18px 2px color-mix(in srgb, var(--color-violet) 45%, transparent),
+      0 0 60px 8px color-mix(in srgb, var(--color-iris) 18%, transparent);
   }
   .stair-ring {
     position: absolute;
     left: 50%;
-    top: 58%;
+    top: 62%;
     transform-style: preserve-3d;
     will-change: transform;
   }
-  /* A tread: a wedge lying flat, narrow at the spine, gold nosing at its outer edge. */
+  /* A tread: a navy-to-indigo wedge with a gold nosing; the light path glows along it once climbed. */
   .stair-tread {
     position: absolute;
     width: var(--tread-w);
@@ -210,44 +282,84 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     position: absolute;
     inset: 0;
     clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%);
-    background: linear-gradient(180deg, rgb(255 255 255 / 0.03), rgb(255 255 255 / 0.12) 70%, rgb(255 194 26 / 0.55) 97%, #ffc21a 100%);
+    background:
+      linear-gradient(90deg, transparent 44%, color-mix(in srgb, var(--path) calc(var(--on, 0) * 85%), transparent) 50%, transparent 56%),
+      linear-gradient(180deg, color-mix(in srgb, var(--color-indigo) 70%, transparent), var(--color-navy) 70%, color-mix(in srgb, var(--color-gold) 60%, var(--color-navy)) 96%, var(--color-gold) 100%);
     opacity: var(--lit, 0.4);
     transition: opacity 0.3s linear;
   }
-  /* Handrail: gold beads tracing the helix at the outer edge. */
+  /* Handrail: beads tracing the helix, coloured along the light path. */
   .stair-rail {
     position: absolute;
     width: 5px;
     height: 5px;
     margin: -2.5px 0 0 -2.5px;
     border-radius: 50%;
-    background: #ffc21a;
-    box-shadow: 0 0 8px rgb(255 194 26 / 0.8);
+    background: var(--path);
+    box-shadow: 0 0 8px var(--path);
     transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise) - 95px)) translateZ(calc(var(--r0) + var(--len) - 8px));
-    opacity: 0.55;
+    opacity: 0.6;
   }
   /* A card stands on its landing, facing outward. */
   .stair-card {
     position: absolute;
     width: var(--card-w);
     margin-left: calc(var(--card-w) / -2);
-    transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise) - 100%)) translateZ(var(--card-r));
-    transform-origin: 50% 100%;
+    /* Taller cards sit centred on their landing rather than standing on it. */
+    transform: rotateY(var(--a)) translateY(calc(var(--y) * var(--rise) - 62%)) translateZ(var(--card-r));
+    transform-origin: 50% 62%;
     backface-visibility: hidden;
   }
   .stair-card-inner {
     border-radius: 1.25rem;
-    padding: 1.1rem 1.15rem 1.2rem;
-    background: linear-gradient(160deg, #1b1710, #0b0b0d);
+    padding: 1.1rem 1.2rem 1.15rem;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--color-indigo) 85%, var(--color-white) 4%), var(--color-night));
     box-shadow:
-      inset 0 0 0 1px rgb(255 194 26 / var(--edge, 0.12)),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-gold) calc(var(--edge, 0.12) * 100%), transparent),
       0 30px 60px -30px rgb(0 0 0 / 0.9),
-      0 0 50px -10px rgb(242 178 0 / calc(var(--edge, 0.12) * 0.5));
+      0 0 50px -10px color-mix(in srgb, var(--color-violet) calc(var(--edge, 0.12) * 60%), transparent);
     transform: translateY(-14px);
   }
-  .stair-glow {
-    background: radial-gradient(circle, rgb(242 178 0 / 0.22), transparent 62%);
-    filter: blur(10px);
+  .stair-sub {
+    margin-top: 0.85rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .stair-get {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+  .stair-get li {
+    border-radius: 999px;
+    padding: 0.22rem 0.6rem;
+    font-size: 0.78rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 8%, transparent);
+  }
+  .stair-more {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.4rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--color-iris-soft);
+  }
+  .stair-more svg {
+    width: 1rem;
+    height: 1rem;
+  }
+  .stair-more:hover {
+    color: var(--color-white);
+  }
+  .stair-progress {
+    background: linear-gradient(90deg, var(--color-azure), var(--color-violet), var(--color-gold));
   }
   .stair-dust {
     position: absolute;
@@ -256,7 +368,7 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     width: 2px;
     height: 2px;
     border-radius: 50%;
-    background: #ffd36a;
+    background: var(--color-iris-soft);
     opacity: 0.5;
     animation: stair-dust var(--d) ease-in-out var(--o) infinite;
   }
@@ -272,10 +384,24 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     }
   }
   .stair-link[aria-current='true'] span:first-child {
-    color: #ffc21a;
+    color: var(--color-iris-soft);
   }
   .stair-link[aria-current='true'] span:last-child {
-    color: #fff;
+    color: var(--color-white);
+  }
+  .stair-fade {
+    position: absolute;
+    inset-inline: 0;
+    height: 14svh;
+    pointer-events: none;
+  }
+  .stair-fade-top {
+    top: 0;
+    background: linear-gradient(to bottom, var(--color-night), transparent);
+  }
+  .stair-fade-bottom {
+    bottom: 0;
+    background: linear-gradient(to top, var(--color-night), transparent);
   }
   /* Reduced motion: no stair. The heading, then a calm grid of the four cards, in normal flow. */
   :global(html.reduced-motion) [data-stair-section] {
@@ -307,15 +433,14 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
     position: static;
     transform: none !important;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
     gap: 1rem;
     padding: 2.5rem max(1rem, min(5vw, 4.5rem)) 0;
   }
   :global(html.reduced-motion) .stair-tread,
   :global(html.reduced-motion) .stair-rail,
   :global(html.reduced-motion) .stair-spine,
-  :global(html.reduced-motion) [data-stair-entry],
-  :global(html.reduced-motion) [data-stair-exit] {
+  :global(html.reduced-motion) .stair-fade {
     display: none;
   }
   :global(html.reduced-motion) .stair-card {

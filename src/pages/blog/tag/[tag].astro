@@ -1,0 +1,18 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Archive from '../../../components/blog/Archive.astro';
+import { posts, slugify, type Post } from '../../../lib/blog';
+
+export const getStaticPaths = (async () => {
+  const all = await posts();
+  const names = [...new Set(all.flatMap((p) => p.data.tags))];
+  return names.map((name) => ({
+    params: { tag: slugify(name) },
+    props: { name, items: all.filter((p) => p.data.tags.includes(name)) },
+  }));
+}) satisfies GetStaticPaths;
+
+const { name, items } = Astro.props as { name: string; items: Post[] };
+---
+
+<Archive kind="Tag" name={name} href={`/blog/tag/${slugify(name)}/`} description={`Raleston articles tagged ${name}: practical ServiceNow notes from the field.`} items={items} />

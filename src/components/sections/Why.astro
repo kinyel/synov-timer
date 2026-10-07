@@ -1,0 +1,233 @@
+---
+/**
+ * 08 · Why Raleston. The kinetic "master craftsmen / not just configurators"
+ * type drifts behind; in front, what architect-led means in practice, the four
+ * reasons from Raleston's site, and the client's two measured outcomes.
+ */
+import { Image } from 'astro:assets';
+import teamDc from '../../assets/images/team-datacentre.png';
+import { SITE } from '../../data/site';
+import Icon from '../ui/Icon.astro';
+
+const practice = [
+  'A certified ServiceNow architect leads every engagement, from the first workshop to go-live.',
+  'The solution is designed before anything is configured: the data model, the integrations, and what stays out-of-the-box.',
+  'Out-of-the-box comes first, so the platform stays easy to upgrade twice a year.',
+  'Work ships in usable stages, so you see value early and can steer as you go.',
+];
+const reasons = [
+  {
+    kicker: 'Architect-led delivery',
+    text: 'Our certified ServiceNow architects lead every engagement, so solutions are scalable, compliant and aligned with your business goals.',
+  },
+  {
+    kicker: 'Strategic clarity',
+    text: 'Architect-led planning ties ServiceNow capabilities to your business objectives, and cuts through the complexity.',
+  },
+  {
+    kicker: 'Measurable outcomes',
+    text: 'Our clients see up to 40% faster deployment and up to 60% higher user adoption through outcome-focused delivery.',
+  },
+  {
+    kicker: 'Long-term success',
+    text: 'Beyond implementation, continuous optimization and scaling support keep your ServiceNow investment paying back.',
+  },
+];
+---
+
+<section id="why" class="section why" data-scene="why" data-theme="dark" aria-labelledby="why-title">
+  <div class="why-kinetic" aria-hidden="true">
+    <p class="kin kin-a" data-kinetic-a>MASTER CRAFTSMEN · MASTER CRAFTSMEN ·</p>
+    <p class="kin kin-b" data-kinetic-b>NOT JUST CONFIGURATORS · NOT JUST CONFIGURATORS ·</p>
+  </div>
+
+  <div class="gutter relative">
+    <div class="why-top">
+      <div>
+        <p class="eyebrow">Why Raleston</p>
+        <h2 id="why-title" class="h2 mt-4" data-reveal>Master craftsmen, <span class="text-lit">not just configurators</span></h2>
+        <p class="lead mt-5" data-reveal>
+          Anyone can configure ServiceNow. Architecting it means deciding how it should work before anyone touches it, so it keeps working as you grow. In practice, architect-led means:
+        </p>
+        <ul class="ticks why-practice" data-reveal>
+          {practice.map((p) => <li>{p}</li>)}
+        </ul>
+      </div>
+      <figure class="why-photo" data-reveal>
+        <div class="why-photo-mask">
+          <Image
+            src={teamDc}
+            alt="A team of seven IT professionals standing together in a data centre aisle, one holding a laptop."
+            widths={[480, 720, 960, 1280]}
+            sizes="(min-width: 1024px) 40vw, 92vw"
+            loading="lazy"
+            class="why-img"
+            data-parallax="0.08"
+          />
+        </div>
+        <dl class="why-stats">
+          {
+            SITE.stats.map((s) => (
+              <div class="card">
+                <dt>{s.label}</dt>
+                <dd>
+                  <span>Up to</span> {s.value}
+                </dd>
+              </div>
+            ))
+          }
+        </dl>
+      </figure>
+    </div>
+
+    <ul class="why-grid">
+      {
+        reasons.map((r, i) => (
+          <li class="card why-card" data-reveal>
+            <span class="why-num">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="h3 mt-3">{r.kicker}</h3>
+            <p class="body mt-3">{r.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+    <a href="/about/" class="link-arrow mt-8" data-reveal>About Raleston and our founder <Icon name="arrow" /></a>
+  </div>
+</section>
+
+<style>
+  .why {
+    overflow: hidden;
+    background:
+      radial-gradient(45% 45% at 85% 20%, color-mix(in srgb, var(--color-iris) 20%, transparent), transparent 70%),
+      var(--color-night);
+  }
+  .why-kinetic {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1rem;
+    pointer-events: none;
+    opacity: 0.9;
+  }
+  .kin {
+    font-size: clamp(4rem, 12vw, 11rem);
+    font-weight: 800;
+    line-height: 0.9;
+    white-space: nowrap;
+    will-change: transform;
+  }
+  .kin-a {
+    color: color-mix(in srgb, var(--color-white) 4%, transparent);
+  }
+  .kin-b {
+    color: transparent;
+    -webkit-text-stroke: 1px color-mix(in srgb, var(--color-iris-soft) 22%, transparent);
+  }
+  .why-top {
+    display: grid;
+    gap: 2.5rem;
+  }
+  @media (min-width: 1024px) {
+    .why-top {
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 4rem;
+      align-items: center;
+    }
+  }
+  .why-practice {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    font-size: 1.04rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .why-photo {
+    position: relative;
+    margin: 0;
+  }
+  .why-photo-mask {
+    position: relative;
+    height: clamp(18rem, 36vw, 28rem);
+    overflow: hidden;
+    border-radius: 2rem 2rem 2rem 0.5rem;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+  }
+  .why-photo-mask::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(200deg, transparent 40%, color-mix(in srgb, var(--color-indigo) 70%, transparent));
+    pointer-events: none;
+  }
+  :global(.why-img) {
+    display: block;
+    width: 100%;
+    height: 120%;
+    margin-top: -5%;
+    object-fit: cover;
+    object-position: 50% 30%;
+  }
+  .why-stats {
+    position: absolute;
+    left: clamp(-1rem, -2vw, 0rem);
+    bottom: -1.75rem;
+    display: flex;
+    gap: 0.6rem;
+  }
+  .why-stats > div {
+    display: flex;
+    flex-direction: column-reverse;
+    min-width: 9.5rem;
+    padding: 0.85rem 1.05rem 0.9rem;
+    background: color-mix(in srgb, var(--color-night) 92%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 30%, transparent);
+  }
+  .why-stats dt {
+    margin-top: 0.2rem;
+    font-size: 0.85rem;
+    color: var(--color-grey-200);
+  }
+  .why-stats dd {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: lining-nums;
+  }
+  .why-stats dd span {
+    margin-right: 0.15rem;
+    font-size: 0.42em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    vertical-align: 0.4em;
+    color: var(--color-iris-soft);
+  }
+  .why-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(4rem, 7vw, 5.5rem);
+  }
+  @media (min-width: 720px) {
+    .why-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .why-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .why-card {
+    padding: 1.5rem;
+  }
+  .why-num {
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    font-variant-numeric: lining-nums;
+    color: var(--color-iris-soft);
+  }
+</style>

@@ -1,0 +1,320 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { SITE } from '../../data/site';
+import { visible } from '../../lib/drafts';
+import founder from '../../assets/images/about-2.png';
+import team from '../../assets/images/team-datacentre.png';
+
+const roles = (await getCollection('roles')).filter(visible);
+const modules = [
+  { name: 'IT Operations Management (ITOM)', href: '/services/itom/' },
+  { name: 'IT Service Management (ITSM)', href: '/services/itsm/' },
+  { name: 'Hardware Asset Management (HAM)', href: '/services/itam/' },
+  { name: 'Software Asset Management (SAM)', href: '/services/itam/' },
+  { name: 'Enterprise Asset Management (EAM)', href: '/services/itam/' },
+  { name: 'Enterprise Architecture (EA)', href: '/services/enterprise-architecture/' },
+  { name: 'Integrations', href: '/services/integrations/' },
+  { name: 'Custom applications', href: '/services/app-engine/' },
+  { name: 'Strategic Portfolio Management (SPM)', href: '/services/spm/' },
+];
+const values = [
+  { kicker: 'Excellence by design', title: 'Architectural integrity', text: 'Implementation should stand on solid architectural foundations. Clean architecture today means sustainable success tomorrow.' },
+  { kicker: 'Partners, not just consultants', title: 'Client-first culture', text: 'Transparent communication, proactive problem-solving, and solutions designed for your context, not cookie-cutter approaches.' },
+  { kicker: 'Clarity where it counts', title: 'Simplicity through expertise', text: 'We help you make informed decisions, avoid unnecessary complexity and get meaningful results from your ServiceNow investment.' },
+  { kicker: 'Built to evolve and thrive', title: 'Long-term scalability', text: 'We architect platforms that evolve with your organisation, designed for growth, adaptation and value delivered over years.' },
+];
+const schema = [
+  {
+    '@type': 'Person',
+    '@id': `${SITE.url}/about/#founder`,
+    name: SITE.founder.name,
+    jobTitle: SITE.founder.role,
+    worksFor: { '@id': `${SITE.url}/#organization` },
+    image: `${SITE.url}/og/about.png`,
+    hasCredential: { '@type': 'EducationalOccupationalCredential', name: 'ServiceNow Certified Technical Architect' },
+    knowsAbout: ['ITOM', 'ITSM', 'ITAM', 'CMDB', 'SPM', 'Scoped applications', 'Integrations', 'Workflows', 'Enterprise Architecture'],
+  },
+];
+---
+
+<Base
+  title="About Raleston Consulting: ServiceNow architects in Ottawa"
+  description="Raleston Consulting is an Ottawa ServiceNow consultancy led by a certified ServiceNow Technical Architect. Our mission, values, founder, and careers."
+  crumbs={[{ name: 'About', href: '/about/' }]}
+  schema={schema}
+>
+  <PageHero
+    crumbs={[{ name: 'About', href: '/about/' }]}
+    eyebrow="About Raleston"
+    title="The architects of excellence"
+    lit="excellence"
+    lead="A team that brings structure and results to every ServiceNow journey. We help you implement and get the most from the ServiceNow subscriptions you already own: simpler operations, fewer inefficiencies, measurable results."
+  />
+
+  <section class="section pt-6" data-theme="dark" aria-labelledby="mission-title">
+    <div class="gutter about-grid">
+      <div class="about-copy">
+        <h2 id="mission-title" class="h2" data-reveal>Our mission</h2>
+        <p class="lead mt-5" data-reveal>
+          Transform how organisations operate through ServiceNow excellence. We don’t just configure features; we architect solutions with integrity, deliver with clarity and build for long-term scalability.
+        </p>
+        <h2 class="h3 mt-10" data-reveal>How we got here</h2>
+        <p class="body mt-3" data-reveal>
+          What started as a commitment to architectural excellence grew into a client-first culture. We engage as partners to our clients, not just consultants, because real transformation takes transparency, proactive communication and genuine investment in your success.
+        </p>
+        <h2 class="h3 mt-10" data-reveal>What we work on</h2>
+        <ul class="mods" data-reveal>
+          {
+            modules.map((m) => (
+              <li>
+                <a href={m.href}>{m.name}</a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <figure class="about-photo" data-reveal>
+        <Image src={team} alt="An IT team standing together in a data centre aisle, one holding a laptop." widths={[480, 800, 1200]} sizes="(min-width: 1024px) 40vw, 92vw" loading="lazy" class="about-img" data-parallax="0.06" />
+      </figure>
+    </div>
+  </section>
+
+  <section class="section values" data-theme="dark" aria-labelledby="values-title">
+    <div class="gutter">
+      <p class="eyebrow">Core values</p>
+      <h2 id="values-title" class="h2 mt-4" data-reveal>What drives <span class="text-lit">every partnership</span></h2>
+      <ul class="values-grid">
+        {
+          values.map((v, i) => (
+            <li class="card" data-reveal>
+              <span class="v-num">{String(i + 1).padStart(2, '0')}</span>
+              <p class="v-kicker">{v.kicker}</p>
+              <h3 class="h3 mt-2">{v.title}</h3>
+              <p class="body mt-3">{v.text}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section id="founder" class="section" data-theme="dark" aria-labelledby="founder-title">
+    <div class="gutter founder">
+      <figure class="founder-photo" data-reveal>
+        <Image src={founder} alt="Charles, founder and principal architect of Raleston Consulting, standing with his arms folded." widths={[360, 540, 705]} sizes="(min-width: 1024px) 30vw, 80vw" loading="lazy" class="founder-img" />
+      </figure>
+      <div>
+        <p class="eyebrow">Founder spotlight</p>
+        <h2 id="founder-title" class="h2 mt-4" data-reveal>Charles, <span class="text-lit">Founder & Principal Architect</span></h2>
+        <p class="lead mt-5" data-reveal>
+          Charles is a certified ServiceNow Technical Architect with more than a decade of experience delivering transformation projects across healthcare, retail, enterprise and government. He is known for fixing broken CMDBs, realigning architectures and bringing clarity to complex implementations.
+        </p>
+        <p class="body mt-4" data-reveal>
+          His expertise spans ITOM, ITSM, ITAM, the CMDB, SPM, scoped applications, integrations, workflows and enterprise architecture. He helps clients design scalable systems, automate processes and deliver meaningful business outcomes.
+        </p>
+        <p class="body mt-4" data-reveal>Outside client work, Charles mentors ServiceNow professionals and helps build tech communities across Africa and North America.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="careers" class="section careers" data-theme="dark" aria-labelledby="careers-title">
+    <div class="gutter">
+      <p class="eyebrow">Careers</p>
+      <h2 id="careers-title" class="h2 mt-4" data-reveal>We’re hiring ServiceNow <span class="text-lit">architects and developers</span></h2>
+      <div class="careers-grid">
+        <ul class="ticks careers-why" data-reveal>
+          <li>Architect-led projects, where the design is agreed before anything is built</li>
+          <li>Mentoring from a certified ServiceNow Technical Architect</li>
+          <li>Current ServiceNow work: ServiceNow Otto, AI agents, MCP and clean CMDBs</li>
+        </ul>
+        <div>
+          {
+            roles.length > 0 ? (
+              <ul class="roles">
+                {roles.map((r) => (
+                  <li class="card role">
+                    {r.data.draft && <span class="role-draft">Draft</span>}
+                    <h3 class="h3">{r.data.title}</h3>
+                    <p class="role-meta">
+                      {r.data.location} · {r.data.type}
+                    </p>
+                    <p class="body mt-3">{r.data.summary}</p>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div class="card role" data-reveal>
+                <h3 class="h3">No open roles are listed right now</h3>
+                <p class="body mt-3">If you are a ServiceNow architect or developer who cares about doing it properly, we would still like to hear from you.</p>
+              </div>
+            )
+          }
+          <a href={`mailto:${SITE.email}?subject=Careers%20at%20Raleston`} class="btn btn-primary mt-5" data-magnetic>
+            Send us your profile <Icon name="mail" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</Base>
+
+<style>
+  .about-grid {
+    display: grid;
+    gap: 2.5rem;
+  }
+  @media (min-width: 1024px) {
+    .about-grid {
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 4rem;
+      align-items: start;
+    }
+  }
+  .mods {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 1rem;
+  }
+  .mods a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.4rem 0.9rem;
+    font-size: 0.95rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 7%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+    transition: box-shadow 0.3s;
+  }
+  .mods a:hover {
+    box-shadow: inset 0 0 0 1px var(--color-iris-soft);
+  }
+  .about-photo {
+    margin: 0;
+    height: clamp(20rem, 40vw, 34rem);
+    overflow: hidden;
+    border-radius: 2rem 2rem 0.5rem 2rem;
+    box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+  }
+  :global(.about-img) {
+    width: 100%;
+    height: 115%;
+    object-fit: cover;
+  }
+  .values {
+    background:
+      radial-gradient(45% 50% at 50% 40%, color-mix(in srgb, var(--color-iris) 14%, transparent), transparent 70%),
+      var(--color-night);
+  }
+  .values-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 720px) {
+    .values-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .values-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+  .values-grid li {
+    padding: 1.5rem;
+  }
+  .v-num {
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--color-iris-soft);
+  }
+  .v-kicker {
+    margin-top: 0.8rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+  }
+  .founder {
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .founder {
+      grid-template-columns: 0.75fr 1.25fr;
+      gap: 4rem;
+    }
+  }
+  .founder-photo {
+    position: relative;
+    margin: 0;
+    max-width: 26rem;
+    overflow: hidden;
+    border-radius: 2rem;
+    background: radial-gradient(circle at 50% 30%, var(--color-white), var(--color-grey-100));
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--color-white) 14%, transparent),
+      0 40px 80px -40px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+  :global(.founder-img) {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .careers {
+    background:
+      radial-gradient(40% 50% at 100% 55%, color-mix(in srgb, var(--color-violet) 14%, transparent), transparent 70%),
+      var(--color-night);
+  }
+  .careers-grid {
+    display: grid;
+    gap: 2rem;
+    margin-top: 2.5rem;
+  }
+  @media (min-width: 1024px) {
+    .careers-grid {
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+    }
+  }
+  .careers-why {
+    display: grid;
+    gap: 0.9rem;
+    font-size: 1.08rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .roles {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .role {
+    padding: 1.4rem;
+  }
+  .role-meta {
+    margin-top: 0.3rem;
+    font-size: 0.92rem;
+    color: var(--color-iris-soft);
+  }
+  .role-draft {
+    display: inline-block;
+    margin-bottom: 0.6rem;
+    border-radius: 999px;
+    padding: 0.15rem 0.55rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+    background: var(--color-gold);
+  }
+</style>

@@ -1,0 +1,153 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { visible } from '../../lib/drafts';
+
+const cases = (await getCollection('caseStudies')).filter(visible);
+const template = [
+  { label: 'Client type', text: 'The kind of organisation and its situation' },
+  { label: 'Industry', text: 'The sector, and what it demanded of the platform' },
+  { label: 'Challenge', text: 'What was wrong, who it affected and why it mattered' },
+  { label: 'Approach', text: 'The decisions we made, and why' },
+  { label: 'Modules', text: 'The ServiceNow products involved' },
+  { label: 'Results', text: 'Only what the client has measured and approved' },
+];
+---
+
+<Base
+  title="ServiceNow case studies | Raleston Consulting"
+  description="ServiceNow case studies from Raleston Consulting. Detailed, client-approved case studies are coming soon; ask us for references in the meantime."
+  crumbs={[{ name: 'Case studies', href: '/case-studies/' }]}
+>
+  <PageHero
+    crumbs={[{ name: 'Case studies', href: '/case-studies/' }]}
+    eyebrow="Case studies"
+    title="ServiceNow work we can show you"
+    lit="show you"
+    lead="Every case study here is a real engagement, written up with the client’s approval. We would rather show you less than show you something invented."
+  />
+
+  <section class="section pt-6" data-theme="dark" aria-label="Case studies">
+    <div class="gutter">
+      {
+        cases.length > 0 ? (
+          <ul class="cs-grid">
+            {cases.map((c) => (
+              <li data-reveal>
+                <a href={`/case-studies/${c.id}/`} class="card card-hover cs-card">
+                  {c.data.draft && <span class="cs-draft">Draft sample</span>}
+                  <p class="cs-ind">{c.data.industry}</p>
+                  <h2 class="h3 mt-3">{c.data.title}</h2>
+                  <p class="body mt-3">{c.data.summary}</p>
+                  <span class="link-arrow mt-auto pt-4">
+                    Read it <Icon name="arrow" />
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="cs-soon">
+            <div class="card cs-note" data-reveal>
+              <span class="icon-tile">
+                <Icon name="book" />
+              </span>
+              <div>
+                <h2 class="h3">Detailed case studies coming soon.</h2>
+                <p class="body mt-2">Ask us for references, and we will put you in touch with clients who can tell you what working with us is like.</p>
+                <a href="/contact/?topic=references" class="btn btn-primary mt-5" data-magnetic>
+                  Ask for references <Icon name="arrowUpRight" />
+                </a>
+              </div>
+            </div>
+            <div class="cs-template" data-reveal>
+              <p class="eyebrow">What each case study will cover</p>
+              <dl>
+                {template.map((t) => (
+                  <div class="card">
+                    <dt>{t.label}</dt>
+                    <dd>{t.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cs-grid {
+    display: grid;
+    gap: 1rem;
+  }
+  @media (min-width: 900px) {
+    .cs-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .cs-grid li {
+    display: flex;
+  }
+  .cs-card {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: 1.6rem;
+  }
+  .cs-ind {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .cs-draft {
+    align-self: flex-start;
+    margin-bottom: 0.8rem;
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+    background: var(--color-gold);
+  }
+  .cs-soon {
+    display: grid;
+    gap: 2rem;
+  }
+  .cs-note {
+    display: flex;
+    gap: 1.1rem;
+    max-width: 46rem;
+    padding: clamp(1.4rem, 3vw, 2rem);
+  }
+  .cs-template dl {
+    display: grid;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+  }
+  @media (min-width: 720px) {
+    .cs-template dl {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  .cs-template dl > div {
+    padding: 1.1rem 1.2rem;
+  }
+  .cs-template dt {
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  .cs-template dd {
+    margin-top: 0.3rem;
+    font-size: 0.95rem;
+    color: var(--color-grey-200);
+  }
+</style>

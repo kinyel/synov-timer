@@ -1,0 +1,9 @@
+# Paths from the previous site, kept working.
+/about-us        /about/            301
+/about-us/       /about/            301
+/contact-us      /contact/          301
+/contact-us/     /contact/          301
+/careers         /about/#careers    301
+/careers/        /about/#careers    301
+/services/advisory      /services/advisory-and-strategy/      301
+/services/support       /services/support-and-optimization/   301

@@ -1,0 +1,87 @@
+---
+/** Questions and answers as an accordion (native details/summary, so it works without script). */
+import type { Faq } from '../../data/services';
+import Icon from './Icon.astro';
+
+interface Props {
+  items: Faq[];
+}
+const { items } = Astro.props;
+---
+
+<ul class="faq">
+  {
+    items.map((f) => (
+      <li data-reveal>
+        <details class="faq-item">
+          <summary>
+            <span>{f.q}</span>
+            <span class="faq-icon" aria-hidden="true">
+              <Icon name="plus" />
+            </span>
+          </summary>
+          <div class="faq-a prose-links" set:html={f.a} />
+        </details>
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .faq {
+    display: grid;
+    gap: 0.75rem;
+  }
+  .faq-item {
+    border-radius: 1.1rem;
+    background: color-mix(in srgb, var(--color-navy) 55%, var(--color-night));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 9%, transparent);
+    transition: box-shadow 0.4s var(--ease-expo);
+  }
+  .faq-item[open] {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 35%, transparent),
+      0 20px 50px -30px color-mix(in srgb, var(--color-iris) 70%, transparent);
+  }
+  .faq-item summary {
+    display: flex;
+    min-height: 3.75rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.9rem 1.25rem;
+    cursor: pointer;
+    list-style: none;
+    font-size: clamp(1.02rem, 1.3vw, 1.15rem);
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq-icon {
+    display: grid;
+    flex: none;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 50%;
+    color: var(--color-iris-soft);
+    background: color-mix(in srgb, var(--color-iris) 18%, transparent);
+    transition: transform 0.45s var(--ease-expo);
+  }
+  .faq-icon :global(svg) {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+  .faq-item[open] .faq-icon {
+    transform: rotate(45deg);
+  }
+  .faq-a {
+    padding: 0 1.25rem 1.2rem;
+    max-width: 52rem;
+    font-size: 1.02rem;
+    line-height: 1.65;
+    color: var(--color-grey-200);
+  }
+</style>

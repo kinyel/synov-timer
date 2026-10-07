@@ -1,0 +1,452 @@
+---
+/**
+ * A service's diagram, drawn from its data (src/data/services.ts): a flow, a
+ * hub, stacked layers, a lifecycle or a service map. Labels are real text
+ * and the layout reflows for phones; connectors are drawn in SVG and CSS.
+ */
+import type { Diagram } from '../../data/services';
+
+interface Props {
+  diagram: Diagram;
+  title: string;
+}
+const { diagram: d, title } = Astro.props;
+const n = (i: number) => String(i + 1).padStart(2, '0');
+---
+
+<figure class={`dg dg-${d.kind}`} aria-label={title}>
+  {
+    d.kind === 'flow' && (
+      <ol class="flow">
+        {d.steps.map((s, i) => (
+          <li style={`--i:${i}`}>
+            <span class="flow-n">{n(i)}</span>
+            <span class="flow-t">{s}</span>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+  {
+    d.kind === 'hub' && (
+      <div class="hub">
+        <ul class="hub-side hub-in">
+          {d.left.map((s) => (
+            <li>{s}</li>
+          ))}
+        </ul>
+        <div class="hub-core">
+          <svg class="hub-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M0 20 C 30 20, 30 50, 50 50 M0 50 H50 M0 80 C 30 80, 30 50, 50 50" />
+            <path d="M100 15 C 70 15, 70 50, 50 50 M100 38 C 75 38, 70 50, 50 50 M100 62 C 75 62, 70 50, 50 50 M100 85 C 70 85, 70 50, 50 50" />
+          </svg>
+          <span class="hub-node">{d.center}</span>
+        </div>
+        <ul class="hub-side hub-out">
+          {d.right.map((s) => (
+            <li>{s}</li>
+          ))}
+        </ul>
+      </div>
+    )
+  }
+  {
+    d.kind === 'layers' && (
+      <ol class="layers">
+        {d.layers.map((l, i) => (
+          <li style={`--i:${i}`}>
+            <span class="layer-n">{n(i)}</span>
+            <span class="layer-t">{l.label}</span>
+            <span class="layer-s">{l.sub}</span>
+          </li>
+        ))}
+      </ol>
+    )
+  }
+  {
+    d.kind === 'cycle' && (
+      <div class="cycle" style={`--n:${d.stages.length}`}>
+        <svg class="cycle-ring" viewBox="0 0 200 200" aria-hidden="true">
+          <circle cx="100" cy="100" r="78" />
+          <circle cx="100" cy="100" r="78" class="cycle-run" pathLength="100" />
+        </svg>
+        <ol>
+          {d.stages.map((s, i) => (
+            <li style={`--i:${i}`}>
+              <span class="cycle-n">{n(i)}</span>
+              <span>{s}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    )
+  }
+  {
+    d.kind === 'map' && (
+      <div class="map">
+        <div class="map-row">
+          <span class="map-node map-service">
+            <small>Business service</small>
+            {d.service}
+          </span>
+        </div>
+        <svg class="map-lines" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M50 0 V8 H28 V20 M50 8 H72 V20" />
+        </svg>
+        <div class="map-row">
+          {d.apps.map((a) => (
+            <span class="map-node map-app">
+              <small>Application service</small>
+              {a}
+            </span>
+          ))}
+        </div>
+        <svg class="map-lines" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M28 0 V8 H17 V20 M28 8 H50 V20 M72 0 V8 H83 V20" />
+        </svg>
+        <div class="map-row">
+          {d.infra.map((x, i) => (
+            <span class={`map-node map-infra ${i === 0 ? 'is-alert' : ''}`}>
+              <small>Infrastructure</small>
+              {x}
+              {i === 0 && <em>Alerts correlated here</em>}
+            </span>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  <figcaption>{d.caption}</figcaption>
+</figure>
+
+<style>
+  .dg {
+    margin: 0;
+    border-radius: 1.6rem;
+    padding: clamp(1.25rem, 3vw, 2.25rem);
+    background:
+      radial-gradient(60% 80% at 50% 0%, color-mix(in srgb, var(--color-iris) 14%, transparent), transparent 70%),
+      color-mix(in srgb, var(--color-navy) 50%, var(--color-night));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 9%, transparent);
+  }
+  figcaption {
+    margin-top: 1.4rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    color: var(--color-grey-400);
+  }
+  /* Shared node look. */
+  .flow li,
+  .hub-side li,
+  .layers li,
+  .cycle li,
+  .map-node {
+    border-radius: 0.9rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 5%, var(--color-night));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 14%, transparent);
+  }
+
+  /* Flow: a row of steps joined by a glowing line (a column on phones). */
+  .flow {
+    position: relative;
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (min-width: 900px) {
+    .flow {
+      grid-auto-flow: column;
+      grid-auto-columns: 1fr;
+    }
+  }
+  .flow li {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 1rem 1.05rem 1.1rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+  .flow li + li::before {
+    content: '';
+    position: absolute;
+    background: linear-gradient(90deg, var(--color-iris-soft), var(--color-azure));
+    box-shadow: 0 0 10px color-mix(in srgb, var(--color-azure) 70%, transparent);
+  }
+  @media (min-width: 900px) {
+    .flow li + li::before {
+      left: -0.75rem;
+      top: 50%;
+      width: 0.75rem;
+      height: 2px;
+    }
+  }
+  @media (max-width: 899px) {
+    .flow li + li::before {
+      left: 1.6rem;
+      top: -0.75rem;
+      width: 2px;
+      height: 0.75rem;
+    }
+  }
+  .flow li:last-child {
+    background: color-mix(in srgb, var(--color-iris) 22%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 50%, transparent),
+      0 0 30px -8px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+  .flow-n,
+  .layer-n,
+  .cycle-n {
+    font-size: 0.78rem;
+    font-weight: 800;
+    font-variant-numeric: lining-nums;
+    color: var(--color-iris-soft);
+  }
+
+  /* Hub: sources on the left, the core in the middle, consumers on the right. */
+  .hub {
+    display: grid;
+    gap: 1rem;
+    align-items: center;
+  }
+  @media (min-width: 900px) {
+    .hub {
+      grid-template-columns: 1fr 1.1fr 1fr;
+    }
+  }
+  .hub-side {
+    display: grid;
+    gap: 0.6rem;
+  }
+  .hub-side li {
+    padding: 0.85rem 1rem;
+    font-weight: 700;
+  }
+  .hub-out li {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 40%, transparent);
+  }
+  .hub-core {
+    position: relative;
+    display: grid;
+    min-height: 12rem;
+    place-items: center;
+  }
+  .hub-lines {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .hub-lines path {
+    fill: none;
+    stroke: var(--color-azure);
+    stroke-width: 0.6;
+    vector-effect: non-scaling-stroke;
+    stroke-dasharray: 4 4;
+    animation: dash 1.4s linear infinite;
+  }
+  @media (max-width: 899px) {
+    .hub-lines {
+      display: none;
+    }
+  }
+  .hub-node {
+    position: relative;
+    display: grid;
+    width: 9rem;
+    height: 9rem;
+    place-items: center;
+    border-radius: 50%;
+    padding: 1rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    text-align: center;
+    color: var(--color-white);
+    background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--color-azure) 40%, var(--color-navy)), var(--color-navy));
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-azure),
+      0 0 50px -6px color-mix(in srgb, var(--color-azure) 70%, transparent);
+  }
+  @keyframes dash {
+    to {
+      stroke-dashoffset: -16;
+    }
+  }
+
+  /* Layers: stacked plates, each a little narrower, like the hero's platform. */
+  .layers {
+    display: grid;
+    gap: 0.55rem;
+  }
+  .layers li {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 1rem;
+    align-items: baseline;
+    margin-inline: calc(var(--i) * 1.4%);
+    padding: 1rem 1.2rem;
+  }
+  .layer-t {
+    font-size: 1.08rem;
+    font-weight: 700;
+  }
+  .layer-s {
+    grid-column: 2;
+    font-size: 0.95rem;
+    color: var(--color-grey-200);
+  }
+  @media (min-width: 720px) {
+    .layers li {
+      grid-template-columns: 3rem 14rem 1fr;
+    }
+    .layer-s {
+      grid-column: 3;
+    }
+  }
+  .layers li:nth-child(odd) {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 30%, transparent);
+  }
+
+  /* Cycle: stages around a ring with light running round it (a grid on phones). */
+  .cycle {
+    position: relative;
+  }
+  .cycle ol {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .cycle li {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 0.9rem 1rem;
+    font-weight: 700;
+  }
+  .cycle-ring {
+    display: none;
+  }
+  @media (min-width: 900px) {
+    .cycle {
+      height: 26rem;
+    }
+    .cycle-ring {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      display: block;
+      width: 20rem;
+      height: 20rem;
+      transform: translate(-50%, -50%);
+    }
+    .cycle-ring circle {
+      fill: none;
+      stroke: color-mix(in srgb, var(--color-white) 12%, transparent);
+      stroke-width: 1.2;
+    }
+    .cycle-ring .cycle-run {
+      stroke: var(--color-iris-soft);
+      stroke-width: 2;
+      stroke-dasharray: 18 82;
+      filter: drop-shadow(0 0 4px var(--color-iris));
+      animation: run 6s linear infinite;
+      transform-origin: center;
+    }
+    .cycle ol {
+      position: absolute;
+      inset: 0;
+      display: block;
+    }
+    .cycle li {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 10rem;
+      text-align: center;
+      align-items: center;
+      transform: translate(-50%, -50%) rotate(calc(360deg / var(--n) * var(--i))) translateY(-12rem) rotate(calc(-360deg / var(--n) * var(--i)));
+    }
+  }
+  @keyframes run {
+    to {
+      stroke-dashoffset: -100;
+    }
+  }
+
+  /* Map: one business service, the application services under it, the infrastructure under those. */
+  .map {
+    display: grid;
+    gap: 0;
+  }
+  .map-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+  .map-node {
+    position: relative;
+    display: grid;
+    min-width: 11rem;
+    padding: 0.85rem 1.1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+  .map-node small {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+  }
+  .map-service {
+    background: color-mix(in srgb, var(--color-iris) 24%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px var(--color-iris-soft),
+      0 0 30px -8px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+  .map-app {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 45%, transparent);
+  }
+  .map-infra.is-alert {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 60%, transparent),
+      0 0 26px -8px color-mix(in srgb, var(--color-violet) 80%, transparent);
+  }
+  .map-node em {
+    margin-top: 0.3rem;
+    font-size: 0.8rem;
+    font-style: normal;
+    color: var(--color-violet-soft);
+  }
+  .map-lines {
+    display: block;
+    width: 100%;
+    height: 2.2rem;
+  }
+  .map-lines path {
+    fill: none;
+    stroke: var(--color-azure);
+    stroke-width: 0.8;
+    vector-effect: non-scaling-stroke;
+  }
+  @media (max-width: 719px) {
+    .map-lines {
+      height: 1.4rem;
+    }
+    .map-lines path {
+      d: path('M50 0 V20');
+    }
+    .map-node {
+      flex: 1 1 100%;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hub-lines path,
+    .cycle-ring .cycle-run {
+      animation: none;
+    }
+  }
+</style>

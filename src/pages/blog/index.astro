@@ -1,0 +1,95 @@
+---
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import PostList from '../../components/blog/PostList.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { posts, slugify } from '../../lib/blog';
+import { SHOW_DRAFTS } from '../../lib/drafts';
+
+const all = await posts();
+const categories = [...new Set(all.map((p) => p.data.category))];
+---
+
+<Base
+  title="ServiceNow insights from the field | Raleston Consulting blog"
+  description="Practical writing on ServiceNow from Raleston’s architects: CMDB health, ITOM, ITAM, ServiceNow Otto and AI agents, integrations and platform architecture."
+  crumbs={[{ name: 'Blog', href: '/blog/' }]}
+>
+  <PageHero
+    crumbs={[{ name: 'Blog', href: '/blog/' }]}
+    eyebrow="Blog"
+    title="ServiceNow insights from the field"
+    lit="from the field"
+    lead="Practical notes from real platforms: what works, what doesn’t, and how to tell the difference before you build."
+  />
+  <section class="section pt-6" data-theme="dark" aria-label="Articles">
+    <div class="gutter">
+      {
+        categories.length > 0 && (
+          <nav class="cats" aria-label="Categories">
+            <a href="/blog/" aria-current="page">
+              All
+            </a>
+            {categories.map((c) => (
+              <a href={`/blog/category/${slugify(c)}/`}>{c}</a>
+            ))}
+          </nav>
+        )
+      }
+      {
+        all.length > 0 ? (
+          <PostList items={all} />
+        ) : (
+          <div class="card empty" data-reveal>
+            <span class="icon-tile">
+              <Icon name="book" />
+            </span>
+            <div>
+              <h2 class="h3">The first articles are on their way</h2>
+              <p class="body mt-2">
+                Topics coming up: what a healthy CMDB actually looks like, ITOM vs ITAM vs CMDB, and where ServiceNow Otto helps and where it doesn’t. Follow along with the <a href="/rss.xml" class="text-iris-soft underline underline-offset-4">RSS feed</a>.
+              </p>
+            </div>
+          </div>
+        )
+      }
+      {SHOW_DRAFTS && all.some((p) => p.data.draft) && <p class="draft-note">Draft articles show in development and preview builds only, until they are reviewed and published.</p>}
+    </div>
+  </section>
+</Base>
+
+<style>
+  .cats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+  }
+  .cats a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    border-radius: 999px;
+    padding: 0.4rem 1rem;
+    font-weight: 700;
+    color: var(--color-grey-200);
+    background: color-mix(in srgb, var(--color-white) 6%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent);
+  }
+  .cats a[aria-current='page'],
+  .cats a:hover {
+    color: var(--color-white);
+    box-shadow: inset 0 0 0 1px var(--color-iris-soft);
+  }
+  .empty {
+    display: flex;
+    gap: 1.1rem;
+    max-width: 46rem;
+    padding: clamp(1.4rem, 3vw, 2rem);
+  }
+  .draft-note {
+    margin-top: 1.5rem;
+    font-size: 0.9rem;
+    color: var(--color-grey-400);
+  }
+</style>

@@ -1,0 +1,106 @@
+---
+/** Inner-page header: breadcrumbs, eyebrow, the page's one H1, and a lead. */
+import type { Crumb } from '../../layouts/Base.astro';
+
+interface Props {
+  crumbs: Crumb[];
+  eyebrow?: string;
+  title: string;
+  /** Words of the title to set in light iris. */
+  lit?: string;
+  lead?: string;
+}
+const { crumbs, eyebrow, title, lit, lead } = Astro.props;
+const [before, after] = lit && title.includes(lit) ? [title.slice(0, title.indexOf(lit)), title.slice(title.indexOf(lit) + lit.length)] : [title, ''];
+---
+
+<header class="page-hero" data-theme="dark">
+  <div class="page-hero-glow" aria-hidden="true"></div>
+  <div class="gutter relative">
+    <nav aria-label="Breadcrumb">
+      <ol class="crumbs">
+        <li><a href="/">Home</a></li>
+        {
+          crumbs.map((c, i) => (
+            <li>
+              {i === crumbs.length - 1 ? (
+                <span aria-current="page">{c.name}</span>
+              ) : (
+                <a href={c.href}>{c.name}</a>
+              )}
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    {eyebrow && <p class="eyebrow mt-8">{eyebrow}</p>}
+    <h1 class="h1 page-title" data-hero-title>
+      {before}{lit && <span class="text-lit">{lit}</span>}{after}
+    </h1>
+    {lead && <p class="lead page-lead">{lead}</p>}
+    <slot />
+  </div>
+</header>
+
+<style>
+  .page-hero {
+    position: relative;
+    overflow: hidden;
+    padding-block: clamp(8rem, 16vw, 11rem) clamp(3rem, 6vw, 5rem);
+    color: var(--color-white);
+    background: var(--color-night);
+  }
+  .page-hero-glow {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(40% 60% at 85% 10%, color-mix(in srgb, var(--color-iris) 32%, transparent), transparent 70%),
+      radial-gradient(40% 50% at 0% 58%, color-mix(in srgb, var(--color-violet) 16%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .page-hero-glow::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--color-white) 3.5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-white) 3.5%, transparent) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(60% 80% at 75% 20%, #000 20%, transparent 75%);
+  }
+  .crumbs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.5rem;
+    font-size: 0.9rem;
+    color: var(--color-grey-400);
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: 0.5rem;
+    color: var(--color-grey-400);
+  }
+  .crumbs a {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    color: var(--color-grey-200);
+  }
+  .crumbs a:hover {
+    color: var(--color-white);
+  }
+  .crumbs [aria-current] {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    color: var(--color-iris-soft);
+  }
+  .page-title {
+    margin-top: 1rem;
+    max-width: 18ch;
+  }
+  .page-lead {
+    margin-top: 1.5rem;
+    max-width: 44rem;
+  }
+</style>

@@ -1,12 +1,10 @@
 import { gsap } from 'gsap';
 import type Lenis from 'lenis';
-import { $scene, type SceneId } from '../lib/store';
 
 /**
- * Navigation behaviour: gliding hover highlight, one morphing flyout for the
- * section menus, active-section markers, condense / tuck-away on scroll,
- * deep links that land on a specific card inside a pinned section, and the
- * mobile sheet. Styling lives in src/components/chrome/Nav.astro.
+ * Navigation behaviour: gliding hover highlight, the morphing Services
+ * flyout, condense on scroll, deep links that land inside a pinned section,
+ * and the mobile sheet. The active page is marked at build time. Styling lives in src/components/chrome/Nav.astro.
  */
 export function initNav(lenis: Lenis | null, reduced: boolean) {
   const nav = document.querySelector<HTMLElement>('[data-nav]');
@@ -168,24 +166,6 @@ export function initNav(lenis: Lenis | null, reduced: boolean) {
   });
   document.addEventListener('pointerdown', (e) => {
     if (openId && !pill?.contains(e.target as Node)) closeFlyout(true);
-  });
-
-  // ── Active section markers ──────────────────────────────────────────────
-  const owner: Partial<Record<SceneId, string>> = {
-    craft: 'expertise',
-    expertise: 'expertise',
-    services: 'services',
-    industries: 'industries',
-    impact: 'impact',
-    contact: 'contact',
-  };
-  const marked = $$('[data-nav-section]');
-  $scene.subscribe((scene) => {
-    const id = owner[scene];
-    for (const el of marked) {
-      if (el.dataset.navSection === id) el.dataset.active = '';
-      else delete el.dataset.active;
-    }
   });
 
   // ── Condense once scrolled (with hysteresis so it never flickers at the threshold).

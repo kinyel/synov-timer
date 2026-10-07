@@ -1,0 +1,299 @@
+---
+import Base from '../layouts/Base.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import Icon from '../components/ui/Icon.astro';
+import { GLOSSARY } from '../data/glossary';
+import { SITE } from '../data/site';
+import { slugify } from '../lib/blog';
+
+const terms = [...GLOSSARY].sort((a, b) => a.term.localeCompare(b.term, 'en', { sensitivity: 'base' }));
+const letterOf = (t: string) => {
+  const c = t[0]!.toUpperCase();
+  return /[A-Z]/.test(c) ? c : '#';
+};
+const groups = new Map<string, typeof terms>();
+for (const t of terms) groups.set(letterOf(t.term), [...(groups.get(letterOf(t.term)) ?? []), t]);
+const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const id = (term: string) => `term-${slugify(term)}`;
+const crumbs = [{ name: 'Glossary', href: '/glossary/' }];
+const schema = [
+  {
+    '@type': 'DefinedTermSet',
+    '@id': `${SITE.url}/glossary/#terms`,
+    name: 'ServiceNow glossary',
+    description: 'ServiceNow terms and acronyms explained in plain English.',
+    hasDefinedTerm: terms.map((t) => ({
+      '@type': 'DefinedTerm',
+      '@id': `${SITE.url}/glossary/#${id(t.term)}`,
+      name: t.term,
+      ...(t.full ? { alternateName: t.full } : {}),
+      description: t.definition,
+      inDefinedTermSet: `${SITE.url}/glossary/#terms`,
+    })),
+  },
+];
+---
+
+<Base
+  title="ServiceNow glossary: CMDB, CSDM, ITOM and more | Raleston"
+  description="Plain-English definitions of the ServiceNow terms and acronyms on this site, from CMDB, CSDM and Discovery to ServiceNow Otto, AI agents and MCP."
+  crumbs={crumbs}
+  schema={schema}
+>
+  <PageHero
+    crumbs={crumbs}
+    eyebrow="Glossary"
+    title="ServiceNow terms, in plain English"
+    lit="in plain English"
+    lead={`The acronyms and product names you will meet on this site and in ServiceNow, each explained in a sentence or two. ${terms.length} terms, A to Z.`}
+  />
+
+  <section class="section pt-4" data-theme="dark" aria-label="Glossary terms">
+    <div class="gutter">
+      <div class="tools">
+        <nav class="az" aria-label="Jump to letter">
+          {
+            alphabet.map((l) =>
+              groups.has(l) ? (
+                <a href={`#letter-${l.toLowerCase()}`}>{l}</a>
+              ) : (
+                <span aria-hidden="true">{l}</span>
+              ),
+            )
+          }
+        </nav>
+        <div class="filter" data-filter hidden>
+          <label for="g-filter" class="sr-only">Filter terms</label>
+          <Icon name="search" />
+          <input id="g-filter" type="search" placeholder="Filter terms, e.g. CMDB" autocomplete="off" />
+        </div>
+      </div>
+      <p class="filter-empty" data-filter-empty hidden>No terms match. Try a shorter word.</p>
+      <p class="sr-only" role="status" data-filter-status></p>
+
+      <div class="groups">
+        {
+          [...groups].map(([letter, items]) => (
+            <section class="group" id={`letter-${letter.toLowerCase()}`} aria-labelledby={`h-${letter.toLowerCase()}`} data-group>
+              <h2 id={`h-${letter.toLowerCase()}`} class="letter">
+                {letter}
+              </h2>
+              <dl class="terms">
+                {items.map((t) => (
+                  <div class="term card" id={id(t.term)} data-term={`${t.term} ${t.full ?? ''} ${t.definition}`.toLowerCase()}>
+                    <dt>
+                      <span class="term-name">{t.term}</span>
+                      {t.full && <span class="term-full">{t.full}</span>}
+                    </dt>
+                    <dd>
+                      <p>{t.definition}</p>
+                      {t.link && (
+                        <a href={t.link} class="term-link">
+                          Where it fits <Icon name="arrow" />
+                        </a>
+                      )}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+</Base>
+
+<script>
+  const box = document.querySelector<HTMLElement>('[data-filter]');
+  const input = box?.querySelector('input');
+  if (box && input) {
+    box.hidden = false;
+    const terms = [...document.querySelectorAll<HTMLElement>('[data-term]')];
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+    const empty = document.querySelector<HTMLElement>('[data-filter-empty]')!;
+    const status = document.querySelector<HTMLElement>('[data-filter-status]')!;
+    input.addEventListener('input', () => {
+      const q = input.value.trim().toLowerCase();
+      let shown = 0;
+      for (const t of terms) {
+        const hit = !q || t.dataset.term!.includes(q);
+        t.hidden = !hit;
+        if (hit) shown++;
+      }
+      for (const g of groups) g.hidden = !g.querySelector('[data-term]:not([hidden])');
+      empty.hidden = shown > 0;
+      status.textContent = q ? `${shown} ${shown === 1 ? 'term matches' : 'terms match'}` : '';
+    });
+  }
+</script>
+
+<style>
+  .tools {
+    position: sticky;
+    top: 4.75rem;
+    z-index: 5;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+    margin-inline: -0.5rem;
+    border-radius: 1rem;
+    padding: 0.5rem;
+    background: color-mix(in srgb, var(--color-night) 82%, transparent);
+    backdrop-filter: blur(12px);
+  }
+  .az {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.15rem;
+  }
+  .az a,
+  .az span {
+    display: inline-grid;
+    min-width: 2.1rem;
+    min-height: 2.6rem;
+    place-items: center;
+    border-radius: 0.55rem;
+    font-weight: 700;
+  }
+  .az a {
+    color: var(--color-white);
+  }
+  .az a:hover {
+    color: var(--color-navy);
+    background: var(--color-iris-soft);
+  }
+  .az span {
+    color: var(--color-grey-600);
+  }
+  @media (max-width: 719px) {
+    .tools {
+      position: static;
+    }
+    .az a,
+    .az span {
+      min-width: 44px;
+      min-height: 44px;
+    }
+  }
+  .filter {
+    position: relative;
+    width: min(100%, 20rem);
+  }
+  .filter :global(svg) {
+    position: absolute;
+    top: 50%;
+    left: 0.85rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    transform: translateY(-50%);
+    color: var(--color-iris-soft);
+    pointer-events: none;
+  }
+  .filter input {
+    width: 100%;
+    min-height: 46px;
+    border: 0;
+    border-radius: 999px;
+    padding: 0.6rem 1rem 0.6rem 2.5rem;
+    font: inherit;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 6%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 16%, transparent);
+  }
+  .filter input::placeholder {
+    color: var(--color-grey-400);
+  }
+  .filter input:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--color-iris-soft),
+      0 0 0 3px color-mix(in srgb, var(--color-iris-soft) 35%, transparent);
+  }
+  .filter-empty {
+    margin-top: 2rem;
+    color: var(--color-grey-200);
+  }
+  .groups {
+    display: grid;
+    gap: clamp(2rem, 4vw, 3rem);
+    margin-top: 2rem;
+  }
+  .group {
+    display: grid;
+    gap: 1rem;
+    scroll-margin-top: 9rem;
+  }
+  @media (min-width: 1024px) {
+    .group {
+      grid-template-columns: 6rem minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+  .letter {
+    font-size: clamp(2.4rem, 5vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-iris-soft);
+  }
+  @media (min-width: 1024px) {
+    .letter {
+      position: sticky;
+      top: 9rem;
+      align-self: start;
+    }
+  }
+  .terms {
+    display: grid;
+    gap: 0.75rem;
+  }
+  @media (min-width: 900px) {
+    .terms {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  .term {
+    padding: 1.25rem 1.35rem;
+    scroll-margin-top: 9rem;
+  }
+  .term:target {
+    box-shadow:
+      inset 0 0 0 1px var(--color-iris-soft),
+      0 30px 60px -40px color-mix(in srgb, var(--color-iris) 70%, transparent);
+  }
+  .term-name {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-white);
+  }
+  .term-full {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+  }
+  .term dd p {
+    margin-top: 0.6rem;
+    line-height: 1.55;
+    color: var(--color-grey-200);
+  }
+  .term-link {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.2rem;
+    font-weight: 700;
+    color: var(--color-iris-soft);
+  }
+  .term-link :global(svg) {
+    width: 1rem;
+    height: 1rem;
+  }
+</style>

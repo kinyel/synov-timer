@@ -1,30 +1,23 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/bricolage-grotesque/standard.css';
-@import '@fontsource-variable/inter/index.css';
-@import '@fontsource/dm-mono/400.css';
-@import '@fontsource/dm-mono/500.css';
+@import './tokens.css';
 @import 'lenis/dist/lenis.css';
 
-/* Palette: mirrors src/lib/palette.ts. Change both together. */
+/* Type: Alegreya Sans for everything, self-hosted through Astro's font API (astro.config.mjs). */
+@theme inline {
+  --font-sans: var(--font-alegreya);
+  --font-display: var(--font-alegreya);
+  --font-mono: var(--font-alegreya);
+}
 @theme {
-  --color-void: #04060f;
-  --color-deep: #0a1030;
-  --color-cobalt: #2350ff;
-  --color-cobalt-light: #5b82ff;
-  --color-gold: #ffc21a;
-  --color-gold-glow: #ffe07a;
-  --color-cyan: #22d3ff;
-  --color-snow: #ffffff;
-  --color-cloud: #eef2f9;
-  --color-ink: #0a1030;
-  --color-mint: #14c99a;
-  --color-muted: #aeb8d6;
-
-  --font-display: 'Bricolage Grotesque Variable', 'Arial Narrow', system-ui, sans-serif;
-  --font-sans: 'Inter Variable', system-ui, sans-serif;
-  --font-mono: 'DM Mono', ui-monospace, monospace;
-
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+/* Older names still used by sections that are rebuilt in later steps. */
+@theme inline {
+  --color-ink: var(--color-navy);
+  --color-snow: var(--color-white);
+  --color-cloud: var(--color-grey-50);
+  --color-void: var(--color-navy);
+  --color-muted: var(--color-grey-400);
 }
 
 /* Nav theme tokens, registered so light ↔ dark cross-fades instead of snapping. */
@@ -63,23 +56,23 @@
   inherits: true;
   initial-value: transparent;
 }
-@property --n-gold {
+@property --n-accent {
   syntax: '<color>';
   inherits: true;
   initial-value: transparent;
 }
 
-@property --n-gold-line {
+@property --n-accent-line {
   syntax: '<color>';
   inherits: true;
   initial-value: transparent;
 }
-@property --n-gold-tint {
+@property --n-accent-tint {
   syntax: '<color>';
   inherits: true;
   initial-value: transparent;
 }
-@property --n-gold-glow {
+@property --n-accent-glow {
   syntax: '<color>';
   inherits: true;
   initial-value: transparent;
@@ -92,55 +85,100 @@
 
 @layer base {
   html {
-    background: var(--color-cloud);
-    color: var(--color-ink);
+    background: var(--color-navy);
+    color: var(--color-navy);
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     overflow-x: clip;
   }
   body {
     font-family: var(--font-sans);
+    font-size: 1.0625rem;
+    line-height: 1.55;
     overflow-x: clip;
   }
   ::selection {
     background: var(--color-gold);
-    color: var(--color-ink);
+    color: var(--color-navy);
   }
+  /* Iris rings on light backgrounds, gold on dark ones. */
   :focus-visible {
-    outline: 2px solid var(--color-gold);
+    outline: 2px solid var(--color-iris);
     outline-offset: 3px;
     border-radius: 6px;
+  }
+  section[data-theme='dark'] :focus-visible,
+  html[data-theme='dark'] .nav :focus-visible {
+    outline-color: var(--color-iris-soft);
+  }
+  abbr[title] {
+    text-decoration: underline dotted;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+    cursor: help;
   }
 }
 
 @layer components {
   .display {
     font-family: var(--font-display);
-    font-variation-settings: 'opsz' 96;
-    font-weight: 640;
-    letter-spacing: -0.04em;
-    line-height: 0.9;
+    font-weight: 800;
+    letter-spacing: -0.015em;
+    line-height: 0.92;
   }
   .label {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    letter-spacing: 0.16em;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
+    font-variant-numeric: lining-nums tabular-nums;
+  }
+  /* Eyebrow: a double rule, then small caps text. Iris on light, light iris on dark. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris);
+  }
+  .eyebrow::before {
+    content: '';
+    flex: none;
+    width: 1.35rem;
+    height: 5px;
+    border-block: 1.5px solid currentColor;
+  }
+  section[data-theme='dark'] .eyebrow {
+    color: var(--color-iris-soft);
+  }
+  /* Emphasised words on dark backgrounds: light iris with a soft glow. */
+  .text-lit {
+    color: var(--color-iris-soft);
+    text-shadow: 0 0 30px color-mix(in srgb, var(--color-iris) 70%, transparent);
   }
   .gutter {
     padding-inline: max(1rem, env(safe-area-inset-left), min(5vw, 4.5rem));
   }
   .line-mask {
     display: block;
-    overflow: clip;
-    padding-block: 0.06em 0.1em;
-    margin-block: -0.06em -0.1em;
+    padding-block: 0.06em 0.12em;
+    margin-block: -0.06em -0.12em;
   }
+  /* Masks clip only while their lines rise, so glowing words aren't boxed in afterwards. */
+  .is-revealing .line-mask {
+    overflow: clip;
+  }
+  /* Gold that glows: emphasised words on dark backgrounds. */
   .text-gold-lit {
     color: var(--color-gold);
     text-shadow:
-      0 0 24px rgb(255 194 26 / 0.45),
-      0 0 2px rgb(255 224 122 / 0.6);
+      0 0 28px color-mix(in srgb, var(--color-gold) 45%, transparent),
+      0 0 2px color-mix(in srgb, var(--color-gold-glow) 60%, transparent);
   }
   /* Navy text on a gold marker stroke: the gold accent without failing contrast on white. */
   .marker {
@@ -153,11 +191,13 @@
   .btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 0.6rem;
+    min-height: 2.9rem;
     border-radius: 999px;
-    padding: 1rem 1.6rem;
-    font-weight: 600;
-    font-size: 0.95rem;
+    padding: 0.95rem 1.6rem;
+    font-weight: 700;
+    font-size: 1rem;
     line-height: 1;
     transition:
       background-color 0.4s var(--ease-expo),
@@ -165,34 +205,314 @@
       box-shadow 0.4s var(--ease-expo);
     will-change: transform;
   }
+  .btn:active {
+    transform: scale(0.97);
+  }
+  .btn svg {
+    width: 0.85rem;
+    height: 0.85rem;
+  }
+  /* Primary: Iris into Azure, white text (AA at both ends), glowing on dark. */
+  .btn-primary {
+    color: var(--color-white);
+    background: linear-gradient(100deg, var(--color-iris) 10%, var(--color-azure-ink) 100%);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 22%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-white) 10%, transparent),
+      0 12px 34px -10px color-mix(in srgb, var(--color-azure) 60%, transparent);
+  }
+  .btn-primary:hover {
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 30%, transparent),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-white) 18%, transparent),
+      0 0 46px 2px color-mix(in srgb, var(--color-azure) 50%, transparent);
+  }
+  /* Older gold button, kept until the sections that use it are rebuilt. */
   .btn-gold {
-    background: var(--color-gold);
-    color: var(--color-ink);
-    box-shadow: 0 0 0 0 rgb(255 194 26 / 0);
+    background: linear-gradient(100deg, var(--color-gold-glow) -30%, var(--color-gold) 45%);
+    color: var(--color-navy);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 45%, transparent),
+      0 10px 34px -8px color-mix(in srgb, var(--color-gold) 55%, transparent);
   }
   .btn-gold:hover {
-    box-shadow: 0 0 44px 6px rgb(255 194 26 / 0.45);
+    box-shadow:
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 55%, transparent),
+      0 0 46px 4px color-mix(in srgb, var(--color-gold) 50%, transparent);
   }
-  /* Secondary button on light backgrounds: a gold hairline that fills softly on hover. */
+  /* Secondary on dark backgrounds: a white hairline that fills softly. */
+  .btn-outline {
+    color: var(--color-white);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-white) 38%, transparent);
+    backdrop-filter: blur(10px);
+  }
+  .btn-outline:hover {
+    background: color-mix(in srgb, var(--color-white) 9%, transparent);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-white) 70%, transparent);
+  }
+  /* Secondary on light backgrounds: iris. */
+  .btn-iris {
+    color: var(--color-iris);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-iris) 55%, transparent);
+  }
+  .btn-iris:hover {
+    background: color-mix(in srgb, var(--color-iris) 8%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--color-iris);
+  }
+  /* Older light-section button, kept until those sections are rebuilt. */
   .btn-outline-gold {
-    color: var(--color-ink);
-    box-shadow: inset 0 0 0 1.5px rgb(201 146 6 / 0.55);
+    color: var(--color-navy);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-gold-ink) 55%, transparent);
   }
   .btn-outline-gold:hover {
-    background: rgb(242 178 0 / 0.12);
-    box-shadow: inset 0 0 0 1.5px rgb(201 146 6 / 0.9);
+    background: color-mix(in srgb, var(--color-gold) 12%, transparent);
+    box-shadow: inset 0 0 0 1.5px var(--color-gold-ink);
   }
   .btn-ghost {
-    color: var(--color-snow);
-    box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.4);
+    color: var(--color-white);
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--color-white) 40%, transparent);
     backdrop-filter: blur(10px);
   }
   .btn-ghost:hover {
-    background: rgb(255 255 255 / 0.1);
+    background: color-mix(in srgb, var(--color-white) 10%, transparent);
+  }
+
+  /*
+   * Capability badges. Violet always means AI, Azure always means data and
+   * integration, Gold means an outcome, so visitors learn to spot them.
+   * Backgrounds are solid mixes so the contrast check can verify them.
+   */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    border-radius: 999px;
+    padding: 0.28rem 0.62rem 0.3rem 0.5rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge::before {
+    content: '';
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 10px currentColor;
+  }
+  .badge-ai {
+    color: var(--color-violet-soft);
+    background: color-mix(in srgb, var(--color-violet) 7%, var(--color-navy));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 45%, transparent),
+      0 0 22px -6px color-mix(in srgb, var(--color-violet) 70%, transparent);
+  }
+  .badge-data {
+    color: var(--color-azure);
+    background: color-mix(in srgb, var(--color-azure) 6%, var(--color-navy));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 45%, transparent),
+      0 0 22px -6px color-mix(in srgb, var(--color-azure) 70%, transparent);
+  }
+  .badge-outcome {
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-gold) 10%, var(--color-navy));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 45%, transparent),
+      0 0 22px -6px color-mix(in srgb, var(--color-gold) 70%, transparent);
+  }
+  .badge-outcome::before {
+    background: var(--color-gold);
+    box-shadow: 0 0 10px var(--color-gold);
+  }
+  section[data-theme='light'] .badge-ai {
+    color: var(--color-violet-ink);
+    background: color-mix(in srgb, var(--color-violet) 9%, var(--color-white));
+  }
+  section[data-theme='light'] .badge-data {
+    color: var(--color-azure-ink);
+    background: color-mix(in srgb, var(--color-azure) 9%, var(--color-white));
+  }
+  section[data-theme='light'] .badge-outcome {
+    color: var(--color-navy);
+    background: color-mix(in srgb, var(--color-gold) 12%, var(--color-white));
   }
 }
 
-/* Building labels (expertise and industries): a glowing gold anchor dot, a
+/* ── Page building blocks, shared by every section and page ─────────── */
+@layer components {
+  /* Inner pages sit on one continuous night background; sections add glows. */
+  main.is-page {
+    background: var(--color-night);
+  }
+  .section {
+    position: relative;
+    padding-block: clamp(5rem, 10vw, 8.5rem);
+    color: var(--color-white);
+  }
+  .h1 {
+    font-size: clamp(2.6rem, 5.6vw, 5.2rem);
+    font-weight: 800;
+    line-height: 0.98;
+    letter-spacing: -0.012em;
+  }
+  .h2 {
+    font-size: clamp(2.1rem, 4.3vw, 3.6rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.01em;
+  }
+  .h3 {
+    font-size: clamp(1.3rem, 1.8vw, 1.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+  .lead {
+    font-size: clamp(1.06rem, 1.35vw, 1.22rem);
+    line-height: 1.6;
+    color: var(--color-grey-200);
+  }
+  .body {
+    font-size: 1.04rem;
+    line-height: 1.65;
+    color: var(--color-grey-200);
+  }
+  .muted {
+    color: var(--color-grey-400);
+  }
+  /* Navy glass card. */
+  .card {
+    position: relative;
+    border-radius: 1.4rem;
+    background:
+      linear-gradient(160deg, color-mix(in srgb, var(--color-white) 5.5%, transparent), color-mix(in srgb, var(--color-white) 1.5%, transparent) 60%),
+      color-mix(in srgb, var(--color-navy) 55%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-white) 9%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 10%, transparent),
+      0 30px 60px -40px rgb(0 0 0 / 0.8);
+  }
+  .card-hover {
+    transition:
+      transform 0.6s var(--ease-expo),
+      box-shadow 0.6s var(--ease-expo);
+  }
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 35%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-white) 14%, transparent),
+      0 40px 70px -40px color-mix(in srgb, var(--color-iris) 60%, transparent);
+  }
+  .icon-tile {
+    display: grid;
+    flex: none;
+    width: 2.9rem;
+    height: 2.9rem;
+    place-items: center;
+    border-radius: 0.9rem;
+    color: var(--color-iris-soft);
+    background: color-mix(in srgb, var(--color-iris) 20%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 30%, transparent),
+      0 0 24px -8px color-mix(in srgb, var(--color-iris) 70%, transparent);
+  }
+  .icon-tile svg {
+    width: 1.45rem;
+    height: 1.45rem;
+  }
+  .icon-tile.is-ai {
+    color: var(--color-violet-soft);
+    background: color-mix(in srgb, var(--color-violet) 14%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-violet) 40%, transparent),
+      0 0 24px -8px color-mix(in srgb, var(--color-violet) 70%, transparent);
+  }
+  .icon-tile.is-sm {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: 0.75rem;
+  }
+  .icon-tile.is-sm svg {
+    width: 1.2rem;
+    height: 1.2rem;
+  }
+  .icon-tile.is-data {
+    color: var(--color-azure);
+    background: color-mix(in srgb, var(--color-azure) 12%, var(--color-night));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--color-azure) 40%, transparent),
+      0 0 24px -8px color-mix(in srgb, var(--color-azure) 70%, transparent);
+  }
+  /* Bulleted lists: light iris dots. */
+  .dots {
+    display: grid;
+    gap: 0.55rem;
+  }
+  .dots li {
+    position: relative;
+    padding-left: 1.15rem;
+  }
+  .dots li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.62em;
+    width: 0.42rem;
+    height: 0.42rem;
+    border-radius: 50%;
+    background: var(--color-iris-soft);
+    box-shadow: 0 0 8px color-mix(in srgb, var(--color-iris) 80%, transparent);
+  }
+  .ticks li {
+    position: relative;
+    padding-left: 1.6rem;
+  }
+  .ticks li::before {
+    content: '';
+    position: absolute;
+    left: 0.1rem;
+    top: 0.42em;
+    width: 0.85rem;
+    height: 0.5rem;
+    border-left: 2px solid var(--color-iris-soft);
+    border-bottom: 2px solid var(--color-iris-soft);
+    transform: rotate(-45deg);
+  }
+  .link-arrow {
+    display: inline-flex;
+    min-height: 44px;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 700;
+    color: var(--color-iris-soft);
+    transition:
+      gap 0.4s var(--ease-expo),
+      color 0.3s;
+  }
+  .link-arrow:hover {
+    gap: 0.8rem;
+    color: var(--color-white);
+  }
+  .link-arrow svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  .prose-links a {
+    color: var(--color-iris-soft);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+  .prose-links a:hover {
+    color: var(--color-white);
+  }
+}
+
+/* Building labels (foundation section): a glowing gold anchor dot, a
  * gold-to-ink leader line and a navy tag with a gold hairline. JS positions
  * them at the building's roof and sets --w (0..1) as they come into focus. */
 .bldg-label {
@@ -209,7 +529,7 @@
   height: 9px;
   margin: -4.5px 0 0 -4.5px;
   border-radius: 50%;
-  background: #ffc21a;
+  background: var(--color-gold);
   box-shadow:
     0 0 0 3px rgb(255 194 26 / 0.25),
     0 0 14px rgb(255 194 26 / 0.85);
@@ -238,7 +558,7 @@
   bottom: 0;
   width: 1.5px;
   height: var(--line);
-  background: linear-gradient(to top, #ffc21a, rgb(10 16 48 / 0.6));
+  background: linear-gradient(to top, var(--color-gold), color-mix(in srgb, var(--color-navy) 60%, transparent));
   transform: scaleY(calc(0.4 + var(--w, 1) * 0.6));
   transform-origin: bottom;
 }
@@ -253,13 +573,13 @@
   align-items: center;
   padding: 0.62rem 1.05rem 0.68rem 0.85rem;
   border-radius: 0.95rem;
-  background: rgb(10 16 48 / 0.94);
-  color: #fff;
+  background: color-mix(in srgb, var(--color-night) 92%, transparent);
+  color: var(--color-white);
   white-space: nowrap;
   box-shadow:
-    inset 0 0 0 1px rgb(255 194 26 / 0.55),
-    0 12px 28px -10px rgb(10 16 48 / 0.6),
-    0 0 24px -6px rgb(255 194 26 / 0.45);
+    inset 0 0 0 1px color-mix(in srgb, var(--color-iris-soft) 45%, transparent),
+    0 12px 28px -10px rgb(0 0 0 / 0.6),
+    0 0 24px -6px color-mix(in srgb, var(--color-iris) 60%, transparent);
   transform: translateX(-50%) translateY(calc((1 - var(--w, 1)) * 8px)) scale(calc(0.94 + var(--w, 1) * 0.06));
   transform-origin: 50% 100%;
 }
@@ -268,8 +588,8 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ffc21a;
-  box-shadow: 0 0 8px #ffc21a;
+  background: var(--color-gold);
+  box-shadow: 0 0 8px var(--color-gold);
 }
 .bldg-name {
   font-family: var(--font-mono);
@@ -283,7 +603,19 @@
   grid-column: 2;
   font-size: 0.74rem;
   letter-spacing: 0;
-  color: rgb(255 255 255 / 0.72);
+  color: var(--color-grey-200);
+}
+.bldg-label.is-xray .bldg-dot {
+  background: var(--color-azure);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--color-azure) 25%, transparent),
+    0 0 14px var(--color-azure);
+}
+.bldg-label.is-xray .bldg-dot::after {
+  border-color: color-mix(in srgb, var(--color-azure) 70%, transparent);
+}
+.bldg-label.is-xray .bldg-line {
+  background: linear-gradient(to top, var(--color-azure), transparent);
 }
 @media (max-width: 639px) {
   .bldg-label {
@@ -329,7 +661,6 @@
     inset 0 0 0 1px rgb(255 255 255 / 0.75),
     0 24px 60px -30px rgb(10 16 48 / 0.38);
   backdrop-filter: blur(22px) saturate(1.2);
-  -webkit-backdrop-filter: blur(22px) saturate(1.2);
 }
 .story-card::before {
   content: '';
@@ -339,7 +670,7 @@
   top: 0;
   height: 2px;
   border-radius: 0 0 2px 2px;
-  background: linear-gradient(90deg, #f2b200, rgb(242 178 0 / 0.15) 70%, transparent);
+  background: linear-gradient(90deg, var(--color-gold), rgb(242 178 0 / 0.15) 70%, transparent);
 }
 .story-card.is-dark {
   color: #fff;
@@ -366,7 +697,7 @@
   font-size: 0.66rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #8c6200;
+  color: var(--color-gold-ink);
 }
 .story-eyebrow > :first-child {
   display: inline-flex;
@@ -384,7 +715,7 @@
   font-variant-numeric: tabular-nums;
 }
 .is-dark .story-eyebrow {
-  color: #ffc21a;
+  color: var(--color-gold);
 }
 .is-dark .story-eyebrow .num {
   color: rgb(255 255 255 / 0.45);
@@ -403,7 +734,7 @@
   color: rgb(10 16 48 / 0.72);
 }
 .is-dark .story-body {
-  color: #aeb8d6;
+  color: var(--color-grey-400);
 }
 @media (min-width: 768px) {
   .story-title {
@@ -480,14 +811,14 @@ html[data-theme='light'] #fx-vignette {
 /* A slim gold scrollbar where the platform allows styling it. */
 html {
   scrollbar-width: thin;
-  scrollbar-color: rgb(201 146 6 / 0.7) transparent;
+  scrollbar-color: color-mix(in srgb, var(--color-iris-soft) 70%, transparent) transparent;
 }
 ::-webkit-scrollbar {
   width: 8px;
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 8px;
-  background: linear-gradient(#ffd24d, #c99206);
+  background: linear-gradient(var(--color-iris-soft), var(--color-iris));
 }
 ::-webkit-scrollbar-track {
   background: transparent;

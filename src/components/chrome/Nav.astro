@@ -1,36 +1,31 @@
 ---
 /**
- * Navigation. Three parts: the mark (left), a glass pill of sections with
- * one shared morphing flyout (centre), and the contact CTA (right).
- * Colours are theme tokens (see `.nav` below) that cross-fade between the
- * light (white + gold) and dark (black + gold) treatments as html[data-theme]
- * follows the section underneath. Behaviour lives in src/scripts/nav.ts.
+ * Navigation. Three parts: the mark (left), a glass pill of page links with
+ * one morphing flyout for Services (centre), and the "Talk to an architect"
+ * call to action (right). Colours are theme tokens (see `.nav` below) that
+ * cross-fade between light and dark treatments as html[data-theme] follows the
+ * section underneath. Behaviour lives in src/scripts/nav.ts.
  */
-import { CONTACT, EXPERTISE, INDUSTRIES, SERVICES, progressFor } from '../../lib/content';
+import { SITE } from '../../data/site';
+import { DELIVERY, PLATFORM } from '../../data/services';
+import Icon from '../ui/Icon.astro';
 
-const groups = [
-  {
-    id: 'expertise',
-    label: 'Expertise',
-    eyebrow: 'Six layers, one platform',
-    items: EXPERTISE.map((e, i) => ({ title: e.name, body: e.body, section: 'expertise', p: progressFor.expertise(i) })),
-  },
-  {
-    id: 'services',
-    label: 'Services',
-    eyebrow: 'From roadmap to run',
-    items: SERVICES.map((s, i) => ({ title: s.title, body: s.body, section: 'services', p: progressFor.services(i) })),
-  },
-  {
-    id: 'industries',
-    label: 'Industries',
-    eyebrow: 'Every district, connected',
-    items: INDUSTRIES.map((d, i) => ({ title: d.name, body: d.body, section: 'industries', p: progressFor.industries(i) })),
-  },
+const path = Astro.url.pathname;
+const isActive = (prefix: string) => path === prefix || path.startsWith(prefix);
+const columns = [
+  { title: 'Platform', items: PLATFORM },
+  { title: 'Delivery', items: DELIVERY },
+];
+const links = [
+  { label: 'Industries', href: '/#industries', active: false },
+  { label: 'Case studies', href: '/case-studies/', active: isActive('/case-studies/') },
+  { label: 'About', href: '/about/', active: isActive('/about/') },
+  { label: 'Blog', href: '/blog/', active: isActive('/blog/') },
 ];
 ---
 
 <header class="nav fixed inset-x-0 top-0 z-50" data-nav>
+  <a href="#main" class="nav-skip">Skip to content</a>
   <div class="nav-bar gutter grid grid-cols-[1fr_auto_1fr] items-center gap-6">
     <!-- Mark -->
     <a href="/" class="nav-brand col-start-1 flex w-fit shrink-0 items-center gap-3" aria-label="Raleston Consulting, home" data-nav-home>
@@ -40,60 +35,70 @@ const groups = [
       </span>
     </a>
 
-    <!-- Section pill (desktop) -->
+    <!-- Page links (desktop) -->
     <nav aria-label="Primary" class="nav-pill relative col-start-2 hidden items-center lg:flex" data-nav-pill>
       <span class="nav-hover" aria-hidden="true" data-nav-hover></span>
+      <button type="button" class="nav-link" data-cursor="none" aria-expanded="false" aria-controls="nav-flyout" data-nav-trigger="services" data-active={isActive('/services/') ? '' : undefined}>
+        <span>Services</span>
+        <svg viewBox="0 0 10 6" class="nav-chev" aria-hidden="true">
+          <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <span class="nav-dot" aria-hidden="true"></span>
+      </button>
       {
-        groups.map((g) => (
-          <button type="button" class="nav-link" data-cursor="none" aria-expanded="false" aria-controls="nav-flyout" data-nav-trigger={g.id} data-nav-section={g.id}>
-            <span>{g.label}</span>
-            <svg viewBox="0 0 10 6" class="nav-chev" aria-hidden="true">
-              <path d="M1 1l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
+        links.map((l) => (
+          <a href={l.href} class="nav-link" data-cursor="none" data-active={l.active ? '' : undefined} aria-current={l.active ? 'page' : undefined}>
+            <span>{l.label}</span>
             <span class="nav-dot" aria-hidden="true" />
-          </button>
+          </a>
         ))
       }
-      <a href="#impact" class="nav-link" data-cursor="none" data-nav-section="impact">
-        <span>Impact</span>
-        <span class="nav-dot" aria-hidden="true"></span>
-      </a>
 
-      <!-- One flyout, many panes: it morphs between them. -->
-      <div id="nav-flyout" class="nav-flyout" role="region" aria-label="Section menu" data-nav-flyout>
+      <!-- One flyout; it morphs to fit its pane. -->
+      <div id="nav-flyout" class="nav-flyout" role="region" aria-label="Services menu" data-nav-flyout>
         <span class="nav-flyout-arrow" aria-hidden="true" data-nav-arrow></span>
         <div class="nav-flyout-clip" data-nav-clip>
-          {
-            groups.map((g) => (
-              <div class="nav-pane" data-nav-pane={g.id} hidden>
-                <p class="nav-eyebrow">{g.eyebrow}</p>
-                <ul class={g.items.length > 4 ? 'nav-grid nav-grid-2' : 'nav-grid'}>
-                  {g.items.map((it, i) => (
-                    <li style={`--i:${i}`}>
-                      <a href={`#${it.section}`} class="nav-item" data-cursor="none" data-nav-jump={it.section} data-nav-p={it.p.toFixed(4)}>
-                        <span class="nav-item-index">0{i + 1}</span>
-                        <span>
-                          <span class="nav-item-title">{it.title}</span>
-                          <span class="nav-item-body">{it.body}</span>
-                        </span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))
-          }
+          <div class="nav-pane" data-nav-pane="services" hidden>
+            <div class="nav-cols">
+              {
+                columns.map((c) => (
+                  <div>
+                    <p class="nav-eyebrow">{c.title}</p>
+                    <ul class="nav-grid">
+                      {c.items.map((s, i) => (
+                        <li style={`--i:${i}`}>
+                          <a href={`/services/${s.slug}/`} class="nav-item" data-cursor="none">
+                            <span class="nav-item-icon">
+                              <Icon name={s.icon} />
+                            </span>
+                            <span>
+                              <span class="nav-item-title">{s.short === s.name ? s.name : `${s.short}`}</span>
+                              <span class="nav-item-body">{s.blurb}</span>
+                            </span>
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              }
+            </div>
+            <a href="/services/" class="nav-all" data-cursor="none">
+              All services and how we deliver them
+              <Icon name="arrow" />
+            </a>
+          </div>
         </div>
       </div>
     </nav>
 
     <!-- CTA (tablet and up) + menu button (below desktop) -->
     <div class="col-start-3 flex items-center justify-self-end gap-2">
-      <a href="#contact" class="nav-cta nav-cta-bar" data-nav-section="contact" data-cursor="none">
+      <a href="/contact/" class="nav-cta nav-cta-bar" data-cursor="none" aria-current={isActive('/contact/') ? 'page' : undefined}>
         <span class="nav-cta-fill" aria-hidden="true"></span>
-        <span class="relative">Contact us</span>
+        <span class="relative">Talk to an architect</span>
         <span class="nav-cta-chip" aria-hidden="true">
-          <svg viewBox="0 0 12 12"><path d="M3 9L9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+          <svg viewBox="0 0 12 12"><path d="M3 9L9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
         </span>
       </a>
       <button type="button" class="nav-burger" aria-expanded="false" aria-controls="mobile-menu" aria-label="Open menu" data-menu-toggle>
@@ -104,43 +109,55 @@ const groups = [
 
   <!-- Mobile / tablet sheet -->
   <div id="mobile-menu" class="nav-sheet" aria-hidden="true" data-menu>
-    <div class="gutter flex h-full flex-col pt-28 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-      <ul class="flex flex-col [counter-reset:sheet]">
+    <div class="gutter flex min-h-full flex-col pt-28 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+      <ul class="flex flex-col">
+        <li class="nav-sheet-row">
+          <button type="button" class="nav-sheet-link" aria-expanded="false" data-sheet-toggle>
+            <span>Services</span>
+            <span class="nav-sheet-plus" aria-hidden="true"></span>
+          </button>
+          <div class="nav-sheet-sub" data-sheet-sub>
+            <div class="nav-sheet-cols">
+              {
+                columns.map((c) => (
+                  <div>
+                    <p class="nav-sheet-eyebrow">{c.title}</p>
+                    <ul>
+                      {c.items.map((s) => (
+                        <li>
+                          <a href={`/services/${s.slug}/`}>{s.short === s.name ? s.name : s.short}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        </li>
         {
-          groups.map((g) => (
+          links.map((l) => (
             <li class="nav-sheet-row">
-              <button type="button" class="nav-sheet-link" aria-expanded="false" data-sheet-toggle>
-                <span>{g.label}</span>
-                <span class="nav-sheet-plus" aria-hidden="true" />
-              </button>
-              <div class="nav-sheet-sub" data-sheet-sub>
-                <ul>
-                  {g.items.map((it) => (
-                    <li>
-                      <a href={`#${it.section}`} data-nav-jump={it.section} data-nav-p={it.p.toFixed(4)}>
-                        {it.title}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <a href={l.href} class="nav-sheet-link" aria-current={l.active ? 'page' : undefined}>
+                {l.label}
+              </a>
             </li>
           ))
         }
         <li class="nav-sheet-row">
-          <a href="#impact" class="nav-sheet-link">Impact</a>
+          <a href="/glossary/" class="nav-sheet-link">Glossary</a>
         </li>
       </ul>
       <div class="mt-auto pt-10">
-        <a href="#contact" class="nav-cta w-full justify-between">
+        <a href="/contact/" class="nav-cta w-full justify-between">
           <span class="nav-cta-fill" aria-hidden="true"></span>
-          <span class="relative">Contact us</span>
+          <span class="relative">Talk to an architect</span>
           <span class="nav-cta-chip" aria-hidden="true">
-            <svg viewBox="0 0 12 12"><path d="M3 9L9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+            <svg viewBox="0 0 12 12"><path d="M3 9L9 3M4.5 3H9v4.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
           </span>
         </a>
-        <p class="label nav-muted mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[0.62rem]">
-          <span>{CONTACT.email}</span><span>{CONTACT.phone}</span>
+        <p class="label nav-muted mt-5 flex flex-wrap gap-x-4 gap-y-1 text-[0.7rem]">
+          <span>{SITE.email}</span><span>{SITE.phone}</span>
         </p>
       </div>
     </div>
@@ -150,18 +167,18 @@ const groups = [
 <style>
   /* ── Theme tokens: registered in global.css (@property) so they animate. ── */
   .nav {
-    --n-fg: #0a1030;
-    --n-muted: rgb(10 16 48 / 0.55);
-    --n-glass: rgb(255 255 255 / 0.66);
-    --n-solid: rgb(255 255 255 / 0.94);
-    --n-border: rgb(10 16 48 / 0.08);
-    --n-hover: rgb(10 16 48 / 0.05);
-    --n-shadow: rgb(10 16 48 / 0.14);
-    --n-gold: #b07d00;
-    --n-gold-fill: #f2b200;
-    --n-gold-line: rgb(214 160 0 / 0.55);
-    --n-gold-tint: rgb(242 178 0 / 0.14);
-    --n-gold-glow: rgb(242 178 0 / 0.22);
+    --n-fg: var(--color-navy);
+    --n-muted: rgb(10 29 59 / 0.62);
+    --n-glass: rgb(255 255 255 / 0.7);
+    --n-solid: rgb(255 255 255 / 0.95);
+    --n-border: rgb(10 29 59 / 0.08);
+    --n-hover: rgb(10 29 59 / 0.05);
+    --n-shadow: rgb(10 29 59 / 0.14);
+    --n-accent: var(--color-gold-ink);
+    --n-accent-fill: var(--color-gold);
+    --n-accent-line: rgb(236 188 4 / 0.55);
+    --n-accent-tint: rgb(236 188 4 / 0.14);
+    --n-accent-glow: rgb(236 188 4 / 0.24);
     color: var(--n-fg);
     transition:
       --n-fg 0.7s var(--ease-expo),
@@ -171,33 +188,49 @@ const groups = [
       --n-border 0.7s var(--ease-expo),
       --n-hover 0.7s var(--ease-expo),
       --n-shadow 0.7s var(--ease-expo),
-      --n-gold 0.7s var(--ease-expo),
-      --n-gold-line 0.7s var(--ease-expo),
-      --n-gold-tint 0.7s var(--ease-expo),
-      --n-gold-glow 0.7s var(--ease-expo),
+      --n-accent 0.7s var(--ease-expo),
+      --n-accent-line 0.7s var(--ease-expo),
+      --n-accent-tint 0.7s var(--ease-expo),
+      --n-accent-glow 0.7s var(--ease-expo),
       transform 0.6s var(--ease-expo);
   }
   :global(html[data-theme='dark']) .nav {
-    --n-fg: #ffffff;
-    --n-muted: rgb(255 255 255 / 0.58);
-    --n-glass: rgb(14 14 16 / 0.55);
-    --n-solid: rgb(14 13 12 / 0.97);
+    --n-fg: var(--color-white);
+    --n-muted: rgb(255 255 255 / 0.64);
+    --n-glass: rgb(10 29 59 / 0.55);
+    --n-solid: rgb(10 29 59 / 0.97);
     --n-border: rgb(255 255 255 / 0.1);
     --n-hover: rgb(255 255 255 / 0.08);
-    --n-shadow: rgb(0 0 0 / 0.5);
-    --n-gold: #ffc21a;
-    --n-gold-line: rgb(255 194 26 / 0.5);
-    --n-gold-tint: rgb(255 194 26 / 0.13);
-    --n-gold-glow: rgb(255 194 26 / 0.28);
+    --n-shadow: rgb(2 8 24 / 0.5);
+    --n-accent: var(--color-gold);
+    --n-accent-fill: var(--color-gold);
+    --n-accent-line: rgb(236 188 4 / 0.5);
+    --n-accent-tint: rgb(236 188 4 / 0.13);
+    --n-accent-glow: rgb(236 188 4 / 0.28);
   }
   .nav-bar {
     padding-top: max(1rem, env(safe-area-inset-top));
     padding-bottom: 1rem;
     transition: padding 0.6s var(--ease-expo);
   }
+  /* Without JavaScript the bar never condenses, so give it a solid backing. */
+  :global(html:not(.js)) .nav-bar {
+    background: var(--n-solid);
+  }
   .nav[data-condensed] .nav-bar {
     padding-top: max(0.7rem, env(safe-area-inset-top));
     padding-bottom: 0.7rem;
+  }
+  /* Inner pages are mostly text: once condensed, the bar gets a dark glass
+     backing so copy never shows through behind the logo. */
+  :global(html[data-page='inner']) .nav-bar {
+    transition:
+      padding 0.6s var(--ease-expo),
+      background-color 0.5s ease;
+  }
+  :global(html[data-page='inner']) .nav[data-condensed] .nav-bar {
+    background-color: rgb(4 10 22 / 0.8);
+    backdrop-filter: blur(16px) saturate(1.3);
   }
   /* A gold hairline fades in under the bar once it condenses. */
   .nav::after {
@@ -207,7 +240,7 @@ const groups = [
     bottom: 0;
     width: min(72rem, 86vw);
     height: 1px;
-    background: linear-gradient(90deg, transparent, var(--n-gold-line) 25%, var(--n-gold-fill) 50%, var(--n-gold-line) 75%, transparent);
+    background: linear-gradient(90deg, transparent, var(--n-accent-line) 25%, var(--n-accent-fill) 50%, var(--n-accent-line) 75%, transparent);
     transform: translateX(-50%) scaleX(0.2);
     opacity: 0;
     transition:
@@ -244,9 +277,8 @@ const groups = [
     background: var(--n-glass);
     box-shadow:
       0 12px 32px -18px var(--n-shadow),
-      0 0 28px -10px var(--n-gold-glow);
+      0 0 28px -10px var(--n-accent-glow);
     backdrop-filter: blur(18px) saturate(1.4);
-    -webkit-backdrop-filter: blur(18px) saturate(1.4);
   }
   /* Gold gradient hairline around the pill; a highlight drifts slowly round it. */
   .nav-pill::before {
@@ -255,7 +287,7 @@ const groups = [
     inset: 0;
     border-radius: inherit;
     padding: 1px;
-    background: conic-gradient(from var(--n-sweep, 0deg), var(--n-gold-line), rgb(255 224 122 / 0.95) 12%, var(--n-gold-line) 26%, rgb(214 160 0 / 0.25) 50%, var(--n-gold-line) 75%, var(--n-gold-line));
+    background: conic-gradient(from var(--n-sweep, 0deg), var(--n-accent-line), color-mix(in srgb, var(--color-gold-glow) 95%, transparent) 12%, var(--n-accent-line) 26%, color-mix(in srgb, var(--color-gold) 25%, transparent) 50%, var(--n-accent-line) 75%, var(--n-accent-line));
     -webkit-mask:
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
@@ -290,7 +322,7 @@ const groups = [
     opacity: 1;
   }
   .nav-link[data-active] {
-    color: var(--n-gold);
+    color: var(--n-accent);
   }
   .nav-chev {
     width: 9px;
@@ -303,7 +335,7 @@ const groups = [
   .nav-link[aria-expanded='true'] .nav-chev {
     transform: rotate(180deg);
     opacity: 1;
-    color: var(--n-gold);
+    color: var(--n-accent);
   }
   /* Active section: a short gold rule that grows in under the label. */
   .nav-dot {
@@ -314,8 +346,8 @@ const groups = [
     height: 2px;
     margin-left: -8px;
     border-radius: 2px;
-    background: linear-gradient(90deg, #ffe07a, var(--n-gold-fill));
-    box-shadow: 0 0 8px var(--n-gold-glow);
+    background: linear-gradient(90deg, var(--color-gold-glow), var(--n-accent-fill));
+    box-shadow: 0 0 8px var(--n-accent-glow);
     transform: scaleX(0);
     transition: transform 0.6s var(--ease-expo);
   }
@@ -330,8 +362,8 @@ const groups = [
     left: 0;
     width: 0;
     border-radius: 999px;
-    background: var(--n-gold-tint);
-    box-shadow: inset 0 0 0 1px var(--n-gold-line);
+    background: var(--n-accent-tint);
+    box-shadow: inset 0 0 0 1px var(--n-accent-line);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s var(--ease-expo);
@@ -344,14 +376,13 @@ const groups = [
     left: 0;
     border-radius: 1.4rem;
     background:
-      radial-gradient(120% 60% at 50% 0%, var(--n-gold-tint), transparent 60%),
+      radial-gradient(120% 60% at 50% 0%, var(--n-accent-tint), transparent 60%),
       var(--n-solid);
     box-shadow:
-      inset 0 0 0 1px var(--n-gold-line),
+      inset 0 0 0 1px var(--n-accent-line),
       0 30px 60px -24px var(--n-shadow),
-      0 0 40px -16px var(--n-gold-glow);
+      0 0 40px -16px var(--n-accent-glow);
     backdrop-filter: blur(24px) saturate(1.4);
-    -webkit-backdrop-filter: blur(24px) saturate(1.4);
     opacity: 0;
     pointer-events: none;
     transform: translateY(8px) scale(0.98);
@@ -377,7 +408,7 @@ const groups = [
     height: 10px;
     border-radius: 2px;
     background: var(--n-solid);
-    box-shadow: -1px -1px 0 0 var(--n-gold-line);
+    box-shadow: -1px -1px 0 0 var(--n-accent-line);
     transform: rotate(45deg);
   }
   .nav-pane {
@@ -395,19 +426,88 @@ const groups = [
     font-size: 0.62rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: var(--n-gold);
+    color: var(--n-accent);
     margin-bottom: 0.8rem;
   }
   .nav-eyebrow::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(90deg, var(--n-gold-line), transparent);
+    background: linear-gradient(90deg, var(--n-accent-line), transparent);
   }
   .nav-grid {
     display: grid;
-    gap: 0.15rem;
-    width: 21rem;
+    gap: 0.1rem;
+  }
+  .nav-cols {
+    display: grid;
+    grid-template-columns: repeat(2, 20.5rem);
+    column-gap: 1.25rem;
+  }
+  .nav-item-icon {
+    display: grid;
+    width: 1.75rem;
+    height: 1.75rem;
+    place-items: center;
+    border-radius: 0.55rem;
+    color: var(--n-accent);
+    background: var(--n-accent-tint);
+  }
+  .nav-item-icon :global(svg) {
+    width: 1.05rem;
+    height: 1.05rem;
+  }
+  .nav-all {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-top: 0.9rem;
+    border-radius: 0.85rem;
+    padding: 0.75rem 0.85rem;
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--n-fg);
+    background: var(--n-accent-tint);
+    transition: background-color 0.3s var(--ease-expo);
+  }
+  .nav-all :global(svg) {
+    width: 1rem;
+    height: 1rem;
+    color: var(--n-accent);
+    transition: transform 0.4s var(--ease-expo);
+  }
+  .nav-all:hover :global(svg) {
+    transform: translateX(3px);
+  }
+  .nav-skip {
+    position: absolute;
+    left: 1rem;
+    top: -4rem;
+    z-index: 2;
+    border-radius: 0.6rem;
+    padding: 0.6rem 0.9rem;
+    font-weight: 700;
+    color: var(--color-navy);
+    background: var(--color-white);
+    transition: top 0.3s var(--ease-expo);
+  }
+  .nav-skip:focus {
+    top: 1rem;
+  }
+  .nav-sheet-cols {
+    display: grid;
+    gap: 1.25rem;
+    padding-bottom: 1rem;
+  }
+  .nav-sheet-eyebrow {
+    margin-bottom: 0.2rem;
+    padding-left: 2.6rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--n-accent);
   }
   .nav-grid-2 {
     grid-template-columns: repeat(2, 19rem);
@@ -429,9 +529,10 @@ const groups = [
   .nav-item {
     position: relative;
     display: grid;
-    grid-template-columns: 1.6rem 1fr;
-    gap: 0.4rem;
-    padding: 0.62rem 0.7rem;
+    grid-template-columns: 1.75rem 1fr;
+    gap: 0.65rem;
+    align-items: start;
+    padding: 0.55rem 0.7rem;
     border-radius: 0.85rem;
     transition: background-color 0.3s var(--ease-expo);
   }
@@ -444,13 +545,13 @@ const groups = [
     bottom: 0.75rem;
     width: 2px;
     border-radius: 2px;
-    background: var(--n-gold-fill);
+    background: var(--n-accent-fill);
     transform: scaleY(0);
     transition: transform 0.45s var(--ease-expo);
   }
   .nav-item:hover,
   .nav-item:focus-visible {
-    background: var(--n-gold-tint);
+    background: var(--n-accent-tint);
   }
   .nav-item:hover::before,
   .nav-item:focus-visible::before {
@@ -460,7 +561,7 @@ const groups = [
     font-family: var(--font-mono);
     font-size: 0.62rem;
     padding-top: 0.2rem;
-    color: var(--n-gold);
+    color: var(--n-accent);
     opacity: 0.7;
     transition: color 0.3s;
   }
@@ -492,12 +593,12 @@ const groups = [
     overflow: hidden;
     font-size: 0.86rem;
     font-weight: 600;
-    color: #0a1030;
-    background: linear-gradient(100deg, #ffd24d 0%, #f2b200 55%, #e0a300 100%);
+    color: var(--color-navy);
+    background: linear-gradient(100deg, var(--color-gold-glow) -30%, var(--color-gold) 50%);
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.45),
-      inset 0 0 0 1px rgb(201 146 6 / 0.6),
-      0 10px 28px -10px var(--n-gold-glow),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-gold-ink) 45%, transparent),
+      0 10px 28px -10px var(--n-accent-glow),
       0 12px 32px -18px var(--n-shadow);
     transition:
       color 0.45s var(--ease-expo),
@@ -506,8 +607,8 @@ const groups = [
   .nav-cta:hover {
     box-shadow:
       inset 0 1px 0 rgb(255 255 255 / 0.55),
-      inset 0 0 0 1px rgb(201 146 6 / 0.7),
-      0 14px 36px -10px rgb(242 178 0 / 0.55),
+      inset 0 0 0 1px color-mix(in srgb, var(--color-gold-ink) 60%, transparent),
+      0 14px 36px -10px color-mix(in srgb, var(--color-gold) 55%, transparent),
       0 12px 32px -18px var(--n-shadow);
   }
   /* The bar CTA hides on phones (the menu sheet carries its own). */
@@ -534,8 +635,8 @@ const groups = [
     width: 2rem;
     height: 2rem;
     border-radius: 999px;
-    background: #0a1030;
-    color: #ffc21a;
+    background: var(--color-navy);
+    color: var(--color-gold);
     transition:
       transform 0.6s var(--ease-expo),
       background-color 0.4s;
@@ -558,10 +659,9 @@ const groups = [
     border-radius: 999px;
     background: var(--n-glass);
     box-shadow:
-      inset 0 0 0 1px var(--n-gold-line),
-      0 0 24px -10px var(--n-gold-glow);
+      inset 0 0 0 1px var(--n-accent-line),
+      0 0 24px -10px var(--n-accent-glow);
     backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
   }
   @media (max-width: 1023px) {
     .nav-burger {
@@ -573,7 +673,7 @@ const groups = [
     width: 1.05rem;
     height: 1.5px;
     border-radius: 2px;
-    background: var(--n-gold);
+    background: var(--n-accent);
     transition:
       transform 0.55s var(--ease-expo),
       background-color 0.4s;
@@ -597,18 +697,17 @@ const groups = [
     inset: 0;
     z-index: -1;
     background:
-      radial-gradient(90% 40% at 80% 0%, var(--n-gold-tint), transparent 70%),
-      #fbfaf7;
+      radial-gradient(90% 40% at 80% 0%, var(--n-accent-tint), transparent 70%),
+      var(--color-grey-50);
     backdrop-filter: blur(28px) saturate(1.3);
-    -webkit-backdrop-filter: blur(28px) saturate(1.3);
     clip-path: inset(0 0 100% 0);
     transition: clip-path 0.75s var(--ease-expo);
     overflow-y: auto;
   }
   :global(html[data-theme='dark']) .nav-sheet {
     background:
-      radial-gradient(90% 40% at 80% 0%, var(--n-gold-tint), transparent 70%),
-      #0c0b0a;
+      radial-gradient(90% 40% at 80% 0%, var(--n-accent-tint), transparent 70%),
+      var(--color-navy);
   }
   .nav-sheet[aria-hidden='false'] {
     clip-path: inset(0 0 0 0);
@@ -624,7 +723,7 @@ const groups = [
     right: 0;
     bottom: 0;
     height: 1px;
-    background: linear-gradient(90deg, var(--n-gold-line), transparent 85%);
+    background: linear-gradient(90deg, var(--n-accent-line), transparent 85%);
   }
   .nav-sheet-link::before {
     content: counter(sheet, decimal-leading-zero);
@@ -634,7 +733,7 @@ const groups = [
     font-size: 0.7rem;
     font-weight: 400;
     letter-spacing: 0.1em;
-    color: var(--n-gold);
+    color: var(--n-accent);
     align-self: flex-start;
     padding-top: 0.8em;
   }
@@ -664,7 +763,7 @@ const groups = [
     position: absolute;
     inset: 6px 0;
     border-radius: 2px;
-    background: var(--n-gold);
+    background: var(--n-accent);
     transition: transform 0.5s var(--ease-expo);
   }
   .nav-sheet-plus::after {
@@ -678,7 +777,8 @@ const groups = [
     grid-template-rows: 0fr;
     transition: grid-template-rows 0.55s var(--ease-expo);
   }
-  .nav-sheet-sub > ul {
+  .nav-sheet-sub > .nav-sheet-cols {
+    min-height: 0;
     overflow: hidden;
   }
   .nav-sheet-link[aria-expanded='true'] + .nav-sheet-sub {
@@ -693,9 +793,9 @@ const groups = [
   }
   .nav-sheet-sub a:hover,
   .nav-sheet-sub a:active {
-    color: var(--n-gold);
+    color: var(--n-accent);
   }
-  .nav-sheet-sub li:last-child a {
+  .nav-sheet-cols > div:last-child li:last-child a {
     padding-bottom: 1.1rem;
   }
   @media (prefers-reduced-motion: reduce) {

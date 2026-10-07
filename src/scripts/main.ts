@@ -2,10 +2,10 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
 import Lenis from 'lenis';
-import { $introDone, $loadProgress, $progress, $reducedMotion, $scene, $sceneReady, $webgl, live, SCENES, type SceneId } from '../lib/store';
-import { reportLoad } from '../lib/loader';
+import { $introDone, $progress, $reducedMotion, $scene, $sceneReady, live, type SceneId } from '../lib/store';
 import { initScroll } from './scroll';
 import { initNav } from './nav';
+import { initHero } from './hero';
 import { rectOf, track } from '../lib/layout';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -13,9 +13,7 @@ gsap.registerPlugin(ScrollTrigger, SplitText);
 // trigger then would shift pinned content mid-gesture.
 ScrollTrigger.config({ ignoreMobileResize: true });
 
-// Start downloading the 3D chunk now; it only executes after first paint (below).
 const canvasEl = document.querySelector<HTMLCanvasElement>('#webgl canvas');
-const bootModule = canvasEl ? import('../webgl/boot') : null;
 
 const html = document.documentElement;
 const reduced = html.classList.contains('reduced-motion');
@@ -91,62 +89,57 @@ const lines = $$('[data-hero-title] [data-line] > span');
 const kicker = $('[data-hero-kicker]');
 const intro = $('[data-hero-intro]');
 const ctas = $$('[data-hero-ctas] > *');
-const heroCard = $('[data-hero-card]');
-// Text must be readable at once (it is the LCP element): reveal on first paint, not on WebGL.
+const cue = $('[data-journey-cue]');
+// Text must be readable at once (it is the LCP element), so this only plays on first paint.
 // Reduced motion: nothing is split or animated; the text simply sits there.
+const title = $('[data-hero-title]');
 if (!reduced) {
   const splits = lines.map((l) => new SplitText(l, { type: 'words', wordsClass: 'inline-block' }));
-  const headlineIn = gsap.timeline({ defaults: { ease: 'expo.out' } });
-  headlineIn
-    .from(lines, { yPercent: 108, rotate: 4, duration: 1.4, stagger: 0.11 }, 0)
+  title?.classList.add('is-revealing');
+  gsap
+    .timeline({ defaults: { ease: 'expo.out' } })
+    .call(() => title?.classList.remove('is-revealing'), [], 1.75)
+    .from(lines, { yPercent: 108, rotate: 3, duration: 1.4, stagger: 0.11 }, 0)
     .from(splits.flatMap((s) => s.words), { letterSpacing: '0.04em', duration: 1.6, stagger: 0.04 }, 0)
     .from(kicker, { opacity: 0, y: 14, duration: 1 }, 0.15)
     .from(intro, { opacity: 0, y: 18, duration: 1.1 }, 0.45)
-    .from(ctas, { opacity: 0, y: 18, duration: 1, stagger: 0.08 }, 0.6);
-  if (heroCard && innerWidth < 768) headlineIn.from(heroCard, { opacity: 0, y: 30, duration: 1.2 }, 0);
+    .from(ctas, { opacity: 0, y: 18, duration: 1, stagger: 0.08 }, 0.6)
+    .from($$('[data-hero-stats] > div'), { opacity: 0, y: 16, duration: 1, stagger: 0.08 }, 0.8)
+    .from(cue, { opacity: 0, duration: 1.2 }, 1.1);
 }
+// There is no curtain any more: the page is ready as soon as it paints.
+$introDone.set(true);
 
-/* ── Preloader → hero ──────────────────────────────────────────────────── */
-const pre = $('#preloader');
-const preCount = $('[data-pre-count]');
-const preBar = $('[data-pre-bar]');
-const preLabel = $('[data-pre-label]');
-document.fonts.ready.then(() => reportLoad('fonts', 1));
-
-if (pre && preCount && preBar) {
-  const shown = { v: 0 };
-  let exiting = false;
-  const render = () => {
-    preCount.textContent = String(Math.round(shown.v * 100)).padStart(3, '0');
-    gsap.set(preBar, { scaleX: shown.v });
+/* ── WebGL: only once the first viewport is settled ───────────────────── */
+// The hero is HTML and SVG, so nothing 3D is needed for several screens.
+// Start once the headline has finished arriving and the visitor pauses
+// (or as soon as a 3D section comes within 2.5 screens, whichever is first),
+// so the start-up work never lands on top of the entrance or a scroll.
+if (canvasEl) {
+  let started = false;
+  const startWebgl = () => {
+    if (started) return;
+    started = true;
+    void import('../webgl/boot').then((m) => m.boot(canvasEl));
   };
-  $loadProgress.subscribe((p) =>
-    gsap.to(shown, { v: p, duration: 0.15, ease: 'power2.out', overwrite: true, onUpdate: render, onComplete: maybeExit }),
-  );
-  // The build-up starts the moment the curtain begins to lift, not after it.
-  const exit = () => {
-    if (exiting) return;
-    exiting = true;
-    $introDone.set(true);
-    gsap
-      .timeline({ onComplete: () => pre.remove() })
-      .to([preCount, preLabel], { yPercent: -30, opacity: 0, duration: 0.3, ease: 'power3.in', stagger: 0.03 })
-      .to(pre, { clipPath: 'inset(0% 0% 100% 0%)', duration: 0.85, ease: 'expo.inOut' }, 0.05);
-  };
-  function maybeExit() {
-    if (shown.v >= 0.999 && $sceneReady.get()) exit();
-  }
-  $sceneReady.subscribe((r) => r && maybeExit());
-  $webgl.subscribe((w) => w === 'unavailable' && exit());
-  // Never hold the page hostage.
-  setTimeout(() => !exiting && ($loadProgress.set(1), exit()), 10000);
+  gsap.delayedCall(2.6, () => {
+    let still = 0;
+    const check = () => {
+      still = live.speed < 0.01 ? still + 1 : 0;
+      if (started || still >= 24) {
+        gsap.ticker.remove(check);
+        if (!started) ('requestIdleCallback' in window ? requestIdleCallback(startWebgl, { timeout: 800 }) : startWebgl());
+      }
+    };
+    gsap.ticker.add(check);
+  });
+  const first3d = $('[data-webgl]');
+  if (first3d) ScrollTrigger.create({ trigger: first3d, start: 'top 250%', once: true, onEnter: startWebgl });
 }
-
-/* ── WebGL: downloaded from the start, run once the DOM has painted ────── */
-if (canvasEl && bootModule) requestAnimationFrame(() => bootModule.then((m) => m.boot(canvasEl)));
 
 /* ── Scroll choreography (sections, canvas clip, nav theme) ───────────── */
 initScroll(reduced, lenis);
+initHero(reduced);
 for (const section of $$('[data-scene]')) {
   const id = section.dataset.scene as SceneId;
   ScrollTrigger.create({ trigger: section, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && $scene.set(id) });
@@ -167,26 +160,55 @@ gsap.ticker.add(() => {
 });
 ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (s) => $progress.set(s.progress) });
 
-/* ── Progress indicator ────────────────────────────────────────────────── */
-const progressEl = $('[data-progress]');
-if (progressEl) {
-  const idx = $('[data-progress-index]', progressEl)!;
-  const label = $('[data-progress-label]', progressEl)!;
-  const bar = $('[data-progress-bar]', progressEl)!;
-  $introDone.subscribe((d) => d && gsap.to(progressEl, { opacity: 1, duration: 1, delay: 1.6 }));
-  $scene.subscribe((id) => {
-    const i = SCENES.findIndex((s) => s.id === id);
-    idx.textContent = String(i + 1).padStart(2, '0');
-    label.textContent = SCENES[i]?.label ?? '';
-    gsap.fromTo(label, { yPercent: 60, opacity: 0 }, { yPercent: 0, opacity: 1, duration: 0.6, ease: 'expo.out' });
+/* ── Copy to clipboard (email, phone) ──────────────────────────────────── */
+for (const btn of $$<HTMLButtonElement>('[data-copy]')) {
+  btn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(btn.dataset.copy ?? '');
+      btn.dataset.copied = '';
+      const label = btn.getAttribute('aria-label') ?? '';
+      btn.setAttribute('aria-label', 'Copied');
+      setTimeout(() => {
+        delete btn.dataset.copied;
+        btn.setAttribute('aria-label', label);
+      }, 1600);
+    } catch {
+      /* Clipboard blocked: the visible link still works. */
+    }
   });
-  $progress.subscribe((p) => gsap.set(bar, { scaleX: p }));
+}
+
+/* ── Reveals: content rises in as it enters ─────────────────────────────── */
+// Only below the first screen, so nothing visible on load waits for script.
+if (!reduced) {
+  const items = $$('[data-reveal]').filter((el) => el.getBoundingClientRect().top > innerHeight);
+  gsap.set(items, { opacity: 0, y: 28 });
+  ScrollTrigger.batch(items, {
+    start: 'top 88%',
+    once: true,
+    onEnter: (batch) => gsap.to(batch, { opacity: 1, y: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08, overwrite: true }),
+  });
+}
+
+/* ── Image parallax: photos drift a little inside their masks ─────────── */
+if (!reduced) {
+  for (const el of $$('[data-parallax]')) {
+    const amount = Number(el.dataset.parallax) || 0.1;
+    gsap.fromTo(
+      el,
+      { yPercent: -amount * 100 },
+      { yPercent: amount * 100, ease: 'none', scrollTrigger: { trigger: el.parentElement ?? el, start: 'top bottom', end: 'bottom top', scrub: true } },
+    );
+  }
 }
 
 /* ── Custom cursor (fine pointers) ─────────────────────────────────────── */
 const dot = $('[data-cursor-dot]');
 const ring = $('[data-cursor-ring]');
 if (html.classList.contains('has-cursor') && dot && ring) {
+  // Hidden until the pointer first moves, so it never sits in the corner.
+  gsap.set([dot, ring], { opacity: 0 });
+  addEventListener('pointermove', () => gsap.to([dot, ring], { opacity: 1, duration: 0.3 }), { once: true });
   const dx = gsap.quickTo(dot, 'x', { duration: 0.08 });
   const dy = gsap.quickTo(dot, 'y', { duration: 0.08 });
   const rx = gsap.quickTo(ring, 'x', { duration: 0.45, ease: 'expo.out' });

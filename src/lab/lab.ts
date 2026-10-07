@@ -20,10 +20,10 @@ if (engine) {
   const campus = (window as unknown as { __campus: CampusScene }).__campus;
   $introDone.set(true);
   const gui = new GUI({ title: 'Raleston lab' });
-  gui.add({ replay: () => (campus.reset(), campus.playIntro()) }, 'replay').name('Replay build');
-  gui.add(scroll, 'owner', ['hero', 'craft', 'expertise', 'industries', 'contact']);
-  gui.add(scroll, 'world', ['campus', 'city', 'none']);
-  for (const k of ['hero', 'craft', 'expertise', 'industries', 'contact'] as const) gui.add(scroll, k, 0, 1, 0.001);
+  void campus;
+  scroll.world = 'campus';
+  gui.add(scroll, 'world', ['campus', 'none']);
+  gui.add(scroll, 'foundation', 0, 1, 0.001).name('Foundation progress');
   const p = gui.addFolder('Post');
   p.add(engine.post.bloom, 'intensity', 0, 4, 0.01).name('Bloom');
   if (engine.post.ao) p.add(engine.post.ao.configuration, 'intensity', 0, 8, 0.01).name('AO intensity');

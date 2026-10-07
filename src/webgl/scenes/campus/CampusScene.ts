@@ -1,18 +1,13 @@
 import * as THREE from 'three';
-import { gsap } from 'gsap';
 import { live } from '../../../lib/store';
+import { TOKENS } from '../../../lib/tokens';
 import type { Engine, SceneModule, View } from '../../core/Engine';
-import { alongShots, applyShot, mixShots, shot, type Shot } from '../../core/shots';
+import { applyShot, mixShots, shot, type Shot } from '../../core/shots';
 import { anchors, scroll } from '../../scroll';
-import { Campus, type Placed } from './Campus';
+import { Campus } from './Campus';
 
-/** Expertise order on the page (matches the copy in Expertise.astro). */
-export const EXPERTISE_ORDER = ['appEngine', 'itsm', 'itam', 'itom', 'integration', 'architecture'] as const;
-
-/** HQ tower centre in world space. */
-const TOWER = new THREE.Vector3(-0.55, 2.4, -0.9);
-const VISITS_END = 0.72;
-const XRAY_START = 0.74;
+/** Section stations, in page order: the slab, three buildings, the x-ray. */
+const STATIONS = 5;
 
 const smooth = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -20,80 +15,54 @@ const smooth = (a: number, b: number, x: number) => {
 };
 
 /**
- * The campus world. One model, many camera shots, Emons-style: the hero
- * overview, a low orbit around HQ for "Craft", a visit to each expertise
- * building, an x-ray scan of the whole model, and HQ at dusk for "Contact".
+ * The foundation section's world: one CMDB slab with the three practice
+ * buildings on it, lit like a model at night. Scroll moves the camera from
+ * the whole slab to each building in turn, then x-rays the model so the
+ * buildings' contents drop onto the slab as records and relationships.
  */
 export class CampusScene implements SceneModule {
   readonly group = new THREE.Group();
   readonly campus: Campus;
-  private sun: THREE.DirectionalLight;
+  private key: THREE.DirectionalLight;
+  private rim: THREE.DirectionalLight;
   private sky: THREE.HemisphereLight;
   private view: View | null = null;
-  private intro = { lift: 1 };
   private drag = 0;
-  private building = true;
-  private visits: Placed[];
-  private dusk = 0;
   private wasVisible = false;
   private out: Shot = shot([0, 0, 0], 0, 0, 1);
-  private tmpA: Shot = shot([0, 0, 0], 0, 0, 1);
-  private tmpB: Shot = shot([0, 0, 0], 0, 0, 1);
   private proj = new THREE.Vector3();
-  private sunDay = new THREE.Color('#fffaf3');
-  private sunDusk = new THREE.Color('#ffb36b');
 
   constructor(private engine: Engine) {
     const { budget, tier } = engine;
     this.campus = new Campus({ shadows: true, detail: tier >= 2 ? 1 : 0.6 });
     this.group.add(this.campus.root);
-    this.visits = EXPERTISE_ORDER.map((id) => this.campus.placed.find((p) => p.building.id === id)!);
 
-    this.sun = new THREE.DirectionalLight('#fffaf3', 4.2);
-    this.sun.position.set(-9, 14, 7);
-    this.sun.castShadow = true;
-    this.sun.shadow.mapSize.setScalar(budget.shadowMap);
-    const sc = this.sun.shadow.camera;
-    sc.left = -13;
-    sc.right = 13;
-    sc.top = 13;
-    sc.bottom = -13;
+    // A cool key light like moonlight, a blue rim from behind, a navy sky.
+    this.key = new THREE.DirectionalLight('#e6ecff', 3.1);
+    this.key.position.set(-8, 14, 9);
+    this.key.castShadow = true;
+    this.key.shadow.mapSize.setScalar(budget.shadowMap);
+    const sc = this.key.shadow.camera;
+    sc.left = -11;
+    sc.right = 11;
+    sc.top = 9;
+    sc.bottom = -9;
     sc.near = 1;
-    sc.far = 45;
-    this.sun.shadow.bias = -0.0003;
-    this.sun.shadow.normalBias = 0.02;
-    this.sun.shadow.radius = 6;
-    this.sun.shadow.blurSamples = 12;
-    this.sky = new THREE.HemisphereLight('#eef3ff', '#c3cad6', 0.35);
-    this.group.add(this.sun, this.sun.target, this.sky);
+    sc.far = 40;
+    this.key.shadow.bias = -0.0003;
+    this.key.shadow.normalBias = 0.02;
+    this.key.shadow.radius = 6;
+    this.key.shadow.blurSamples = 12;
+    this.rim = new THREE.DirectionalLight(TOKENS.azure, 1.4);
+    this.rim.position.set(6, 5, -10);
+    this.sky = new THREE.HemisphereLight(TOKENS.iris, TOKENS.navy, 0.55);
+    this.group.add(this.key, this.key.target, this.rim, this.sky);
     engine.scene.add(this.group);
-  }
-
-  /** The model builds itself while the camera settles from a higher, wider angle. */
-  playIntro(): gsap.core.Timeline {
-    const tl = gsap.timeline();
-    this.intro.lift = 1;
-    this.building = true;
-    // Shadows can't follow the build clip, so they fade in as the model completes: "lights on".
-    tl.fromTo(this.sun.shadow, { intensity: 0 }, { intensity: 1, duration: 0.9, ease: 'power2.out' }, 0.9);
-    tl.to(this.intro, { lift: 0, duration: 2.4, ease: 'power3.out' }, 0);
-    this.campus.playBuild(tl, 0);
-    tl.call(() => (this.building = false));
-    return tl;
   }
 
   settle() {
     this.campus.finish();
-    this.intro.lift = 0;
-    this.sun.shadow.intensity = 1;
-    this.building = true;
-    requestAnimationFrame(() => requestAnimationFrame(() => (this.building = false)));
-  }
-
-  reset() {
-    this.campus.reset();
-    this.intro.lift = 1;
-    this.sun.shadow.intensity = 0;
+    this.key.shadow.intensity = 1;
   }
 
   resize(view: View) {
@@ -101,143 +70,86 @@ export class CampusScene implements SceneModule {
   }
 
   // ── Shots ────────────────────────────────────────────────────────────────
-  private heroShot(v: View, t: number): Shot {
-    const lean = live.pointerActive ? live.pointer.x * 3 : 0;
-    const lift = this.intro.lift;
-    const az = 36 + Math.sin(t * 0.05) * 4 + lean + this.drag - lift * 22;
-    const el = 29 + lift * 18;
-    if (v.portrait) return shot([0.2, 1.1, -0.2], az, el, 33 * (1 + lift * 0.35), 0, 0.17);
-    if (v.aspect < 1.25) return shot([0.2, 1.1, -0.2], az, el, 28 * (1 + lift * 0.35), 0, 0.08);
-    return shot([0.2, 1.1, -0.2], az, el, 23 * (1 + lift * 0.35), 0.16, 0.02);
+  /** The whole slab, the subject sliding right of the copy (desktop) or up (phone). */
+  private overview(v: View, t: number, high = 0): Shot {
+    const lean = live.pointerActive ? live.pointer.x * 2.5 : 0;
+    const az = 28 + Math.sin(t * 0.06) * 3 + lean + this.drag;
+    if (v.portrait) return shot([0, 0.4, 0], az, 40 + high * 14, 31 + high * 3, 0, 0.19);
+    return shot([0, 0.3, 0.2], az, 33 + high * 14, 21.5 + high * 2, 0.17, 0.02);
   }
 
-  /** Low orbit around HQ against the sky, so the kinetic words behind it stay visible. */
-  private craftShots(v: View): Shot[] {
-    const k = v.portrait ? 1.5 : 1;
-    const sy = v.portrait ? 0.12 : -0.02;
-    const T: [number, number, number] = [TOWER.x, TOWER.y, TOWER.z];
-    return [
-      shot(T, 60, 9, 12.5 * k, 0, sy),
-      shot([TOWER.x, TOWER.y + 0.2, TOWER.z], 135, 13, 12.5 * k, 0, sy),
-      shot(T, 215, 15, 13 * k, 0, sy),
-      shot([TOWER.x, TOWER.y - 0.3, TOWER.z], 290, 19, 15 * k, 0, sy),
-    ];
-  }
-
-  private visitShot(p: Placed, i: number, v: View): Shot {
+  private visit(i: number, v: View): Shot {
+    const p = this.campus.placed[i]!;
     const b = p.building;
-    const size = b.height * 1.6 + Math.max(b.half.x, b.half.y) * 1.8;
-    const target: [number, number, number] = [p.position.x, b.height * 0.4, p.position.z];
-    // ITAM sits behind HQ, so it is filmed from the back of the campus.
-    const az = b.id === 'itam' ? 205 : 30 + (i % 3) * 12 - (i > 2 ? 8 : 0);
-    if (v.portrait) return shot(target, az, 32, (7 + size) * 1.6, 0, 0.2);
-    return shot(target, az, 30, 6.5 + size, 0.17, 0.04);
+    const size = b.height * 1.35 + Math.max(p.half.x, p.half.y) * 1.25;
+    const target: [number, number, number] = [p.position.x, b.height * 0.5, p.position.z];
+    const az = [36, 18, 28][i]! + this.drag * 0.4;
+    if (v.portrait) return shot(target, az, 30, (6.5 + size) * 1.75, 0, 0.21);
+    return shot(target, az, 26, 6.2 + size * 1.2, 0.18, 0.03);
   }
 
-  private xrayShot(v: View, p: number): Shot {
-    const az = 30 + p * 40;
-    if (v.portrait) return shot([0, 1.2, 0], az, 34, 38, 0, 0.12);
-    return shot([0, 1.2, 0], az, 32, 25, 0.12, 0.02);
-  }
-
-  private contactShot(v: View, t: number): Shot {
-    const az = 20 + t * 1.5;
-    if (v.portrait) return shot([TOWER.x, 2.0, TOWER.z], az, 16, 21, 0, 0.16);
-    return shot([TOWER.x, 2.0, TOWER.z], az, 14, 14, 0.2, 0);
-  }
-
-  /** Expertise progress → camera, which building is the subject, and the x-ray state. */
-  private expertise(v: View, p: number, out: Shot): number[] {
-    const weights = new Array<number>(6).fill(0);
-    if (p < VISITS_END) {
-      const f = (p / VISITS_END) * 6;
-      const i = Math.min(5, Math.floor(f));
-      const u = f - i;
-      const blend = smooth(0.62, 1, u);
-      const a = this.visitShot(this.visits[i]!, i, v);
-      const b = i < 5 ? this.visitShot(this.visits[i + 1]!, i + 1, v) : this.xrayShot(v, 0);
-      mixShots(a, b, blend, out);
-      weights[i] = 1 - blend;
-      if (i < 5) weights[i + 1] = blend;
-    } else {
-      mixShots(this.xrayShot(v, 0), this.xrayShot(v, 1), (p - VISITS_END) / (1 - VISITS_END), out);
-    }
-    return weights;
+  /** Section progress → camera. Dwell on each station for the first half of its segment. */
+  private camera(v: View, p: number, t: number, out: Shot) {
+    const f = Math.min(STATIONS - 1 - 1e-6, Math.max(0, p * (STATIONS - 1)));
+    const i = Math.floor(f);
+    const blend = smooth(0.5, 1, f - i);
+    const at = (k: number): Shot => (k === 0 ? this.overview(v, t) : k === STATIONS - 1 ? this.overview(v, t, 1) : this.visit(k - 1, v));
+    mixShots(at(i), at(i + 1), blend, out);
+    // Weight of each building as the subject (for highlighting and labels).
+    const w = [0, 0, 0];
+    if (i >= 1 && i <= 3) w[i - 1] = 1 - blend;
+    if (i + 1 >= 1 && i + 1 <= 3) w[i] = Math.max(w[i]!, blend);
+    return w;
   }
 
   update(dt: number, t: number) {
     const v = this.view;
     const visible = scroll.world === 'campus';
     this.group.visible = visible;
-    this.drag += (live.drag.x * 12 - this.drag) * (1 - Math.exp(-dt * 5));
-    // Static shadow map: only request a re-render (three clears the flag after use).
-    if (visible && (this.intro.lift > 0.001 || this.building || !this.wasVisible)) this.engine.renderer.shadowMap.needsUpdate = true;
+    this.drag += (live.drag.x * 10 - this.drag) * (1 - Math.exp(-dt * 5));
+    if (visible && !this.wasVisible) this.engine.renderer.shadowMap.needsUpdate = true;
     this.wasVisible = visible;
     if (!visible || !v) return;
 
     const rig = this.engine.rig;
-    const owner = scroll.owner;
-    let weights = new Array<number>(6).fill(0);
-    let xray = 0;
-    let scan = 20;
-    let flow = 1;
-
-    if (owner === 'contact' || scroll.contact > 0) {
-      applyShot(this.contactShot(v, t), v, rig);
-    } else if (owner === 'expertise') {
-      const p = scroll.expertise;
-      // Normally built in idle time already; this only runs if someone scrolls here first.
-      if (p > 0.4) this.campus.ensureXray();
-      weights = this.expertise(v, p, this.out);
-      applyShot(this.out, v, rig);
-      xray = smooth(XRAY_START, XRAY_START + 0.05, p);
-      scan = THREE.MathUtils.lerp(5.3, -0.25, smooth(XRAY_START + 0.04, 0.96, p));
-    } else if (owner === 'craft') {
-      const p = scroll.craft;
-      alongShots(this.craftShots(v), p, this.out);
-      applyShot(this.out, v, rig);
-      // "Lightning results": the data vans speed up while that card is up.
-      flow = 1 + 3.5 * smooth(0.28, 0.4, p) * (1 - smooth(0.6, 0.72, p));
-    } else {
-      // Hero, easing into the first craft shot as the hero scrolls away.
-      mixShots(this.heroShot(v, t), this.craftShots(v)[0]!, scroll.hero, this.out);
-      applyShot(this.out, v, rig);
-    }
-    rig.handheld = 0.35;
-    rig.parallax = 0.25;
+    const p = scroll.foundation;
+    if (p > 0.45) this.campus.ensureXray();
+    const weights = this.camera(v, p, t, this.out);
+    applyShot(this.out, v, rig);
+    rig.handheld = 0.3;
+    rig.parallax = 0.22;
     rig.stiffness = 2.6;
 
-    // Dusk for the contact section: warm low sun, navy sky, every window lit.
-    const duskTarget = scroll.contact > 0 ? 1 : 0;
-    this.dusk += (duskTarget - this.dusk) * (1 - Math.exp(-dt * 3));
-    const d = this.dusk;
-    this.sun.color.lerpColors(this.sunDay, this.sunDusk, d);
-    this.sun.intensity = THREE.MathUtils.lerp(4.2, 1.6, d);
-    this.sky.intensity = THREE.MathUtils.lerp(0.35, 0.12, d);
-    this.engine.scene.environmentIntensity = THREE.MathUtils.lerp(0.45, 0.16, d);
+    // X-ray over the last station: the scan sweeps down from above the roofs into the slab.
+    const xray = smooth(0.78, 0.83, p);
+    const scan = THREE.MathUtils.lerp(2.6, -0.26, smooth(0.82, 0.97, p));
     const u = this.campus.uniforms;
-    u.uLit.value = THREE.MathUtils.lerp(0.14, 1.8, d);
     u.uXray.value = xray;
     u.uScan.value = scan;
 
-    // Subject highlighting for the expertise tour.
+    // The subject building stands out; the others recede a little.
     const anyActive = Math.max(...weights);
-    this.visits.forEach((p, i) => {
+    this.campus.placed.forEach((pl, i) => {
       const w = weights[i]!;
-      p.build.uDim.value = anyActive * (1 - w) * (1 - xray);
-      const mat = p.ring.material as THREE.MeshBasicMaterial;
-      mat.opacity = w * (0.75 + 0.25 * Math.sin(t * 4)) * (1 - xray);
-      p.ring.scale.setScalar(1 + (1 - w) * 0.15);
-      // Label anchor in screen pixels.
-      this.proj.copy(p.anchor).project(this.engine.camera);
-      const a = anchors.expertise[i]!;
+      pl.build.uDim.value = anyActive * (1 - w) * 0.6 * (1 - xray);
+      const mat = pl.ring.material as THREE.MeshBasicMaterial;
+      mat.opacity = w * (0.7 + 0.3 * Math.sin(t * 3)) * (1 - xray);
+      pl.ring.scale.setScalar(1 + (1 - w) * 0.12);
+      this.proj.copy(pl.anchor).project(this.engine.camera);
+      const a = anchors.foundation[i]!;
       a.x = (this.proj.x * 0.5 + 0.5) * v.width;
       a.y = (-this.proj.y * 0.5 + 0.5) * v.height;
-      a.weight = w * (1 - xray);
+      // Labels show on the overview and for the building being visited.
+      a.weight = Math.max(w, 1 - smooth(0, 0.12, p)) * (1 - xray);
     });
-    this.campus.placed.find((p) => p.building.id === 'hq')!.build.uDim.value = anyActive * (1 - xray);
-
-    this.campus.setFlow(flow);
+    // X-ray labels: records, relationships, discovery.
+    this.campus.xrayAnchors.forEach((pt, i) => {
+      this.proj.copy(pt).project(this.engine.camera);
+      const a = anchors.xray[i]!;
+      a.x = (this.proj.x * 0.5 + 0.5) * v.width;
+      a.y = (-this.proj.y * 0.5 + 0.5) * v.height;
+      a.weight = smooth(0.9, 0.96, p);
+    });
     this.campus.update(dt, t);
   }
 }

@@ -1,0 +1,456 @@
+---
+import { Image } from 'astro:assets';
+import Base from '../../layouts/Base.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import Icon from '../../components/ui/Icon.astro';
+import { SITE } from '../../data/site';
+import { TOPICS } from '../../data/topics';
+import photo from '../../assets/images/woman-desk.png';
+
+const siteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY ?? '';
+const crumbs = [{ name: 'Contact', href: '/contact/' }];
+const schema = [
+  {
+    '@type': 'ContactPage',
+    name: 'Contact Raleston Consulting',
+    url: `${SITE.url}/contact/`,
+    about: { '@id': `${SITE.url}/#organization` },
+  },
+];
+---
+
+<Base
+  title="Contact a ServiceNow architect | Raleston Consulting, Ottawa"
+  description="Talk to a certified ServiceNow architect at Raleston Consulting in Ottawa. Tell us where your platform is today and where you want it to go."
+  crumbs={crumbs}
+  schema={schema}
+  cta={false}
+>
+  <PageHero
+    crumbs={crumbs}
+    eyebrow="Contact"
+    title="Talk to a ServiceNow architect"
+    lit="ServiceNow architect"
+    lead="Tell us where your platform is today and where you want it to go. A certified architect reads every message and gets back to you."
+  />
+
+  <section class="section pt-6" data-theme="dark" aria-label="Contact form and details">
+    <div class="gutter contact-grid">
+      <form
+        id="contact-form"
+        class="card form"
+        method="post"
+        action="/api/contact"
+        data-contact
+        data-sitekey={siteKey || undefined}
+        aria-describedby="form-note"
+      >
+        <h2 class="h3">Send us a message</h2>
+        <p id="form-note" class="form-note">All fields are required unless marked optional.</p>
+        <noscript>
+          <p class="form-noscript">
+            The form needs JavaScript for its spam check. You can also email <a href={`mailto:${SITE.email}`}>{SITE.email}</a>.
+          </p>
+        </noscript>
+
+        <div class="fields">
+          <div class="field">
+            <label for="f-name">Your name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" required maxlength="100" />
+            <p class="field-error" id="f-name-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-email">Work email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="200" />
+            <p class="field-error" id="f-email-error" hidden></p>
+          </div>
+          <div class="field">
+            <label for="f-company">Company <span class="opt">(optional)</span></label>
+            <input id="f-company" name="company" type="text" autocomplete="organization" maxlength="120" />
+          </div>
+          <div class="field">
+            <label for="f-topic">What do you need?</label>
+            <div class="select">
+              <select id="f-topic" name="topic" required>
+                <option value="" selected disabled>Choose one</option>
+                {
+                  TOPICS.map((g) => (
+                    <optgroup label={g.group}>
+                      {g.items.map((t) => (
+                        <option value={t.label} data-slugs={t.slugs.join(' ')}>
+                          {t.label}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))
+                }
+              </select>
+              <Icon name="chevron" class="select-icon" />
+            </div>
+            <p class="field-error" id="f-topic-error" hidden></p>
+          </div>
+          <div class="field field-wide">
+            <label for="f-message">Tell us a little more</label>
+            <textarea id="f-message" name="message" rows="6" required minlength="10" maxlength="5000" aria-describedby="f-message-hint"></textarea>
+            <p class="field-hint" id="f-message-hint">Which ServiceNow products you use today, and what you would like to change.</p>
+            <p class="field-error" id="f-message-error" hidden></p>
+          </div>
+        </div>
+
+        <div class="hp" aria-hidden="true">
+          <label for="f-website">Leave this field empty</label>
+          <input id="f-website" name="website" type="text" tabindex="-1" autocomplete="off" />
+        </div>
+
+        <div class="ts-slot" data-turnstile></div>
+
+        <div class="form-foot">
+          <button type="submit" class="btn btn-primary" data-submit>
+            <span data-submit-label>Send message</span>
+            <Icon name="arrowUpRight" />
+          </button>
+          <p class="form-privacy">We use these details only to reply to you.</p>
+        </div>
+        <p class="form-status" role="status" aria-live="polite" data-status></p>
+      </form>
+
+      <div class="form-done card" data-done hidden tabindex="-1">
+        <span class="icon-tile"><Icon name="check" /></span>
+        <h2 class="h3 mt-5">Thank you. Your message is on its way.</h2>
+        <p class="body mt-3">An architect will read it and reply to the email address you gave. If it is urgent, call us on <a href={`tel:${SITE.tel}`} class="text-iris-soft underline underline-offset-4">{SITE.phone}</a>.</p>
+        <a href="/services/" class="link-arrow mt-6">While you wait, explore our services <Icon name="arrow" /></a>
+      </div>
+
+      <aside class="contact-aside" aria-label="Contact details">
+        <div class="card details">
+          <h2 class="details-h">Reach us directly</h2>
+          <ul class="details-list">
+            <li>
+              <span class="icon-tile is-sm"><Icon name="mail" /></span>
+              <div>
+                <p class="details-k">Email</p>
+                <a href={`mailto:${SITE.email}`} class="details-v">{SITE.email}</a>
+              </div>
+              <button type="button" class="copy" data-copy={SITE.email} aria-label="Copy email address"><Icon name="copy" /></button>
+            </li>
+            <li>
+              <span class="icon-tile is-sm"><Icon name="phone" /></span>
+              <div>
+                <p class="details-k">Phone</p>
+                <a href={`tel:${SITE.tel}`} class="details-v">{SITE.phone}</a>
+              </div>
+              <button type="button" class="copy" data-copy={SITE.phone} aria-label="Copy phone number"><Icon name="copy" /></button>
+            </li>
+            <li>
+              <span class="icon-tile is-sm"><Icon name="pin" /></span>
+              <div>
+                <p class="details-k">Office</p>
+                <p class="details-v">{SITE.city}, Ontario, {SITE.countryName}</p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <div class="card next">
+          <h2 class="details-h">What happens next</h2>
+          <ol class="next-list">
+            <li><span>01</span><p>An architect reads your message. Not a sales queue.</p></li>
+            <li><span>02</span><p>We arrange a short call to understand your platform and your goals.</p></li>
+            <li><span>03</span><p>You get a clear next step: a health check, a proposal, or an honest answer if you do not need us.</p></li>
+          </ol>
+        </div>
+
+        <figure class="photo">
+          <Image src={photo} alt="A consultant working at a desk with a laptop and a large monitor." widths={[400, 640, 900]} sizes="(min-width: 1024px) 34vw, 92vw" loading="lazy" class="photo-img" />
+        </figure>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<script>
+  import '../../scripts/contact';
+</script>
+
+<style>
+  .contact-grid {
+    display: grid;
+    gap: 1.25rem;
+    align-items: start;
+  }
+  @media (min-width: 1024px) {
+    .contact-grid {
+      grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+      gap: 1.5rem;
+    }
+    .contact-aside {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+  }
+  .form,
+  .form-done {
+    padding: clamp(1.25rem, 3.4vw, 2.25rem);
+  }
+  @media (max-width: 479px) {
+    .form {
+      padding-inline: 0.75rem;
+    }
+  }
+  .form-note {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    color: var(--color-grey-400);
+  }
+  .form-noscript {
+    margin-top: 1rem;
+    border-radius: 0.75rem;
+    padding: 0.8rem 1rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-iris) 22%, transparent);
+  }
+  .form-noscript a {
+    text-decoration: underline;
+  }
+  .fields {
+    display: grid;
+    gap: 1.1rem;
+    margin-top: 1.6rem;
+  }
+  @media (min-width: 640px) {
+    .fields {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .field-wide {
+      grid-column: 1 / -1;
+    }
+  }
+  .field label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  .opt {
+    font-weight: 400;
+    color: var(--color-grey-400);
+  }
+  .field input,
+  .field select,
+  .field textarea {
+    display: block;
+    width: 100%;
+    min-height: 48px;
+    border: 0;
+    border-radius: 0.75rem;
+    padding: 0.7rem 0.95rem;
+    font: inherit;
+    font-size: 1.05rem;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-night) 60%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 16%, transparent);
+    transition: box-shadow 0.2s ease;
+  }
+  .field textarea {
+    min-height: 9.5rem;
+    resize: vertical;
+  }
+  .field input:hover,
+  .field select:hover,
+  .field textarea:hover {
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 30%, transparent);
+  }
+  .field input:focus-visible,
+  .field select:focus-visible,
+  .field textarea:focus-visible {
+    outline: none;
+    box-shadow:
+      inset 0 0 0 1px var(--color-iris-soft),
+      0 0 0 3px color-mix(in srgb, var(--color-iris-soft) 35%, transparent);
+  }
+  .field [aria-invalid='true'] {
+    box-shadow: inset 0 0 0 1px #ff8f8f;
+  }
+  .select {
+    position: relative;
+  }
+  .select select {
+    appearance: none;
+    padding-right: 2.6rem;
+  }
+  .select select:invalid {
+    color: var(--color-grey-400);
+  }
+  .select option,
+  .select optgroup {
+    color: var(--color-white);
+    background: var(--color-indigo);
+  }
+  .select :global(.select-icon) {
+    position: absolute;
+    top: 50%;
+    right: 0.9rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    transform: translateY(-50%);
+    color: var(--color-iris-soft);
+    pointer-events: none;
+  }
+  .field-hint {
+    margin-top: 0.45rem;
+    font-size: 0.92rem;
+    color: var(--color-grey-400);
+  }
+  .field-error {
+    margin-top: 0.45rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffb3b3;
+  }
+  .hp {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .ts-slot:not(:empty) {
+    margin-top: 1.4rem;
+  }
+  .form-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.9rem 1.4rem;
+    margin-top: 1.6rem;
+  }
+  .form-foot .btn[aria-busy='true'] {
+    opacity: 0.75;
+    cursor: progress;
+  }
+  .form-privacy {
+    font-size: 0.92rem;
+    color: var(--color-grey-400);
+  }
+  .form-status:not(:empty) {
+    margin-top: 1rem;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-weight: 700;
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 7%, transparent);
+  }
+  .form-status[data-tone='error'] {
+    color: #ffd0d0;
+    background: color-mix(in srgb, #ff6b6b 16%, transparent);
+  }
+  .form-done:focus {
+    outline: none;
+  }
+  .contact-aside {
+    display: grid;
+    gap: 1.25rem;
+  }
+  .details,
+  .next {
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+  }
+  .details-h {
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .details-list {
+    display: grid;
+    gap: 1rem;
+    margin-top: 1.1rem;
+  }
+  .details-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+  }
+  .details-list li > div {
+    min-width: 0;
+    flex: 1;
+  }
+  .details-k {
+    font-size: 0.85rem;
+    color: var(--color-grey-400);
+  }
+  .details-v {
+    display: inline-block;
+    overflow-wrap: break-word;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+  @media (max-width: 479px) {
+    .details-list .icon-tile {
+      display: none;
+    }
+    .details-v {
+      font-size: 1rem;
+    }
+  }
+  a.details-v:hover {
+    color: var(--color-iris-soft);
+  }
+  .copy {
+    display: inline-grid;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    place-items: center;
+    border-radius: 0.7rem;
+    color: var(--color-grey-200);
+    background: color-mix(in srgb, var(--color-white) 6%, transparent);
+    transition: color 0.2s ease, background 0.2s ease;
+  }
+  .copy:hover {
+    color: var(--color-white);
+    background: color-mix(in srgb, var(--color-white) 12%, transparent);
+  }
+  .copy :global(svg) {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+  .copy[data-copied] {
+    color: var(--color-navy);
+    background: var(--color-iris-soft);
+  }
+  .next-list {
+    display: grid;
+    gap: 0.9rem;
+    margin-top: 1.1rem;
+  }
+  .next-list li {
+    display: flex;
+    gap: 0.9rem;
+  }
+  .next-list span {
+    flex: none;
+    padding-top: 0.15rem;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--color-iris-soft);
+  }
+  .next-list p {
+    color: var(--color-grey-200);
+    line-height: 1.55;
+  }
+  .photo {
+    overflow: hidden;
+    border-radius: 1.25rem;
+    aspect-ratio: 4 / 3;
+  }
+  .photo :global(.photo-img) {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+</style>

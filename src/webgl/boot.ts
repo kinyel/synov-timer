@@ -1,10 +1,10 @@
 import * as THREE from 'three';
-import { $introDone, $reducedMotion, $sceneReady, $tier, $webgl, live } from '../lib/store';
+import { gsap } from 'gsap';
+import { $reducedMotion, $sceneReady, $tier, $webgl, live } from '../lib/store';
 import { completeAll, reportLoad } from '../lib/loader';
 import { detectTier } from '../lib/tier';
 import { Engine } from './core/Engine';
 import { CampusScene } from './scenes/campus/CampusScene';
-import { CityScene } from './scenes/city/CityScene';
 import { scroll } from './scroll';
 
 function hasWebGL2(): boolean {
@@ -21,16 +21,26 @@ const mark = (name: string) => performance.mark(`raleston:${name}`);
 /** Resolve when the main thread is idle (falls back to a short timeout). */
 const idle = () =>
   new Promise<void>((r) => ('requestIdleCallback' in window ? requestIdleCallback(() => r(), { timeout: 1500 }) : setTimeout(r, 200)));
+/** Resolve once the page has been still for ~0.4 s and the main thread is idle. */
+const quiet = () =>
+  new Promise<void>((resolve) => {
+    let still = 0;
+    const check = () => {
+      still = live.speed < 0.01 ? still + 1 : 0;
+      if (still < 24) return;
+      gsap.ticker.remove(check);
+      void idle().then(resolve);
+    };
+    gsap.ticker.add(check);
+  });
 
 /**
  * Starts the single site-wide WebGL layer.
  *
- * Only what the first viewport needs is built and compiled before the curtain
- * lifts: the campus, with exactly the lights it renders with (shader programs
- * depend on the light set, so warming with extra lights would leave the real
- * variants to compile mid-scroll). The x-ray lines and the industries city are
- * built and pre-compiled afterwards in idle time, or on demand if the visitor
- * scrolls there first.
+ * The foundation world (the CMDB slab and its three buildings) is built and
+ * compiled with exactly the lights it renders with (shader programs depend on
+ * the light set). Its x-ray lines are built and pre-compiled afterwards, while
+ * the page is still, or on demand if the visitor scrolls there first.
  */
 export async function boot(canvas: HTMLCanvasElement): Promise<Engine | null> {
   if (!hasWebGL2()) {
@@ -50,6 +60,7 @@ export async function boot(canvas: HTMLCanvasElement): Promise<Engine | null> {
   mark('tier');
   const engine = new Engine(canvas, tier);
   mark('engine');
+  await idle();
   engine.shouldRender = () => scroll.world !== 'none';
   // Rest when only a sliver of 3D shows and the page is still.
   engine.canRest = () => scroll.coverage < 0.3 && live.speed < 0.02;
@@ -64,37 +75,18 @@ export async function boot(canvas: HTMLCanvasElement): Promise<Engine | null> {
   const campus = new CampusScene(engine);
   engine.add(campus);
   mark('campus');
+  await idle();
 
+  // The campus is first seen below the hero, already built.
   campus.settle();
   await engine.warm();
   mark('compiled');
   reportLoad('compile', 1);
-  campus.reset();
   engine.start();
   await nextFrame();
   reportLoad('frame', 1);
   mark('ready');
   $sceneReady.set(true);
-
-  $introDone.subscribe((done) => {
-    if (!done) return;
-    if ($reducedMotion.get()) campus.settle();
-    else campus.playIntro();
-  });
-
-  // ── Below-the-fold 3D, prepared without blocking the first viewport ──────
-  let city: CityScene | null = null;
-  const buildCity = () => {
-    if (!city) {
-      city = new CityScene(engine);
-      engine.add(city);
-    }
-    return city;
-  };
-  // If someone reaches Industries before idle time gets there, build it now.
-  engine.beforeFrame = () => {
-    if (scroll.world === 'city' && !city) buildCity();
-  };
 
   /** Compile `show` with the light set it will actually render with. */
   const precompile = async (show: THREE.Object3D, hide: THREE.Object3D[]) => {
@@ -135,23 +127,16 @@ export async function boot(canvas: HTMLCanvasElement): Promise<Engine | null> {
     rt.dispose();
   };
 
+  // The x-ray lines are built and compiled later, while the page is still.
   void (async () => {
-    if (!$introDone.get()) await new Promise<void>((r) => $introDone.listen((d) => d && r()));
-    // Let the build-up play undisturbed, then prepare the rest in idle time.
-    await new Promise((r) => setTimeout(r, 1800));
-    await idle();
+    await quiet();
     campus.campus.ensureXray();
     await precompile(campus.group, []);
-    await idle();
+    await quiet();
     warmRender(campus.group, []);
-    await idle();
-    const c = buildCity();
-    await precompile(c.group, [campus.group]);
-    await idle();
-    warmRender(c.group, [campus.group]);
-    mark('city');
+    mark('xray');
   })();
 
-  if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) Object.assign(window, { __engine: engine, __campus: campus, __city: () => city, __scroll: scroll });
+  if (import.meta.env.DEV || new URLSearchParams(location.search).has('debug')) Object.assign(window, { __engine: engine, __campus: campus, __scroll: scroll });
   return engine;
 }

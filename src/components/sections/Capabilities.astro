@@ -1,0 +1,146 @@
+---
+/**
+ * 03 · Capabilities. The rest of the platform, beyond the three core
+ * practices: each card is the condensed explanation (what it is, what we
+ * deliver) with a link to the full page.
+ */
+import { serviceBySlug } from '../../data/services';
+import Icon from '../ui/Icon.astro';
+import type { IconName } from '../ui/icons';
+
+const firstSentences = (text: string, n = 2) => text.match(/[^.!?]+[.!?]+/g)!.slice(0, n).join(' ').trim();
+const fromService = (slug: string) => {
+  const s = serviceBySlug(slug)!;
+  return { href: `/services/${s.slug}/`, icon: s.icon, title: s.short === s.name ? s.name : `${s.short}`, full: s.short === s.name ? '' : s.name, text: firstSentences(s.plain), delivers: s.delivers.slice(0, 3), accent: s.accent };
+};
+const itam = serviceBySlug('itam')!;
+const cards: { href: string; icon: IconName; title: string; full: string; text: string; delivers: string[]; accent: string }[] = [
+  fromService('app-engine'),
+  fromService('integrations'),
+  fromService('enterprise-architecture'),
+  fromService('spm'),
+  {
+    href: '/services/itam/',
+    icon: 'itam',
+    title: 'HAM and SAM',
+    full: 'Hardware and Software Asset Management',
+    text: 'Hardware Asset Management follows every device from purchase to disposal. Software Asset Management compares the licences you own with what is installed and used, so you reclaim waste and face audits calmly.',
+    delivers: [itam.delivers[1]!, itam.delivers[3]!, itam.delivers[4]!],
+    accent: 'data',
+  },
+];
+---
+
+<section id="capabilities" class="section caps" data-scene="capabilities" data-theme="dark" aria-labelledby="caps-title">
+  <div class="gutter">
+    <div class="caps-head">
+      <div>
+        <p class="eyebrow">Across the platform</p>
+        <h2 id="caps-title" class="h2 mt-4" data-reveal>The rest of the platform, <span class="text-lit">explained</span></h2>
+      </div>
+      <p class="lead max-w-[34rem]" data-reveal>
+        Beyond the three core practices, these are the capabilities we design and deliver most often. Each one in plain words, with what we actually do.
+      </p>
+    </div>
+
+    <ul class="caps-grid">
+      {
+        cards.map((c, i) => (
+          <li class={`caps-item caps-${i + 1}`} data-reveal>
+            <a href={c.href} class="card card-hover caps-card">
+              <span class={`icon-tile ${c.accent === 'data' ? 'is-data' : ''}`}>
+                <Icon name={c.icon} />
+              </span>
+              <h3 class="h3 mt-5">{c.title}</h3>
+              {c.full && <p class="caps-full">{c.full}</p>}
+              <p class="body mt-3">{c.text}</p>
+              <p class="caps-label">What we deliver</p>
+              <ul class="dots caps-list">
+                {c.delivers.map((d) => (
+                  <li>{d}</li>
+                ))}
+              </ul>
+              <span class="link-arrow mt-auto pt-4">
+                Explore {c.title}
+                <Icon name="arrow" />
+              </span>
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+</section>
+
+<style>
+  .caps {
+    background:
+      radial-gradient(40% 50% at 90% 10%, color-mix(in srgb, var(--color-iris) 18%, transparent), transparent 70%),
+      radial-gradient(35% 40% at 0% 90%, color-mix(in srgb, var(--color-violet) 12%, transparent), transparent 70%),
+      var(--color-night);
+  }
+  .caps-head {
+    display: grid;
+    gap: 1.5rem;
+    align-items: end;
+  }
+  @media (min-width: 1024px) {
+    .caps-head {
+      grid-template-columns: 1.1fr 1fr;
+      gap: 4rem;
+    }
+  }
+  .caps-grid {
+    display: grid;
+    gap: 1rem;
+    margin-top: clamp(2.5rem, 5vw, 4rem);
+  }
+  @media (min-width: 720px) {
+    .caps-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (min-width: 1100px) {
+    .caps-grid {
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+    }
+    .caps-item {
+      grid-column: span 2;
+    }
+    .caps-4,
+    .caps-5 {
+      grid-column: span 3;
+    }
+  }
+  .caps-item {
+    display: flex;
+  }
+  .caps-card {
+    display: flex;
+    width: 100%;
+    flex-direction: column;
+    padding: clamp(1.4rem, 2.2vw, 1.9rem);
+  }
+  .caps-full {
+    margin-top: 0.3rem;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-grey-400);
+  }
+  .caps-label {
+    margin-top: 1.3rem;
+    margin-bottom: 0.6rem;
+    font-size: 0.76rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-iris-soft);
+  }
+  .caps-list {
+    font-size: 0.96rem;
+    line-height: 1.45;
+    color: var(--color-grey-200);
+  }
+</style>
