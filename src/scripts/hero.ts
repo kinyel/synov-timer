@@ -208,6 +208,8 @@ export function initHero(reduced: boolean) {
   };
 
   const render = () => {
+    // A page reloaded part-way down scrolls before the plates are measured: wait for them.
+    if (!open.c.length) return;
     const tIntro = clamp(p / INTRO);
     const closing = ease(clamp((p - END) / (1 - END)));
     const s = p < INTRO ? tIntro - 1 : station((p - INTRO) / (END - INTRO));
@@ -328,31 +330,6 @@ export function initHero(reduced: boolean) {
   };
   gsap.ticker.add(tick);
 
-  ScrollTrigger.create({
-    trigger: root,
-    start: 'top top',
-    end: 'bottom bottom',
-    onUpdate: (st) => {
-      p = st.progress;
-      render();
-    },
-    onToggle: (st) => {
-      visible = st.isActive;
-      if (visible) startDust();
-      else stopDust();
-    },
-    onRefresh: (st) => {
-      measure();
-      p = st.progress;
-      lastKey = '';
-      active = -2;
-      note = -2;
-      wasClosing = false;
-      leaderOn = false;
-      render();
-    },
-  });
-
   // ── Dust in the light ──────────────────────────────────────────────────
   const ctx = dust.getContext('2d');
   type Mote = { x: number; y: number; r: number; a: number; vx: number; vy: number; t: number; warm: boolean };
@@ -418,6 +395,32 @@ export function initHero(reduced: boolean) {
   sizeDust();
   ScrollTrigger.addEventListener('refreshInit', sizeDust);
   startDust();
+
+  // Created last: a page reloaded part-way down fires these at once, so everything they use must exist.
+  ScrollTrigger.create({
+    trigger: root,
+    start: 'top top',
+    end: 'bottom bottom',
+    onUpdate: (st) => {
+      p = st.progress;
+      render();
+    },
+    onToggle: (st) => {
+      visible = st.isActive;
+      if (visible) startDust();
+      else stopDust();
+    },
+    onRefresh: (st) => {
+      measure();
+      p = st.progress;
+      lastKey = '';
+      active = -2;
+      note = -2;
+      wasClosing = false;
+      leaderOn = false;
+      render();
+    },
+  });
 
   // ── Arrival: the plates settle into place one after another ────────────
   measure();
