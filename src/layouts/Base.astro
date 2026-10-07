@@ -118,7 +118,6 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schem
         var d = document.documentElement;
         d.classList.add('js');
         if (matchMedia('(prefers-reduced-motion: reduce)').matches) d.classList.add('reduced-motion');
-        if (matchMedia('(pointer: fine)').matches) d.classList.add('has-cursor');
       })();
     </script>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

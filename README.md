@@ -76,7 +76,7 @@ The three blog posts, three case studies and one role in the repository are draf
 
 - **The foundation** (ITSM, ITOM, ITAM on the CMDB) is deliberately plain: flat boxes in `Foundation.astro`.
 - **The hero and the other sections (CSS 3D).** Pure HTML and CSS, so the text stays crisp:
-  - The hero is in `Hero.astro` with `src/scripts/hero.ts`. On the first scroll the stack turns from diamonds to squares (an eased tween on `--turn`); the plate the request reaches turns its words level to the reader (`.lvl`, `--lv`); after the last level the stack turns back to diamonds and closes up.
+  - The hero is in `Hero.astro` with `src/scripts/hero.ts`. On the first scroll the stack turns from diamonds to squares (an eased tween on the stack's transform). A gold thread draws down through the plates; the plate the request has reached stays solid, its words turned level to the reader (`.lvl`), while the others fade to faint outlines. After the last level every plate comes back, turns back to a diamond and closes up.
   - The staircase of square tiles is `Services.astro`, driven from `src/scripts/scroll.ts`.
   - The small models (platform board, AI layer, case files, industry ring, assembling cube, TCPWave flow, and the plate stack on inner-page headers) are built from the `.s3d` / `.blk` primitives at the end of `src/styles/global.css`. `src/scripts/scenes.ts` drives their scroll progress (`--p`) and pointer tilt, and pauses them off screen. To make a new one, put blocks (`blk()` from `src/lib/iso.ts`) inside `<div class="s3d" data-s3d><div class="s3d-world">…</div></div>` and animate with `--p`.
 - **Reduced motion:** no smooth scroll, no animation; every model shows in its finished state.

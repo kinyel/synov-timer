@@ -14,8 +14,8 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
  * so it is smooth however fast the page is scrolled).
  *
  * The request's position is a station `s`: -1 above the first plate, 0..4 at
- * the plates, fractions in between. The plates are CSS 3D; the spark, the
- * leader line and the level marks are drawn in screen space over them, from
+ * the plates, fractions in between. The plates are CSS 3D; the thread, the
+ * spark, the leader line and the level marks are drawn in screen space over them, from
  * plate positions measured on load and resize (never per frame), in both the
  * diamond and the square pose, and mixed by the turn.
  * The plate the request has reached is marked is-active; its words turn level
@@ -44,6 +44,9 @@ export function initHero(reduced: boolean) {
   const notes = all<HTMLElement>('[data-note]');
   const noteEnd = one<HTMLElement>('[data-note-end]');
   const datums = all<HTMLElement>('[data-datum]');
+  const base = one<SVGPathElement>('[data-beam-base]');
+  const lit = all<SVGPathElement>('[data-beam-lit]');
+  const grad = one<SVGLinearGradientElement>('[data-beam-grad]');
   const spark = one<SVGGElement>('[data-spark]');
   const sparkInner = one<SVGGElement>('[data-spark-inner]');
   const flares = all<SVGGElement>('[data-flare]');
@@ -52,6 +55,10 @@ export function initHero(reduced: boolean) {
   const dust = one<HTMLCanvasElement>('[data-dust]');
   const steps = all<HTMLElement>('[data-progress-steps] i');
   const N = plates.length;
+  /** Each plate's glass layers (top face and edges): what fades when it is not the one in focus. */
+  const layers = plates.map((pl) => [...pl.querySelectorAll<HTMLElement>('.plate-top, .plate-edge')]);
+  /** What stays of a plate while it is out of focus: a faint outline. */
+  const outlines = plates.map((pl) => pl.querySelector<HTMLElement>('[data-outline]')!);
   const ease = gsap.parseEase('power2.inOut');
   const clamp = gsap.utils.clamp(0, 1);
   const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
@@ -237,15 +244,27 @@ export function initHero(reduced: boolean) {
     intro.style.visibility = tIntro >= 0.99 ? 'hidden' : '';
     notesBox.style.opacity = String(clamp((tIntro - 0.55) / 0.45));
 
-    // The spark: from above the first plate down through every plate's centre.
+    // The thread: from above the first plate down through every plate's centre.
     const top: Pt = { x: C[0]!.x, y: C[0]!.y - plateSize * 0.42 };
     const pts = [top, ...C];
+    const d = pts.map((pt, i) => `${i ? 'L' : 'M'} ${pt.x.toFixed(1)} ${pt.y.toFixed(1)}`).join(' ');
+    let total = 0;
+    const cum = [0];
+    for (let i = 1; i < pts.length; i++) cum.push((total += Math.hypot(pts[i]!.x - pts[i - 1]!.x, pts[i]!.y - pts[i - 1]!.y)));
     const u = Math.max(0, Math.min(N, s + 1));
     const k = Math.min(N - 1, Math.floor(u));
     const head = mix(pts[k]!, pts[k + 1]!, u - k);
-    const key = `${head.x.toFixed(1)}|${head.y.toFixed(1)}|${R.map((r) => `${r.x.toFixed(0)},${r.y.toFixed(0)}`).join(';')}`;
+    const drawn = cum[k]! + (cum[k + 1]! - cum[k]!) * (u - k);
+    const key = `${d}|${drawn.toFixed(1)}|${R.map((r) => `${r.x.toFixed(0)},${r.y.toFixed(0)}`).join(';')}`;
     if (key !== lastKey) {
       lastKey = key;
+      base.setAttribute('d', d);
+      for (const l of lit) {
+        l.setAttribute('d', d);
+        l.style.strokeDasharray = `${drawn.toFixed(1)} ${(total + 50).toFixed(1)}`;
+      }
+      grad.setAttribute('y1', (head.y - 260).toFixed(1));
+      grad.setAttribute('y2', (head.y + 6).toFixed(1));
       spark.setAttribute('transform', `translate(${head.x.toFixed(1)} ${head.y.toFixed(1)})`);
       flares.forEach((f, i) => f.setAttribute('transform', `translate(${C[i]!.x.toFixed(1)} ${C[i]!.y.toFixed(1)})`));
       datums.forEach((dt, i) => {
@@ -259,17 +278,28 @@ export function initHero(reduced: boolean) {
       const v = f.toFixed(3);
       if (seg.style.getPropertyValue('--f') !== v) seg.style.setProperty('--f', v);
     });
-    for (const dt of datums) dt.style.opacity = String(clamp((tIntro - 0.4) / 0.6) * (1 - closing));
 
     // Which plate is lit, and which note shows.
     const here = s < -0.2 ? -1 : Math.max(0, Math.min(N - 1, Math.floor(s + 0.2)));
     setActive(closing > 0.25 ? N - 1 : here, closing > 0.25);
-    // While a plate is active, the others fade to outlines and only its level mark shows.
-    // From the close on, everything is back.
-    const alone = closing === 0 && here >= 0;
     stack.classList.toggle('is-closing', closing > 0);
-    plates.forEach((pl, i) => pl.classList.toggle('is-ghost', alone && i !== here));
-    datums.forEach((dt, i) => dt.classList.toggle('is-shown', !alone ? closing > 0 : i === here));
+    // One plate at a time: each plate (and its level mark) fades to a faint outline with the
+    // spark's distance from it, so the old one fades as the spark leaves and the next comes
+    // in as it arrives, in step with the scroll. Before the first level and from the close
+    // on, every plate is back.
+    const smooth = (x: number) => x * x * (3 - 2 * x);
+    const focus = smooth(clamp((s + 0.6) / 0.6)) * (1 - smooth(clamp(closing * 4)));
+    const marks = clamp((tIntro - 0.4) / 0.6) * (1 - closing);
+    plates.forEach((_, i) => {
+      const near = smooth(clamp(1 - Math.abs(s - i)));
+      const vis = 1 - focus * (1 - near);
+      const v = vis > 0.999 ? '' : vis.toFixed(3);
+      for (const layer of layers[i]!) if (layer.style.opacity !== v) layer.style.opacity = v;
+      const o = (1 - vis).toFixed(3);
+      if (outlines[i]!.style.opacity !== o) outlines[i]!.style.opacity = o;
+      const m = (marks * vis).toFixed(3);
+      if (datums[i]!.style.opacity !== m) datums[i]!.style.opacity = m;
+    });
     setNote(closing > 0.35 ? N : Math.max(0, here));
 
     // The leader ties the note to its plate while the request dwells there.
@@ -393,8 +423,9 @@ export function initHero(reduced: boolean) {
   measure();
   render();
   if (scrollY < innerHeight * 0.4) {
-    const tl = gsap.timeline({ delay: 0.1, onComplete: () => stack.classList.add('is-settled') });
+    const tl = gsap.timeline({ delay: 0.1 });
     tl.from(plates, { '--drop': '260px', '--fade': 0, duration: 1.5, ease: 'expo.out', stagger: 0.12 }, 0);
+    tl.from(base, { opacity: 0, duration: 1.2 }, 0.9);
     tl.from(sparkInner, { scale: 0, transformOrigin: '50% 50%', duration: 1.2, ease: 'expo.out' }, 1.0);
-  } else stack.classList.add('is-settled');
+  }
 }

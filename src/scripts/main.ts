@@ -146,9 +146,11 @@ if (!reduced) {
 }
 
 /* ── Custom cursor (fine pointers) ─────────────────────────────────────── */
+// The native pointer is hidden only once this runs, so it never goes missing if the script does not.
 const dot = $('[data-cursor-dot]');
 const ring = $('[data-cursor-ring]');
-if (html.classList.contains('has-cursor') && dot && ring) {
+if (matchMedia('(pointer: fine)').matches && dot && ring) {
+  html.classList.add('has-cursor');
   // Hidden until the pointer first moves, so it never sits in the corner.
   gsap.set([dot, ring], { opacity: 0 });
   addEventListener('pointermove', () => gsap.to([dot, ring], { opacity: 1, duration: 0.3 }), { once: true });

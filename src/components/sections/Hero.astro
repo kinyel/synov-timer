@@ -166,7 +166,7 @@ const alerts = [
                 <i class="anchor" style="left:100%;top:100%" data-anchor="r" />
                 <i class="anchor" style="left:0;top:100%" data-anchor="f" />
               </div>
-              <span class="plate-outline" />
+              <span class="plate-outline" data-outline />
             </div>
           ))
         }
@@ -180,7 +180,18 @@ const alerts = [
             <stop offset="0.3" stop-color="var(--color-gold)" stop-opacity="0.38"></stop>
             <stop offset="1" stop-color="var(--color-gold)" stop-opacity="0"></stop>
           </radialGradient>
+          <linearGradient id="beam-lit" gradientUnits="userSpaceOnUse" x1="0" y1="-400" x2="0" y2="400" data-beam-grad>
+            <stop offset="0" stop-color="var(--color-gold)" stop-opacity="0.3"></stop>
+            <stop offset="0.85" stop-color="var(--color-gold)" stop-opacity="1"></stop>
+            <stop offset="1" stop-color="var(--color-gold-glow)" stop-opacity="1"></stop>
+          </linearGradient>
+          <filter id="beam-blur" x="-400%" y="-10%" width="900%" height="120%">
+            <feGaussianBlur stdDeviation="4"></feGaussianBlur>
+          </filter>
         </defs>
+        <path class="beam-base" data-beam-base></path>
+        <path class="beam-glow" filter="url(#beam-blur)" stroke="url(#beam-lit)" data-beam-lit></path>
+        <path class="beam-lit" stroke="url(#beam-lit)" data-beam-lit></path>
         {
           JOURNEY.map((_, i) => (
             <g class="flare" data-flare={i}>
@@ -518,28 +529,14 @@ const alerts = [
     border-radius: 1.15em;
     opacity: var(--fade);
   }
-  /* A plate's faint outline, shown while another plate is active. */
+  /* A plate's faint outline: what stays of it while another plate is in focus (set by hero.ts). */
   .plate-outline {
     position: absolute;
     inset: 0;
     border-radius: 1.15em;
-    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 16%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 18%, transparent);
     opacity: 0;
-    transition: opacity 0.8s var(--ease-expo);
     pointer-events: none;
-  }
-  /* Once the plates have arrived, their fades are eased (opacity only: cheap to animate). */
-  .stack.is-settled .plate-top {
-    transition:
-      box-shadow 0.9s var(--ease-expo),
-      background-color 0.9s var(--ease-expo),
-      opacity 0.8s var(--ease-expo);
-  }
-  .stack.is-settled .plate-edge {
-    transition:
-      box-shadow 0.8s var(--ease-expo),
-      background-color 0.8s var(--ease-expo),
-      opacity 0.8s var(--ease-expo);
   }
   /* Thickness: four faint layers under the top face read as a slab of glass. */
   .plate-edge {
@@ -911,6 +908,23 @@ const alerts = [
     overflow: visible;
     pointer-events: none;
   }
+  .beam-base {
+    fill: none;
+    stroke: color-mix(in srgb, var(--color-white) 16%, transparent);
+    stroke-width: 1.2;
+    stroke-dasharray: 2 5;
+  }
+  .beam-lit {
+    fill: none;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+  }
+  .beam-glow {
+    fill: none;
+    stroke-width: 9;
+    stroke-linecap: round;
+    opacity: 0.6;
+  }
   .flare circle {
     fill: none;
     stroke: var(--color-gold-glow);
@@ -1201,24 +1215,6 @@ const alerts = [
   }
   :global(html.js:not(.reduced-motion)) .plate.is-passed:not(.is-active) .plate-top {
     background-color: color-mix(in srgb, var(--color-night) 15%, transparent);
-  }
-  /* While a plate is active the others are faint outlines, so it stands alone. */
-  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-top,
-  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-edge {
-    opacity: 0;
-  }
-  :global(html.js:not(.reduced-motion)) .plate.is-ghost:not(.is-active) .plate-outline {
-    opacity: 1;
-  }
-  /* Level marks: only the active level's shows (all of them again at the close). */
-  :global(html.js:not(.reduced-motion)) .datum > * {
-    opacity: 0;
-    transition:
-      opacity 0.7s var(--ease-expo),
-      color 0.6s var(--ease-expo);
-  }
-  :global(html.js:not(.reduced-motion)) .datum.is-shown > * {
-    opacity: 1;
   }
   :global(html.js:not(.reduced-motion)) .is-active .ui {
     opacity: 1;
