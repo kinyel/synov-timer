@@ -1,76 +1,110 @@
 ---
 /**
- * 03 · Capabilities. The rest of the platform, beyond the three core
- * practices: each card is the condensed explanation (what it is, what we
- * deliver) with a link to the full page.
+ * 03 · Capabilities: the rest of the platform. A 3D model of the platform:
+ * five modules drop onto one base and light up in turn, joined by gold
+ * lines through Integrations at the centre. Beside it, one short line each.
  */
 import { serviceBySlug } from '../../data/services';
 import Icon from '../ui/Icon.astro';
 import type { IconName } from '../ui/icons';
+import { blk, line } from '../../lib/iso';
 
-const firstSentences = (text: string, n = 2) => text.match(/[^.!?]+[.!?]+/g)!.slice(0, n).join(' ').trim();
-const fromService = (slug: string) => {
-  const s = serviceBySlug(slug)!;
-  return { href: `/services/${s.slug}/`, icon: s.icon, title: s.short === s.name ? s.name : `${s.short}`, full: s.short === s.name ? '' : s.name, text: firstSentences(s.plain), delivers: s.delivers.slice(0, 3), accent: s.accent };
-};
-const itam = serviceBySlug('itam')!;
-const cards: { href: string; icon: IconName; title: string; full: string; text: string; delivers: string[]; accent: string }[] = [
-  fromService('app-engine'),
-  fromService('integrations'),
-  fromService('enterprise-architecture'),
-  fromService('spm'),
-  {
-    href: '/services/itam/',
-    icon: 'itam',
-    title: 'HAM and SAM',
-    full: 'Hardware and Software Asset Management',
-    text: 'Hardware Asset Management follows every device from purchase to disposal. Software Asset Management compares the licences you own with what is installed and used, so you reclaim waste and face audits calmly.',
-    delivers: [itam.delivers[1]!, itam.delivers[3]!, itam.delivers[4]!],
-    accent: 'data',
-  },
+interface Cap {
+  key: string;
+  href: string;
+  icon: IconName;
+  name: string;
+  line: string;
+  /** Position on the board, height, and drop order. */
+  x: number;
+  y: number;
+  h: number;
+}
+const s = (slug: string) => serviceBySlug(slug)!;
+const caps: Cap[] = [
+  { key: 'app-engine', href: '/services/app-engine/', icon: 'appEngine', name: 'App Engine', line: s('app-engine').blurb, x: -132, y: -132, h: 66 },
+  { key: 'ea', href: '/services/enterprise-architecture/', icon: 'architecture', name: 'Enterprise Architecture', line: s('enterprise-architecture').blurb, x: 132, y: -132, h: 50 },
+  { key: 'integrations', href: '/services/integrations/', icon: 'integrations', name: 'Integrations', line: s('integrations').blurb, x: 0, y: 0, h: 38 },
+  { key: 'spm', href: '/services/spm/', icon: 'spm', name: 'SPM', line: s('spm').blurb, x: -132, y: 132, h: 44 },
+  { key: 'ham-sam', href: '/services/itam/', icon: 'itam', name: 'HAM and SAM', line: 'Every device and licence, accounted for', x: 132, y: 132, h: 26 },
 ];
+const short = (c: Cap) => (c.key === 'ea' ? 'EA' : c.key === 'ham-sam' ? 'HAM · SAM' : c.name);
 ---
 
 <section id="capabilities" class="section caps" data-scene="capabilities" data-theme="dark" aria-labelledby="caps-title">
-  <div class="gutter">
+  <div class="gutter caps-grid">
     <div class="caps-head">
-      <div>
-        <p class="eyebrow">Across the platform</p>
-        <h2 id="caps-title" class="h2 mt-4" data-reveal>The rest of the platform, <span class="text-lit">explained</span></h2>
+      <p class="eyebrow">Across the platform</p>
+      <h2 id="caps-title" class="h2 mt-4" data-reveal>The rest of <span class="text-lit">the platform</span></h2>
+    </div>
+    <div class="s3d caps-scene" data-s3d aria-hidden="true">
+      <div class="s3d-world">
+        <span class="caps-glow"></span>
+        <div class="blk caps-base" style={blk(0, 0, 440, 16)}>
+          <b class="blk-top"><span class="caps-base-label">ServiceNow platform</span></b>
+          <b class="blk-e"></b>
+          <b class="blk-s"></b>
+        </div>
+        {
+          caps
+            .filter((c) => c.key !== 'integrations')
+            .map((c, i) => (
+              <span class="s3d-line caps-line" style={line(0, 0, c.x, c.y, 17) + `;--i:${i}`}>
+                <i />
+              </span>
+            ))
+        }
+        {
+          caps.map((c, i) => (
+            <div class="blk caps-blk" style={blk(c.x, c.y, 88, c.h, 16, `--i:${i}`)} data-cap-blk={c.key}>
+              <b class="blk-top">
+                <span class="blk-label">
+                  <Icon name={c.icon} />
+                  {short(c)}
+                </span>
+              </b>
+              <b class="blk-e" />
+              <b class="blk-s" />
+            </div>
+          ))
+        }
       </div>
-      <p class="lead max-w-[34rem]" data-reveal>
-        Beyond the three core practices, these are the capabilities we design and deliver most often. Each one in plain words, with what we actually do.
-      </p>
     </div>
 
-    <ul class="caps-grid">
-      {
-        cards.map((c, i) => (
-          <li class={`caps-item caps-${i + 1}`} data-reveal>
-            <a href={c.href} class="card card-hover caps-card">
-              <span class={`icon-tile ${c.accent === 'data' ? 'is-data' : ''}`}>
-                <Icon name={c.icon} />
-              </span>
-              <h3 class="h3 mt-5">{c.title}</h3>
-              {c.full && <p class="caps-full">{c.full}</p>}
-              <p class="body mt-3">{c.text}</p>
-              <p class="caps-label">What we deliver</p>
-              <ul class="dots caps-list">
-                {c.delivers.map((d) => (
-                  <li>{d}</li>
-                ))}
-              </ul>
-              <span class="link-arrow mt-auto pt-4">
-                Explore {c.title}
-                <Icon name="arrow" />
-              </span>
-            </a>
-          </li>
-        ))
-      }
+    <ul class="caps-list">
+        {
+          caps.map((c) => (
+            <li data-reveal>
+              <a href={c.href} class="caps-row" data-cap={c.key}>
+                <span class={`icon-tile is-sm ${c.key === 'ham-sam' ? 'is-data' : ''}`}>
+                  <Icon name={c.icon} />
+                </span>
+                <span class="caps-text">
+                  <b>{c.name}</b>
+                  <span>{c.line}</span>
+                </span>
+                <Icon name="arrow" class="caps-arrow" />
+              </a>
+            </li>
+          ))
+        }
     </ul>
   </div>
 </section>
+
+<script>
+  // Hovering a row lights its module on the board.
+  for (const row of document.querySelectorAll<HTMLElement>('[data-cap]')) {
+    const block = document.querySelector<HTMLElement>(`[data-cap-blk="${row.dataset.cap}"]`);
+    if (!block) continue;
+    const on = () => block.classList.add('is-lit', 'is-hover');
+    const off = () => block.classList.remove('is-lit', 'is-hover');
+    row.addEventListener('pointerenter', on);
+    row.addEventListener('pointerleave', off);
+    row.addEventListener('focus', on);
+    row.addEventListener('blur', off);
+  }
+</script>
 
 <style>
   .caps {
@@ -79,68 +113,185 @@ const cards: { href: string; icon: IconName; title: string; full: string; text: 
       radial-gradient(35% 40% at 0% 90%, color-mix(in srgb, var(--color-violet) 12%, transparent), transparent 70%),
       var(--color-night);
   }
-  .caps-head {
-    display: grid;
-    gap: 1.5rem;
-    align-items: end;
-  }
-  @media (min-width: 1024px) {
-    .caps-head {
-      grid-template-columns: 1.1fr 1fr;
-      gap: 4rem;
-    }
-  }
   .caps-grid {
     display: grid;
     gap: 1rem;
-    margin-top: clamp(2.5rem, 5vw, 4rem);
+    align-items: center;
   }
-  @media (min-width: 720px) {
+  @media (min-width: 1024px) {
     .caps-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+      grid-template-areas: 'scene head' 'scene list';
+      grid-template-rows: auto 1fr;
+      column-gap: 3rem;
+    }
+    .caps-head {
+      grid-area: head;
+      align-self: end;
+    }
+    .caps-scene {
+      grid-area: scene;
+    }
+    .caps-list {
+      grid-area: list;
+      align-self: start;
     }
   }
-  @media (min-width: 1100px) {
-    .caps-grid {
-      grid-template-columns: repeat(6, minmax(0, 1fr));
-    }
-    .caps-item {
-      grid-column: span 2;
-    }
-    .caps-4,
-    .caps-5 {
-      grid-column: span 3;
+  /* A pool of light under the board. */
+  .caps-glow {
+    position: absolute;
+    left: -360px;
+    top: -360px;
+    width: 720px;
+    height: 720px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, color-mix(in srgb, var(--color-iris) 30%, transparent), color-mix(in srgb, var(--color-violet) 10%, transparent) 55%, transparent);
+    transform: translateZ(-2px);
+  }
+  /* ── The model ── */
+  .caps-scene {
+    --k: 0.62;
+    height: 330px;
+  }
+  @media (min-width: 640px) {
+    .caps-scene {
+      --k: 0.85;
+      height: 430px;
     }
   }
-  .caps-item {
-    display: flex;
+  @media (min-width: 1280px) {
+    .caps-scene {
+      --k: 1;
+      height: 520px;
+    }
   }
-  .caps-card {
-    display: flex;
-    width: 100%;
-    flex-direction: column;
-    padding: clamp(1.4rem, 2.2vw, 1.9rem);
+  .caps-scene .s3d-world {
+    top: 54%;
   }
-  .caps-full {
-    margin-top: 0.3rem;
-    font-size: 0.85rem;
+  .caps-base .blk-top {
+    background:
+      linear-gradient(to right, color-mix(in srgb, var(--color-iris-soft) 10%, transparent) 1px, transparent 1px) 0 0 / 40px 40px,
+      linear-gradient(to bottom, color-mix(in srgb, var(--color-iris-soft) 10%, transparent) 1px, transparent 1px) 0 0 / 40px 40px,
+      radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--color-iris) 24%, transparent), transparent 75%),
+      color-mix(in srgb, var(--color-navy) 70%, var(--color-night));
+  }
+  .caps-base-label {
+    position: absolute;
+    right: 14px;
+    bottom: 10px;
+    font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.2em;
     text-transform: uppercase;
+    color: color-mix(in srgb, var(--color-iris-soft) 70%, transparent);
+  }
+  /* Each module drops onto the board in turn as the section arrives. */
+  .caps-blk {
+    --q: clamp(0, calc(var(--p) * 1.9 - var(--i) * 0.2), 1);
+    --lift: 0px;
+    transform: translateZ(calc(var(--z) + var(--h) + (1 - var(--q)) * (1 - var(--q)) * 260px + var(--lift)));
+    transition: --lift 0.5s var(--ease-expo);
+  }
+  .caps-blk > b {
+    opacity: var(--q);
+  }
+  .caps-blk.is-hover {
+    --lift: 18px;
+  }
+  /* Idle: the modules take turns to light, as if work is flowing between them. */
+  .caps-blk .blk-top::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    box-shadow:
+      inset 0 0 0 1.5px var(--color-gold),
+      inset 0 0 26px color-mix(in srgb, var(--color-gold) 30%, transparent),
+      0 0 30px color-mix(in srgb, var(--color-gold) 30%, transparent);
+    opacity: 0;
+    animation: caps-turn 10s ease-in-out infinite;
+    animation-delay: calc(var(--i) * 2s);
+  }
+  @keyframes caps-turn {
+    0%,
+    24%,
+    100% {
+      opacity: 0;
+    }
+    8%,
+    16% {
+      opacity: 1;
+    }
+  }
+  .caps-line {
+    --draw: clamp(0, calc(var(--p) * 2.2 - 1.1), 1);
+  }
+  .caps-line > i {
+    position: absolute;
+    top: -3px;
+    left: 0;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    background: var(--color-gold-glow);
+    box-shadow: 0 0 12px 3px color-mix(in srgb, var(--color-gold) 80%, transparent);
+    animation: caps-packet 2.6s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+    animation-delay: calc(var(--i) * -0.65s);
+  }
+  @keyframes caps-packet {
+    0% {
+      left: 0;
+      opacity: 0;
+    }
+    15% {
+      opacity: 1;
+    }
+    85% {
+      opacity: 1;
+    }
+    100% {
+      left: calc(100% - 8px);
+      opacity: 0;
+    }
+  }
+  /* ── The list ── */
+  .caps-list {
+    display: grid;
+    margin-top: 1.5rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-white) 9%, transparent);
+  }
+  .caps-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem 0.25rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-white) 9%, transparent);
+    transition: background 0.3s ease;
+  }
+  .caps-text {
+    display: grid;
+    flex: 1;
+    min-width: 0;
+  }
+  .caps-text b {
+    font-size: 1.15rem;
+    color: var(--color-white);
+  }
+  .caps-text span {
+    font-size: 0.98rem;
     color: var(--color-grey-400);
   }
-  .caps-label {
-    margin-top: 1.3rem;
-    margin-bottom: 0.6rem;
-    font-size: 0.76rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+  .caps-row :global(.caps-arrow) {
+    width: 1.2rem;
+    height: 1.2rem;
+    flex: none;
     color: var(--color-iris-soft);
+    transition: transform 0.4s var(--ease-expo);
   }
-  .caps-list {
-    font-size: 0.96rem;
-    line-height: 1.45;
+  .caps-row:hover :global(.caps-arrow),
+  .caps-row:focus-visible :global(.caps-arrow) {
+    transform: translateX(4px);
+  }
+  .caps-row:hover .caps-text span {
     color: var(--color-grey-200);
   }
 </style>
