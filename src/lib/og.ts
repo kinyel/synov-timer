@@ -52,13 +52,13 @@ const C = { night: '#040a16', navy: '#0a1d3b', iris: '#4247af', irisSoft: '#8e93
 let assets: Promise<{ fonts: { name: string; data: Buffer; weight: 400 | 700 | 800; style: 'normal' }[]; mark: string }> | undefined;
 const load = () =>
   (assets ??= (async () => {
-    const font = (w: number) => readFile(join(process.cwd(), `node_modules/@fontsource/alegreya-sans/files/alegreya-sans-latin-${w}-normal.woff`));
+    const font = (w: number) => readFile(join(process.cwd(), `node_modules/@fontsource/poppins/files/poppins-latin-${w}-normal.woff`));
     const [r, b, x, mark] = await Promise.all([font(400), font(700), font(800), readFile(join(process.cwd(), 'public/brand/mark.svg'))]);
     return {
       fonts: [
-        { name: 'Alegreya Sans', data: r, weight: 400, style: 'normal' },
-        { name: 'Alegreya Sans', data: b, weight: 700, style: 'normal' },
-        { name: 'Alegreya Sans', data: x, weight: 800, style: 'normal' },
+        { name: 'Poppins', data: r, weight: 400, style: 'normal' },
+        { name: 'Poppins', data: b, weight: 700, style: 'normal' },
+        { name: 'Poppins', data: x, weight: 800, style: 'normal' },
       ],
       mark: `data:image/svg+xml;base64,${mark.toString('base64')}`,
     };
@@ -67,7 +67,7 @@ const load = () =>
 export async function renderCard(page: OgPage): Promise<Buffer> {
   const { fonts, mark } = await load();
   const len = page.title.length;
-  const size = len > 60 ? 52 : len > 40 ? 60 : 70;
+  const size = len > 60 ? 46 : len > 40 ? 54 : 62;
   // Words inside the lit phrase are set in light iris.
   const from = page.lit ? page.title.indexOf(page.lit) : -1;
   const to = from + (page.lit?.length ?? 0);
@@ -113,7 +113,7 @@ export async function renderCard(page: OgPage): Promise<Buffer> {
       flexDirection: 'column',
       justifyContent: 'space-between',
       padding: '64px 72px 56px',
-      fontFamily: 'Alegreya Sans',
+      fontFamily: 'Poppins',
       color: C.white,
       backgroundColor: C.night,
       backgroundImage: `radial-gradient(circle at 92% 0%, ${C.iris}88 0%, transparent 48%), radial-gradient(circle at 0% 100%, ${C.violet}44 0%, transparent 46%), linear-gradient(180deg, ${C.night} 0%, ${C.navy} 100%)`,
@@ -135,14 +135,14 @@ export async function renderCard(page: OgPage): Promise<Buffer> {
           { display: 'flex', alignSelf: 'flex-start', padding: '8px 18px', borderRadius: 999, border: `1.5px solid ${C.irisSoft}66`, backgroundColor: `${C.iris}33`, color: C.irisSoft, fontSize: 22, fontWeight: 700, letterSpacing: 3, textTransform: 'uppercase' },
           page.eyebrow,
         ),
-        h('div', { display: 'flex', flexWrap: 'wrap', maxWidth: 780, fontSize: size, fontWeight: 800, lineHeight: 1.06, letterSpacing: -0.5 }, words),
+        h('div', { display: 'flex', flexWrap: 'wrap', maxWidth: 700, fontSize: size, fontWeight: 800, lineHeight: 1.08, letterSpacing: -1 }, words),
       ]),
       // The gold thread, and the address
       h('div', { display: 'flex', alignItems: 'center', gap: 28 }, [
-        h('div', { display: 'flex', width: 360, height: 4, borderRadius: 4, backgroundImage: `linear-gradient(90deg, ${C.gold}00 0%, ${C.gold} 55%, ${C.goldGlow} 100%)`, boxShadow: `0 0 18px ${C.gold}` }),
+        h('div', { display: 'flex', width: 220, height: 4, borderRadius: 4, backgroundImage: `linear-gradient(90deg, ${C.gold}00 0%, ${C.gold} 55%, ${C.goldGlow} 100%)`, boxShadow: `0 0 18px ${C.gold}` }),
         h('div', { display: 'flex', width: 12, height: 12, borderRadius: 12, marginLeft: -34, backgroundColor: C.goldGlow, boxShadow: `0 0 22px 6px ${C.gold}` }),
-        h('span', { fontSize: 24, fontWeight: 700, color: C.grey200 }, 'ralestonconsulting.com'),
-        h('span', { marginLeft: 'auto', fontSize: 22, color: C.grey400 }, 'ServiceNow consultancy · Ottawa, Canada'),
+        h('span', { fontSize: 22, fontWeight: 700, color: C.grey200, whiteSpace: 'nowrap' }, 'ralestonconsulting.com'),
+        h('span', { marginLeft: 'auto', fontSize: 19, color: C.grey400, whiteSpace: 'nowrap' }, 'ServiceNow consultancy · Ottawa, Canada'),
       ]),
     ],
   );

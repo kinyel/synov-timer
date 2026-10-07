@@ -128,7 +128,7 @@ const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
             return (
               <article class="stair-card" style={`--a:${i * 90}deg;--y:${-i * PER_CARD}`} data-stair-card={i} aria-labelledby={`stage-${s.slug}`}>
                 <div class="stair-card-inner">
-                  <p class="flex justify-between text-[0.72rem] font-bold tracking-[0.14em] uppercase">
+                  <p class="flex flex-wrap justify-between gap-x-3 gap-y-1 text-[0.66rem] font-semibold tracking-[0.1em] uppercase">
                     <span class="text-grey-400">Stage 0{i + 1}</span>
                     <span class="text-iris-soft">{card.typical}</span>
                   </p>

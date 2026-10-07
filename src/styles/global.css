@@ -2,11 +2,11 @@
 @import './tokens.css';
 @import 'lenis/dist/lenis.css';
 
-/* Type: Alegreya Sans for everything, self-hosted through Astro's font API (astro.config.mjs). */
+/* Type: Poppins for everything, self-hosted through Astro's font API (astro.config.mjs). */
 @theme inline {
-  --font-sans: var(--font-alegreya);
-  --font-display: var(--font-alegreya);
-  --font-mono: var(--font-alegreya);
+  --font-sans: var(--font-poppins);
+  --font-display: var(--font-poppins);
+  --font-mono: var(--font-poppins);
 }
 @theme {
   --ease-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -68,14 +68,14 @@
   .display {
     font-family: var(--font-display);
     font-weight: 800;
-    letter-spacing: -0.015em;
-    line-height: 0.92;
+    letter-spacing: -0.03em;
+    line-height: 1;
   }
   .label {
     font-family: var(--font-mono);
-    font-size: 0.78rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     font-variant-numeric: lining-nums tabular-nums;
   }
@@ -84,9 +84,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.7rem;
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.14em;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
     color: var(--color-iris);
   }
@@ -302,30 +302,30 @@
     color: var(--color-white);
   }
   .h1 {
-    font-size: clamp(2.6rem, 5.6vw, 5.2rem);
+    font-size: clamp(2.2rem, 4.8vw, 4.4rem);
     font-weight: 800;
-    line-height: 0.98;
-    letter-spacing: -0.012em;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
   }
   .h2 {
-    font-size: clamp(2.1rem, 4.3vw, 3.6rem);
-    font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -0.01em;
+    font-size: clamp(1.8rem, 3.6vw, 3rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
   }
   .h3 {
-    font-size: clamp(1.3rem, 1.8vw, 1.6rem);
-    font-weight: 700;
-    line-height: 1.15;
+    font-size: clamp(1.15rem, 1.5vw, 1.4rem);
+    font-weight: 600;
+    line-height: 1.25;
   }
   .lead {
-    font-size: clamp(1.06rem, 1.35vw, 1.22rem);
-    line-height: 1.6;
+    font-size: clamp(1rem, 1.2vw, 1.12rem);
+    line-height: 1.7;
     color: var(--color-grey-200);
   }
   .body {
-    font-size: 1.04rem;
-    line-height: 1.65;
+    font-size: 0.98rem;
+    line-height: 1.7;
     color: var(--color-grey-200);
   }
   .muted {

@@ -4,8 +4,8 @@ import tailwindcss from '@tailwindcss/vite';
 import mdx from '@astrojs/mdx';
 import sitemap from '@astrojs/sitemap';
 
-/** A Latin-subset Alegreya Sans file from the @fontsource package. */
-const alegreya = (/** @type {string} */ v) => `./node_modules/@fontsource/alegreya-sans/files/alegreya-sans-latin-${v}.woff2`;
+/** A Latin-subset Poppins file from the @fontsource package. */
+const poppins = (/** @type {string} */ v) => `./node_modules/@fontsource/poppins/files/poppins-latin-${v}.woff2`;
 
 export default defineConfig({
   site: 'https://ralestonconsulting.com',
@@ -18,20 +18,21 @@ export default defineConfig({
     sitemap({ filter: (page) => !page.includes('/og/') && !page.endsWith('/404/') }),
   ],
   devToolbar: { enabled: false },
-  // Alegreya Sans (SIL Open Font License), Latin subset, served from this site.
+  // Poppins (SIL Open Font License), Latin subset, served from this site.
   fonts: [
     {
       provider: fontProviders.local(),
-      name: 'Alegreya Sans',
-      cssVariable: '--font-alegreya',
+      name: 'Poppins',
+      cssVariable: '--font-poppins',
       fallbacks: ['Helvetica Neue', 'Arial', 'sans-serif'],
       options: {
         variants: [
-          { weight: 400, style: 'normal', src: [alegreya('400-normal')] },
-          { weight: 400, style: 'italic', src: [alegreya('400-italic')] },
-          { weight: 500, style: 'normal', src: [alegreya('500-normal')] },
-          { weight: 700, style: 'normal', src: [alegreya('700-normal')] },
-          { weight: 800, style: 'normal', src: [alegreya('800-normal')] },
+          { weight: 400, style: 'normal', src: [poppins('400-normal')] },
+          { weight: 400, style: 'italic', src: [poppins('400-italic')] },
+          { weight: 500, style: 'normal', src: [poppins('500-normal')] },
+          { weight: 600, style: 'normal', src: [poppins('600-normal')] },
+          { weight: 700, style: 'normal', src: [poppins('700-normal')] },
+          { weight: 800, style: 'normal', src: [poppins('800-normal')] },
         ],
       },
     },

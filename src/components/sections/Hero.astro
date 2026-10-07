@@ -400,10 +400,10 @@ const alerts = [
   }
   .hero-title {
     margin-top: 1.5rem;
-    font-size: clamp(2.65rem, 5.4vw, 6rem);
+    font-size: clamp(2.1rem, 4.6vw, 5rem);
     font-weight: 800;
-    line-height: 0.98;
-    letter-spacing: -0.012em;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
   }
   .hero-lead {
     margin-top: 1.75rem;
@@ -1446,7 +1446,11 @@ const alerts = [
       font-size: 0.74rem;
       letter-spacing: 0.09em;
     }
-    /* Centred, but never pushed up under the nav when screen one is taller than the screen. */
+    /* Centred by auto margins (not justify-content), so when screen one is taller than the
+       screen it starts below the nav instead of spilling up under it. */
+    .intro {
+      justify-content: flex-start;
+    }
     .intro > :first-child {
       margin-top: auto;
     }
@@ -1454,8 +1458,10 @@ const alerts = [
       margin-bottom: auto;
     }
     .pill {
-      font-size: 0.68rem;
-      letter-spacing: 0.08em;
+      gap: 0.5rem;
+      padding-inline: 0.65rem 0.8rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.06em;
     }
     .hero-ctas .btn {
       flex: 1 1 auto;
@@ -1530,7 +1536,7 @@ const alerts = [
   }
   @media (max-width: 380px) {
     .hero-title {
-      font-size: 2.45rem;
+      font-size: 1.95rem;
     }
   }
   /* Shorter phones: tighter spacing on screen one, so all of it fits below the nav. */
@@ -1554,9 +1560,28 @@ const alerts = [
       margin-top: 1.25rem;
     }
   }
-  @media (max-width: 1023px) and (max-height: 620px) {
+  @media (max-width: 1023px) and (max-height: 650px) {
     .hero-title {
-      font-size: 2.2rem;
+      font-size: 1.85rem;
+    }
+    .hero-lead {
+      margin-top: 0.8rem;
+      font-size: 0.92rem;
+    }
+    /* With the cue hidden, the stats are the last thing on screen one: they take its auto margin. */
+    .intro-stats {
+      margin-top: 0.9rem;
+      margin-bottom: auto;
+    }
+    .hero-ctas {
+      gap: 0.6rem;
+    }
+    .hero-ctas {
+      margin-top: 1.1rem;
+    }
+    .hero-ctas .btn {
+      min-height: 2.75rem;
+      padding-block: 0.6rem;
     }
     .cue {
       display: none;

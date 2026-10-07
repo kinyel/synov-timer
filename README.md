@@ -2,7 +2,7 @@
 
 The marketing site for Raleston Consulting, a ServiceNow consultancy in Ottawa. Static Astro with CSS 3D models in the hero and most sections (no WebGL, no canvas), and a contact form that runs as a Cloudflare Pages Function.
 
-**Stack:** Astro 7 (static output, strict TypeScript), GSAP with ScrollTrigger, Lenis, Tailwind CSS 4, MDX. Fonts are self-hosted (Alegreya Sans).
+**Stack:** Astro 7 (static output, strict TypeScript), GSAP with ScrollTrigger, Lenis, Tailwind CSS 4, MDX. Fonts are self-hosted (Poppins).
 
 ## Run, build, deploy
 
