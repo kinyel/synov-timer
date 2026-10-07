@@ -1,10 +1,12 @@
 import { gsap } from 'gsap';
 import type Lenis from 'lenis';
+import { $progress } from '../lib/store';
 
 /**
  * Navigation behaviour: gliding hover highlight, the morphing Services
- * flyout, condense on scroll, deep links that land inside a pinned section,
- * and the mobile sheet. The active page is marked at build time. Styling lives in src/components/chrome/Nav.astro.
+ * flyout, the dock drawing in on scroll (and its page-progress line), deep
+ * links that land inside a pinned section, and the mobile sheet. The active
+ * page is marked at build time. Styling lives in src/components/chrome/Nav.astro.
  */
 export function initNav(lenis: Lenis | null, reduced: boolean) {
   const nav = document.querySelector<HTMLElement>('[data-nav]');
@@ -180,6 +182,10 @@ export function initNav(lenis: Lenis | null, reduced: boolean) {
       nav.toggleAttribute('data-condensed', condensed);
     }
   });
+
+  // ── Page progress along the foot of the dock ────────────────────────────
+  const line = $('[data-nav-progress]');
+  if (line) $progress.subscribe((p) => (line.style.transform = `scaleX(${p.toFixed(4)})`));
 
   // ── Mobile / tablet sheet ───────────────────────────────────────────────
   const sheet = $('[data-menu]');

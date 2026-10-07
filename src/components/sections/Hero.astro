@@ -925,6 +925,14 @@ const alerts = [
     stroke-linecap: round;
     opacity: 0.6;
   }
+  /* Phones: no thread, just the spark travelling through the plates. */
+  @media (max-width: 1023px) {
+    .beam-base,
+    .beam-lit,
+    .beam-glow {
+      display: none;
+    }
+  }
   .flare circle {
     fill: none;
     stroke: var(--color-gold-glow);

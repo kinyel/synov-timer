@@ -101,7 +101,7 @@ gsap.ticker.add(() => {
     }
   }
 });
-ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (s) => $progress.set(s.progress) });
+ScrollTrigger.create({ start: 0, end: 'max', onUpdate: (s) => $progress.set(s.progress), onRefresh: (s) => $progress.set(s.progress) });
 
 /* ── Copy to clipboard (email, phone) ──────────────────────────────────── */
 for (const btn of $$<HTMLButtonElement>('[data-copy]')) {

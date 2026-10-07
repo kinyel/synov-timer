@@ -260,13 +260,16 @@ export function initHero(reduced: boolean) {
     const key = `${d}|${drawn.toFixed(1)}|${R.map((r) => `${r.x.toFixed(0)},${r.y.toFixed(0)}`).join(';')}`;
     if (key !== lastKey) {
       lastKey = key;
-      base.setAttribute('d', d);
-      for (const l of lit) {
-        l.setAttribute('d', d);
-        l.style.strokeDasharray = `${drawn.toFixed(1)} ${(total + 50).toFixed(1)}`;
+      // The thread is desktop only (hidden in CSS on phones), so phones skip drawing it.
+      if (!phone()) {
+        base.setAttribute('d', d);
+        for (const l of lit) {
+          l.setAttribute('d', d);
+          l.style.strokeDasharray = `${drawn.toFixed(1)} ${(total + 50).toFixed(1)}`;
+        }
+        grad.setAttribute('y1', (head.y - 260).toFixed(1));
+        grad.setAttribute('y2', (head.y + 6).toFixed(1));
       }
-      grad.setAttribute('y1', (head.y - 260).toFixed(1));
-      grad.setAttribute('y2', (head.y + 6).toFixed(1));
       spark.setAttribute('transform', `translate(${head.x.toFixed(1)} ${head.y.toFixed(1)})`);
       flares.forEach((f, i) => f.setAttribute('transform', `translate(${C[i]!.x.toFixed(1)} ${C[i]!.y.toFixed(1)})`));
       datums.forEach((dt, i) => {

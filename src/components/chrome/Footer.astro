@@ -95,6 +95,7 @@ const company = [
   <div class="gutter footer-base">
     <p>© {year} {SITE.name}. {SITE.city}, {SITE.countryName}.</p>
     <p>ServiceNow and its product names are trademarks of ServiceNow, Inc. Raleston Consulting is an independent consultancy.</p>
+    {/* <p>Powered by <span class="footer-credit">Synovika Technologies</span></p> */}
   </div>
 </footer>
 
@@ -229,5 +230,9 @@ const company = [
     font-size: 0.85rem;
     color: var(--color-grey-400);
     border-top: 1px solid color-mix(in srgb, var(--color-white) 8%, transparent);
+  }
+  .footer-credit {
+    font-weight: 600;
+    color: var(--color-grey-200);
   }
 </style>

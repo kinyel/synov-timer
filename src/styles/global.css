@@ -20,74 +20,11 @@
   --color-muted: var(--color-grey-400);
 }
 
-/* Nav theme tokens, registered so light ↔ dark cross-fades instead of snapping. */
 /* Animatable lift for the 3D scenes' hover state. */
-/* How far a hero label has turned to the reader (0..1), animatable. */
 @property --lift {
   syntax: '<length>';
   inherits: false;
   initial-value: 0px;
-}
-@property --n-fg {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-muted {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-glass {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-solid {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-border {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-hover {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-shadow {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-accent {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-
-@property --n-accent-line {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-accent-tint {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-accent-glow {
-  syntax: '<color>';
-  inherits: true;
-  initial-value: transparent;
-}
-@property --n-sweep {
-  syntax: '<angle>';
-  inherits: false;
-  initial-value: 0deg;
 }
 
 @layer base {
