@@ -78,12 +78,51 @@ export function initHero(reduced: boolean) {
   const turn = { v: 0 };
   let turnTo = 0;
   const deg = (name: string) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || 0;
+  const tops = all<HTMLElement>('.plate-top');
+  const progressBar = one<HTMLElement>('[data-progress-steps]');
+  const stage = one<HTMLElement>('[data-stage]');
   const pose = (t: number) => {
     stack.style.transform = `rotateX(${deg('--tilt')}deg) rotateZ(${(deg('--spin') * (1 - t)).toFixed(3)}deg)`;
   };
   let noteAt: Pt[] = [];
   let introShift: Pt = { x: 0, y: 0 };
   let plateSize = 0;
+
+  /**
+   * Phones: place the stack in the space between the headline (with its progress bar)
+   * and the note at the bottom, and shrink the plates if that space is short, so the
+   * three never overlap on any screen height. Desktop keeps the CSS placement.
+   */
+  const fit = () => {
+    root.style.removeProperty('--plate');
+    platform.style.top = '';
+    if (!phone()) return;
+    const GAP = 16;
+    const extent = () => {
+      // Every plate's top face, in both poses, relative to the platform's origin.
+      const o = platform.getBoundingClientRect();
+      let lo = Infinity;
+      let hi = -Infinity;
+      for (const t of [0, 1]) {
+        pose(t);
+        for (const el of tops) {
+          const r = el.getBoundingClientRect();
+          lo = Math.min(lo, r.top - o.top);
+          hi = Math.max(hi, r.bottom - o.top);
+        }
+      }
+      return { lo, hi };
+    };
+    const st = stage.getBoundingClientRect();
+    const from = progressBar.getBoundingClientRect().bottom - st.top + GAP;
+    const to = Math.min(...notes.map((li) => li.getBoundingClientRect().top)) - st.top - GAP;
+    let e = extent();
+    if (e.hi - e.lo > to - from) {
+      root.style.setProperty('--plate', `${((plates[0]!.offsetWidth * (to - from)) / (e.hi - e.lo)).toFixed(1)}px`);
+      e = extent();
+    }
+    platform.style.top = `${((from + to) / 2 - (e.lo + e.hi) / 2).toFixed(1)}px`;
+  };
 
   const measure = () => {
     // Measure the resting pose: no shift, no float, plates not mid-arrival.
@@ -102,6 +141,7 @@ export function initHero(reduced: boolean) {
       f: plates.map((p) => at(p.querySelector('[data-anchor="f"]'))),
     });
     stack.style.setProperty('--spread', '1');
+    fit();
     pose(0);
     open = read();
     pose(1);
@@ -325,7 +365,8 @@ export function initHero(reduced: boolean) {
     if (!visible) return;
     float = Math.sin(time * 0.9) * (phone() ? 3 : 4.5);
     platform.style.transform = `translate3d(${shift.x.toFixed(1)}px, ${(shift.y + float).toFixed(1)}px, 0)`;
-    if (leaderDraw.v > 0.001) drawLeader();
+    // The leader is desktop only (hidden in CSS on phones), so phones skip drawing it.
+    if (leaderDraw.v > 0.001 && !phone()) drawLeader();
     else if (leader.style.strokeDasharray !== '0 1') {
       leader.style.strokeDasharray = '0 1';
       leaderEnd.style.opacity = '0';
