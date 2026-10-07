@@ -6,6 +6,7 @@ import { $introDone, $progress, $reducedMotion, $scene, $sceneReady, live, type 
 import { initScroll } from './scroll';
 import { initNav } from './nav';
 import { initHero } from './hero';
+import { initScenes } from './scenes';
 import { rectOf, track } from '../lib/layout';
 
 gsap.registerPlugin(ScrollTrigger, SplitText);
@@ -140,6 +141,7 @@ if (canvasEl) {
 /* ── Scroll choreography (sections, canvas clip, nav theme) ───────────── */
 initScroll(reduced, lenis);
 initHero(reduced);
+initScenes(reduced);
 for (const section of $$('[data-scene]')) {
   const id = section.dataset.scene as SceneId;
   ScrollTrigger.create({ trigger: section, start: 'top 55%', end: 'bottom 55%', onToggle: (s) => s.isActive && $scene.set(id) });
