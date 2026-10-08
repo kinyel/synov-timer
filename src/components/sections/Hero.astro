@@ -45,7 +45,7 @@ const alerts = [
 
     <!-- Screen one -->
     <div class="intro gutter" data-intro>
-      <p class="pill" data-hero-kicker><span class="pill-dot" aria-hidden="true"></span>ServiceNow consultancy · Ottawa, Canada</p>
+      <p class="pill" data-hero-kicker><span class="pill-dot" aria-hidden="true"></span>ServiceNow consultancy · Ottawa</p>
       <h1 id="hero-title" class="hero-title" data-hero-title>
         <span class="line-mask" data-line><span class="block">Architecting</span></span>
         <span class="line-mask" data-line><span class="block"><span class="text-lit">digital empires</span></span></span>
@@ -279,7 +279,15 @@ const alerts = [
 <style>
   /* ── The stage ──────────────────────────────────────────────────────── */
   .hero {
-    --len: 620svh;
+    /* How much scrolling each stage of the journey takes (hero.ts reads these for its stage
+       boundaries). The start (diamonds turning to squares) and the close (back to diamonds,
+       closing up) keep an easy pace; the five cards in between go quickly, so it never feels stuck. */
+    --len-intro: 50svh;
+    --len-cards: 172svh;
+    --len-close: 87svh;
+    --len: calc(var(--len-intro) + var(--len-cards) + var(--len-close));
+    /* Card changes (glow, edges, words) ease in and out evenly, so one card hands over to the next without a snap. */
+    --ease-calm: cubic-bezier(0.45, 0, 0.25, 1);
     --plate: 272px;
     --gap: 88px;
     --tilt: 57deg;
@@ -290,7 +298,7 @@ const alerts = [
   }
   .journey-mark {
     position: absolute;
-    top: calc(var(--len) * 0.08);
+    top: var(--len-intro);
     left: 0;
   }
   .stage {
@@ -544,15 +552,15 @@ const alerts = [
     background: color-mix(in srgb, var(--color-white) 2%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 7%, transparent);
     transition:
-      box-shadow 0.8s var(--ease-expo),
-      background-color 0.8s var(--ease-expo);
+      box-shadow 0.8s var(--ease-calm),
+      background-color 0.8s var(--ease-calm);
   }
   .plate-top {
     background-color: color-mix(in srgb, var(--color-night) 55%, transparent);
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-gold) 45%, transparent);
     transition:
-      box-shadow 0.9s var(--ease-expo),
-      background-color 0.9s var(--ease-expo);
+      box-shadow 0.9s var(--ease-calm),
+      background-color 0.9s var(--ease-calm);
   }
   /* The glass sheen, separate so it can fade when the plate is only an outline. */
   .plate-top::before {
@@ -561,14 +569,14 @@ const alerts = [
     inset: 0;
     border-radius: inherit;
     background-image: linear-gradient(140deg, color-mix(in srgb, var(--color-white) 11%, transparent), color-mix(in srgb, var(--color-white) 3%, transparent) 48%, color-mix(in srgb, var(--color-iris) 10%, transparent));
-    transition: opacity 0.9s var(--ease-expo);
+    transition: opacity 0.9s var(--ease-calm);
   }
   .plate-sheen {
     position: absolute;
     inset: 0;
     background: radial-gradient(70% 70% at 50% 50%, color-mix(in srgb, var(--color-gold) 22%, transparent), transparent 70%);
     opacity: 0;
-    transition: opacity 0.9s var(--ease-expo);
+    transition: opacity 0.9s var(--ease-calm);
   }
   /* Only the sweep is clipped to the glass, so turned labels may overhang the edge. */
   .plate-clip {
@@ -595,8 +603,8 @@ const alerts = [
     font-variant-numeric: lining-nums;
     color: color-mix(in srgb, var(--color-white) 9%, transparent);
     transition:
-      color 0.9s var(--ease-expo),
-      opacity 0.8s var(--ease-expo);
+      color 0.9s var(--ease-calm),
+      opacity 0.8s var(--ease-calm);
   }
   .plate-name {
     position: absolute;
@@ -608,8 +616,8 @@ const alerts = [
     text-transform: uppercase;
     color: color-mix(in srgb, var(--color-white) 30%, transparent);
     transition:
-      color 0.9s var(--ease-expo),
-      opacity 0.8s var(--ease-expo);
+      color 0.9s var(--ease-calm),
+      opacity 0.8s var(--ease-calm);
   }
   .plate-port {
     position: absolute;
@@ -621,8 +629,8 @@ const alerts = [
     border-radius: 50%;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-white) 22%, transparent);
     transition:
-      box-shadow 0.8s var(--ease-expo),
-      opacity 0.8s var(--ease-expo);
+      box-shadow 0.8s var(--ease-calm),
+      opacity 0.8s var(--ease-calm);
   }
   .plate-port > span {
     position: absolute;
@@ -696,7 +704,7 @@ const alerts = [
   .ui {
     position: absolute;
     inset: 9%;
-    transition: opacity 0.8s var(--ease-expo);
+    transition: opacity 0.8s var(--ease-calm);
   }
   /* 01 Asked: the employee's message and Otto's reply. */
   .bubble {
@@ -1002,7 +1010,7 @@ const alerts = [
     width: max-content;
     padding-left: 3.1rem;
     color: var(--color-grey-400);
-    transition: color 0.6s var(--ease-expo);
+    transition: color 0.6s var(--ease-calm);
   }
   .datum-line {
     position: absolute;
@@ -1025,7 +1033,7 @@ const alerts = [
     font-size: 0.95rem;
     font-weight: 700;
     color: var(--color-grey-200);
-    transition: color 0.6s var(--ease-expo);
+    transition: color 0.6s var(--ease-calm);
   }
   .datum-cap {
     grid-column: 2 / -1;
@@ -1316,9 +1324,9 @@ const alerts = [
     /* On the active plate (always square to the reader by then) the words grow and
        stretch to undo most of the tilt's squash. */
     transition:
-      scale 0.9s var(--ease-expo),
-      color 0.6s var(--ease-expo),
-      background-color 0.6s var(--ease-expo);
+      scale 0.9s var(--ease-calm),
+      color 0.6s var(--ease-calm),
+      background-color 0.6s var(--ease-calm);
   }
   .lane-t,
   .ticket-in {
@@ -1399,31 +1407,32 @@ const alerts = [
   :global(html.js:not(.reduced-motion)) .notes-progress {
     display: flex;
   }
+  /* Notes hand over as one crossfade: the old one fades quickly, the new one settles in with a short drift. */
   :global(html.js:not(.reduced-motion)) .note > * {
     opacity: 0;
-    transform: translateY(0.9rem);
+    transform: translateY(0.45rem);
     transition:
-      opacity 0.4s var(--ease-expo),
-      transform 0.5s var(--ease-expo);
+      opacity 0.3s var(--ease-calm),
+      transform 0.4s var(--ease-calm);
   }
   :global(html.js:not(.reduced-motion)) .note.is-active > * {
     opacity: 1;
     transform: none;
     transition:
-      opacity 0.8s var(--ease-expo),
-      transform 1s var(--ease-expo);
+      opacity 0.6s var(--ease-calm) 0.1s,
+      transform 0.7s var(--ease-calm) 0.1s;
   }
   :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(2) {
-    transition-delay: 0.06s;
+    transition-delay: 0.14s;
   }
   :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(3) {
-    transition-delay: 0.12s;
-  }
-  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(4) {
     transition-delay: 0.18s;
   }
+  :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(4) {
+    transition-delay: 0.22s;
+  }
   :global(html.js:not(.reduced-motion)) .note.is-active > :nth-child(5) {
-    transition-delay: 0.24s;
+    transition-delay: 0.26s;
   }
 
   /* Phones and tablets in portrait: platform on top, the note below it. */
@@ -1434,7 +1443,8 @@ const alerts = [
       width: 90vw;
     }
     .hero {
-      --len: 560svh;
+      --len-intro: 45svh;
+      --len-close: 78svh;
       --plate: min(50vw, 230px);
       --gap: calc(var(--plate) * 0.3);
     }

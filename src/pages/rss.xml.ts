@@ -17,6 +17,6 @@ export async function GET(context: APIContext) {
       categories: [p.data.category, ...p.data.tags],
       author: `${SITE.email} (${p.data.author})`,
     })),
-    customData: '<language>en-ca</language>',
+    customData: '<language>en</language>',
   });
 }

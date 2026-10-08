@@ -174,7 +174,7 @@ function page(ok: boolean, error?: string): string {
   const title = ok ? 'Thank you. Your message is on its way.' : 'Your message was not sent';
   const lead = ok ? 'An architect will read it and reply to the email address you gave.' : escape(error ?? 'Something went wrong.');
   return `<!doctype html>
-<html lang="en-CA">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

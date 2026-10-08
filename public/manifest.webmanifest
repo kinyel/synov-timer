@@ -1,7 +1,7 @@
 {
   "name": "Raleston Consulting",
   "short_name": "Raleston",
-  "description": "ServiceNow consultancy in Ottawa, Canada.",
+  "description": "ServiceNow consultancy in Ottawa, working with clients worldwide.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#040a16",

@@ -17,7 +17,7 @@ export const slugify = (s: string) =>
 /** Minutes to read, at about 220 words a minute. */
 export const readingTime = (post: Post) => Math.max(1, Math.round((post.body ?? '').split(/\s+/).filter(Boolean).length / 220));
 
-export const formatDate = (d: Date) => d.toLocaleDateString('en-CA', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+export const formatDate = (d: Date) => d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
 
 /** Related posts: same category first, then shared tags. */
 export function related(post: Post, all: Post[], n = 3): Post[] {

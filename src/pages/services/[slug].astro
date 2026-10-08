@@ -32,7 +32,7 @@ const schema = [
     description: s.seo.description,
     url: `${SITE.url}/services/${s.slug}/`,
     provider: { '@id': `${SITE.url}/#organization` },
-    areaServed: { '@type': 'Country', name: SITE.countryName },
+    areaServed: 'Worldwide',
   },
   faqSchema(s.faqs),
 ];

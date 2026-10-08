@@ -48,9 +48,9 @@ export const INDUSTRIES: Industry[] = [
     name: 'Government & Public Sector',
     line: 'Services that follow policy',
     icon: 'government',
-    summary: 'Federal, provincial and municipal organisations, where services follow policy and data stays in Canada.',
+    summary: 'National, regional and local government, where services follow policy and data stays where the law says it must.',
     uses: [
-      { title: 'Canadian data residency', text: 'Instance plans that use ServiceNow’s Canadian-hosted infrastructure.' },
+      { title: 'Data residency', text: 'Instance plans that keep data in the right country, on ServiceNow’s in-country hosting where it is offered.' },
       { title: 'Accessible services', text: 'Portals for staff and residents built to WCAG accessibility standards.' },
       { title: 'Traceable decisions', text: 'Approvals and records that show who decided what, and when.' },
       { title: 'Services for residents', text: 'Public Sector Digital Services for requests from the people you serve.' },

@@ -53,7 +53,7 @@ const graph: Record<string, unknown>[] = [
     email: SITE.email,
     telephone: '+1-613-981-1843',
     address: { '@type': 'PostalAddress', addressLocality: SITE.city, addressRegion: SITE.region, addressCountry: SITE.country },
-    areaServed: { '@type': 'Country', name: SITE.countryName },
+    areaServed: 'Worldwide',
     founder: { '@id': `${SITE.url}/about/#founder` },
     knowsAbout: [
       'ServiceNow',
@@ -67,7 +67,7 @@ const graph: Record<string, unknown>[] = [
       'ServiceNow App Engine',
     ],
   },
-  { '@type': 'WebSite', '@id': `${SITE.url}/#website`, url: SITE.url, name: SITE.name, inLanguage: 'en-CA', publisher: { '@id': org } },
+  { '@type': 'WebSite', '@id': `${SITE.url}/#website`, url: SITE.url, name: SITE.name, inLanguage: 'en', publisher: { '@id': org } },
 ];
 if (path !== '/') {
   graph.push({
@@ -84,7 +84,7 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schem
 ---
 
 <!doctype html>
-<html lang="en-CA" data-theme="dark" data-page={home ? 'home' : 'inner'}>
+<html lang="en" data-theme="dark" data-page={home ? 'home' : 'inner'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
@@ -101,7 +101,6 @@ const jsonLd = { '@context': 'https://schema.org', '@graph': [...graph, ...schem
     <meta name="theme-color" content="#040A16" />
     <meta property="og:type" content={type} />
     <meta property="og:site_name" content={SITE.name} />
-    <meta property="og:locale" content="en_CA" />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />

@@ -142,7 +142,7 @@ export async function renderCard(page: OgPage): Promise<Buffer> {
         h('div', { display: 'flex', width: 220, height: 4, borderRadius: 4, backgroundImage: `linear-gradient(90deg, ${C.gold}00 0%, ${C.gold} 55%, ${C.goldGlow} 100%)`, boxShadow: `0 0 18px ${C.gold}` }),
         h('div', { display: 'flex', width: 12, height: 12, borderRadius: 12, marginLeft: -34, backgroundColor: C.goldGlow, boxShadow: `0 0 22px 6px ${C.gold}` }),
         h('span', { fontSize: 22, fontWeight: 700, color: C.grey200, whiteSpace: 'nowrap' }, 'ralestonconsulting.com'),
-        h('span', { marginLeft: 'auto', fontSize: 19, color: C.grey400, whiteSpace: 'nowrap' }, 'ServiceNow consultancy · Ottawa, Canada'),
+        h('span', { marginLeft: 'auto', fontSize: 19, color: C.grey400, whiteSpace: 'nowrap' }, 'ServiceNow consultancy · Ottawa'),
       ]),
     ],
   );

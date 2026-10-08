@@ -15,7 +15,6 @@ export const SITE = {
   region: 'ON',
   regionName: 'Ontario',
   country: 'CA',
-  countryName: 'Canada',
   founder: {
     name: 'Charles',
     role: 'Founder & Principal Architect',

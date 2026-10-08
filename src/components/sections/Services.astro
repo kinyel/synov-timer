@@ -74,7 +74,7 @@ const treads = Array.from({ length: TREADS }, (_, i) => i - FIRST);
 const rail = Array.from({ length: TREADS * 2 }, (_, i) => i / 2 - FIRST);
 ---
 
-<section id="services" data-scene="services" data-theme="dark" class="relative h-[480svh]" data-stair-section aria-labelledby="services-title">
+<section id="services" data-scene="services" data-theme="dark" class="relative h-[230svh]" data-stair-section aria-labelledby="services-title">
   <div class="stair-bg layer-bg pointer-events-none sticky top-0 h-svh overflow-hidden" aria-hidden="true">
     <div class="stair-glow"></div>
     {Array.from({ length: 26 }, (_, i) => <span class="stair-dust" style={`--x:${(i * 37) % 100}%;--y:${(i * 61) % 100}%;--d:${6 + (i % 7)}s;--o:${-(i % 9)}s`} />)}

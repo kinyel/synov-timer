@@ -23,8 +23,9 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
  */
 type Pt = { x: number; y: number };
 
-const INTRO = 0.08;
-const END = 0.86;
+/** Where the start ends and the close begins (0..1). Set from the hero's --len-* stage lengths. */
+let INTRO = 0.08;
+let END = 0.86;
 const DWELL = 1;
 const TRAVEL = 1.1;
 /** How far the plates close up at the end (1 = exploded). */
@@ -124,7 +125,20 @@ export function initHero(reduced: boolean) {
     platform.style.top = `${((from + to) / 2 - (e.lo + e.hi) / 2).toFixed(1)}px`;
   };
 
+  /** Stage boundaries from the CSS stage lengths (all in svh, so their ratios are what count). */
+  const stages = () => {
+    const len = (name: string) => parseFloat(getComputedStyle(root).getPropertyValue(name)) || 0;
+    const intro = len('--len-intro');
+    const cards = len('--len-cards');
+    const total = intro + cards + len('--len-close');
+    if (total > 0) {
+      INTRO = intro / total;
+      END = (intro + cards) / total;
+    }
+  };
+
   const measure = () => {
+    stages();
     // Measure the resting pose: no shift, no float, plates not mid-arrival.
     platform.style.transform = 'none';
     const drops = plates.map((pl) => pl.style.getPropertyValue('--drop'));
@@ -169,12 +183,14 @@ export function initHero(reduced: boolean) {
 
   // ── Scroll → station ───────────────────────────────────────────────────
   const UNITS = N * DWELL + (N - 1) * TRAVEL;
+  /** Between two cards the request glides (sine in and out) rather than lurching. */
+  const glide = gsap.parseEase('sine.inOut');
   const station = (q: number) => {
     let u = q * UNITS;
     for (let k = 0; k < N; k++) {
       if (u <= DWELL || k === N - 1) return k;
       u -= DWELL;
-      if (u <= TRAVEL) return k + ease(u / TRAVEL);
+      if (u <= TRAVEL) return k + glide(u / TRAVEL);
       u -= TRAVEL;
     }
     return N - 1;
@@ -182,6 +198,14 @@ export function initHero(reduced: boolean) {
 
   // ── State and per-frame writes ─────────────────────────────────────────
   let p = 0;
+  /**
+   * The station the scroll asks for, and the one on screen. The one on screen follows with a
+   * short, eased lag (see tick), so even a quick flick hands one card over to the next as a calm
+   * crossfade instead of a snap. snapS jumps straight there (first paint, reload, resize).
+   */
+  let sTarget = 0;
+  let sShown = 0;
+  let snapS = true;
   let spread = 1;
   let shift: Pt = { x: 0, y: 0 };
   let float = 0;
@@ -252,7 +276,12 @@ export function initHero(reduced: boolean) {
     if (!open.c.length) return;
     const tIntro = clamp(p / INTRO);
     const closing = ease(clamp((p - END) / (1 - END)));
-    const s = p < INTRO ? tIntro - 1 : station((p - INTRO) / (END - INTRO));
+    sTarget = p < INTRO ? tIntro - 1 : station((p - INTRO) / (END - INTRO));
+    if (snapS || !visible) {
+      sShown = sTarget;
+      snapS = false;
+    }
+    const s = sShown;
 
     // Close the plates up at the end.
     const nextSpread = lerp(1, CLOSED, closing);
@@ -325,7 +354,9 @@ export function initHero(reduced: boolean) {
     });
 
     // Which plate is lit, and which note shows.
-    const here = s < -0.2 ? -1 : Math.max(0, Math.min(N - 1, Math.floor(s + 0.2)));
+    // The lit card, its words and its note all change together, halfway between two cards,
+    // where the old and new cards are crossing over (each at half strength).
+    const here = s < -0.5 ? -1 : Math.max(0, Math.min(N - 1, Math.round(s)));
     setActive(closing > 0.25 ? N - 1 : here, closing > 0.25);
     stack.classList.toggle('is-closing', closing > 0);
     // One plate at a time: each plate (and its level mark) fades to a faint outline with the
@@ -361,8 +392,20 @@ export function initHero(reduced: boolean) {
 
   // Every frame: the platform's gentle float, and the leader that follows it.
   let visible = true;
-  const tick = (time: number) => {
+  /** How quickly the cards catch up with the scroll (seconds), and the most stations per second. */
+  const LAG = 0.16;
+  const MAX_RATE = 3.2;
+  const tick = (time: number, deltaTime: number) => {
     if (!visible) return;
+    const gap = sTarget - sShown;
+    if (gap !== 0) {
+      const dt = Math.min(deltaTime, 50) / 1000;
+      let step = gap * (1 - Math.exp(-dt / LAG));
+      const cap = MAX_RATE * dt;
+      step = Math.max(-cap, Math.min(cap, step));
+      sShown = Math.abs(gap - step) < 0.0005 ? sTarget : sShown + step;
+      render();
+    }
     float = Math.sin(time * 0.9) * (phone() ? 3 : 4.5);
     platform.style.transform = `translate3d(${shift.x.toFixed(1)}px, ${(shift.y + float).toFixed(1)}px, 0)`;
     // The leader is desktop only (hidden in CSS on phones), so phones skip drawing it.
@@ -457,6 +500,7 @@ export function initHero(reduced: boolean) {
     onRefresh: (st) => {
       measure();
       p = st.progress;
+      snapS = true;
       lastKey = '';
       active = -2;
       note = -2;
