@@ -7,14 +7,10 @@ export const SITE = {
   url: 'https://ralestonconsulting.com',
   tagline: 'Architecting digital empires with ServiceNow',
   description:
-    'Ottawa ServiceNow consultancy. Certified architects for ITSM, ITOM, ITAM, CMDB, SPM, integrations, App Engine and enterprise architecture.',
+    'Independent ServiceNow consultancy working with clients worldwide. Certified architects for ITSM, ITOM, ITAM, CMDB, SPM, integrations, App Engine and enterprise architecture.',
   email: 'info@ralestonconsulting.com',
   phone: '+1 (613) 981-1843',
   tel: '+16139811843',
-  city: 'Ottawa',
-  region: 'ON',
-  regionName: 'Ontario',
-  country: 'CA',
   founder: {
     name: 'Charles',
     role: 'Founder & Principal Architect',

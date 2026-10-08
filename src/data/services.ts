@@ -68,7 +68,7 @@ export const SERVICES: Service[] = [
     seo: {
       title: 'ServiceNow ITSM implementation and redesign | Raleston Consulting',
       description:
-        'ServiceNow ITSM done properly: incident, problem, change and request management, a catalog people use, and ServiceNow Otto built in. Architects in Ottawa.',
+        'ServiceNow ITSM done properly: incident, problem, change and request management, a catalog people use, and ServiceNow Otto built in.',
     },
     headline: 'IT Service Management on ServiceNow',
     lead: 'How IT takes requests and fixes problems for everyone else. We design it around the way your teams actually work, then build it so it stays easy to upgrade.',
@@ -150,7 +150,7 @@ export const SERVICES: Service[] = [
     seo: {
       title: 'ServiceNow ITOM: Discovery, Service Mapping and AIOps | Raleston',
       description:
-        'Know what you run and catch problems before users do: ServiceNow Discovery, Service Mapping, Event Management and AIOps, from certified architects in Ottawa.',
+        'Know what you run and catch problems before users do: ServiceNow Discovery, Service Mapping, Event Management and AIOps, from certified architects.',
     },
     headline: 'IT Operations Management on ServiceNow',
     lead: 'Know exactly what is running, what depends on what, and which alert matters, before your users notice anything.',
@@ -228,7 +228,7 @@ export const SERVICES: Service[] = [
     seo: {
       title: 'ServiceNow ITAM: hardware and software assets | Raleston',
       description:
-        'Know what you own, what it costs and whether it is used. ServiceNow Hardware, Software and Enterprise Asset Management, designed by certified architects in Ottawa.',
+        'Know what you own, what it costs and whether it is used. ServiceNow Hardware, Software and Enterprise Asset Management, designed by certified architects.',
     },
     headline: 'IT Asset Management on ServiceNow',
     lead: 'Know what you own, what it costs and whether anyone uses it, from the day you buy it to the day it leaves.',
